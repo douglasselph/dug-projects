@@ -29,14 +29,14 @@ data class DoomResult(
 }
 
 /**
- * Executes Battle Step 7.
+ * Executes Doom under either Battle structure.
  *
- * Doom Trashes every die showing the lowest value. If that removed fewer than
+ * The legacy whole-Battle [execute] Trashes every die showing the lowest value. If that removed fewer than
  * two dice total, it continues with the next-lowest value, always taking the
  * complete value group. When fewer than two dice exist, it Trashes everything
  * available and stops.
  *
- * The universal v37.03 Trash rule applies: Doomed D4s return to the Graft
+ * The same physical Trash rule applies to both paths: Doomed D4s return to the Graft
  * Bed; larger Doomed dice leave the game.
  */
 class DoomResolver(
@@ -46,6 +46,20 @@ class DoomResolver(
         private const val MINIMUM_DOOMED_DICE = 2
     }
 
+    /** v38: Doom only this resolved Strike, trashing exactly its minimum-value group. */
+    fun executeRow(game: Game, battleState: BattleState, row: StrikeRow): DoomResult {
+        stateCheck(battleState.grid.isRowClosed(row), context = "DoomResolver") {
+            "Doom requires a resolved Strike: $row"
+        }
+        val placements = battleState.grid.diePlacements.filter { it.row == row }
+        val lowest = placements.minOfOrNull { it.die.value }
+            ?: return DoomResult(emptyList())
+        return battleState.grid.withResolvedRowRemoval(row) {
+            trashPlacements(game, battleState, placements.filter { it.die.value == lowest })
+        }
+    }
+
+    /** Legacy whole-Battle Doom; intentionally unchanged for old experiment replay. */
     fun execute(
         game: Game,
         battleState: BattleState
@@ -68,6 +82,14 @@ class DoomResolver(
             }
         }
 
+        return trashPlacements(game, battleState, doomedPlacements)
+    }
+
+    private fun trashPlacements(
+        game: Game,
+        battleState: BattleState,
+        doomedPlacements: List<dugsolutions.leaf.v35.battle.domain.BattleDiePlacement>
+    ): DoomResult {
         var results = emptyList<DoomedDie>()
         game.chronicle.scoped(
             parent = {

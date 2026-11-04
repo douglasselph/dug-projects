@@ -173,9 +173,6 @@ class BattleActionCoordinator(
     fun researchLegalSupports(game: Game, player: Player, card: RoundCard, state: BattleState): List<BattleSupportAction> =
         supportActions(game, player, card, state).filter { support ->
             val shared = (support as? BattleSupportAction.Shared)?.action
-            // Never permit the early-resolve Wisp in Candidate B.
-            if ((shared as? SupportAction.PlayWisp)?.card?.effect ==
-                dugsolutions.leaf.v35.effect.GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW) return@filter false
             val selectedDie = when (shared) {
                 is SupportAction.UseWaterReroll -> shared.die
                 is SupportAction.UseButterfly -> shared.die

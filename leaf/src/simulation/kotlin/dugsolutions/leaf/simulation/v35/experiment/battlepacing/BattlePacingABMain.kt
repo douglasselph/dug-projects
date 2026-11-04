@@ -408,7 +408,10 @@ fun main(args: Array<String>) {
                                             mainPlans.row(players, ordinal, options.policy, sample,
                                                 result.openingSha256, planLine)
                                         }
-                                    result.candidate.engagements.forEach { engagement ->
+                                    result.candidate.engagements.forEach engagementLoop@ { engagement ->
+                                        // A Wisp may have finished a future row before any turns there.
+                                        // No "last actor" observation exists for that row.
+                                        if (engagement.preempted) return@engagementLoop
                                         val baseline = result.baselineStrikes.strikes.first { it.row == engagement.order.row }
                                         val last = engagement.opportunities.last()
                                         val lastObs = lastActorObservation(engagement)

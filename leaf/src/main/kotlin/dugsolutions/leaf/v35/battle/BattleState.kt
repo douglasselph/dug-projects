@@ -76,11 +76,31 @@ class BattleState(
         BattleGrid(playerIdsInBattleOrder)
 
     private val frozenResolvedRows = mutableMapOf<StrikeRow, BattleGridRowSnapshot>()
+    private val completedStrikes = mutableMapOf<StrikeRow, FinishedStrike>()
+    /** Mode of the actual running scheduler, independent of research config fallback. */
+    var isThreeEngagements: Boolean = false
+        private set
+
+    fun activateThreeEngagements() {
+        stateCheck(grid.playerIdsInGridOrder.isNotEmpty() && completedStrikes.isEmpty(),
+            context = "BattleState") { "Cannot switch Battle scheduling after a Strike finishes" }
+        isThreeEngagements = true
+    }
+
+    fun finishedStrike(row: StrikeRow): FinishedStrike? = completedStrikes[row]
+
+    fun recordFinishedStrike(row: StrikeRow, finished: FinishedStrike) {
+        stateCheck(grid.isRowClosed(row) && frozenResolvedRows.containsKey(row) &&
+            !completedStrikes.containsKey(row), context = "BattleState") {
+            "Cannot record duplicate or unlocked finished Strike: $row"
+        }
+        completedStrikes[row] = finished
+    }
 
     /** The immutable decision/reporting total of a previously settled Strike. */
     fun frozenResolvedRow(row: StrikeRow): BattleGridRowSnapshot? = frozenResolvedRows[row]
 
-    /** Candidate B only: capture effective Critter values before closing the row. */
+    /** v38: capture effective Critter/die values before Doom and row cleanup. */
     fun lockResolvedRow(row: StrikeRow, provenance: AssetProvenance? = null) {
         stateCheck(!grid.isRowClosed(row) && !frozenResolvedRows.containsKey(row), context = "BattleState") {
             "Strike is already locked: $row"

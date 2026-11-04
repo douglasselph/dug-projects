@@ -47,6 +47,25 @@ object EngagementOrderSelector {
         val highest = columns.associateWith { id ->
             battle.grid.square(id, row).dice.maxOfOrNull { it.value } ?: 0
         }
+        return selectWithHighest(battle, physicalSeatsClockwise, row, highest)
+    }
+
+    /** Reporting-only placeholder for a row finished early by Wisp's Resolve. No turns occur. */
+    fun selectSettled(battle: BattleState, physicalSeatsClockwise: List<PlayerId>,
+                      row: StrikeRow): EngagementOrder {
+        require(battle.grid.isRowClosed(row)) { "Strike $row is not settled" }
+        val snapshot = requireNotNull(battle.frozenResolvedRow(row))
+        val highest = snapshot.squares.associate { square ->
+            square.playerId to (square.dice.maxOfOrNull { it.value } ?: 0)
+        }
+        return selectWithHighest(battle, physicalSeatsClockwise, row, highest)
+    }
+
+    private fun selectWithHighest(battle: BattleState, physicalSeatsClockwise: List<PlayerId>,
+                                  row: StrikeRow, highest: Map<PlayerId, Int>): EngagementOrder {
+        val columns = battle.grid.playerIdsInGridOrder
+        require(physicalSeatsClockwise.size == columns.size &&
+            physicalSeatsClockwise.toSet() == columns.toSet())
         val column = columns.withIndex().associate { (index, id) -> id to index }
         val starter = columns.maxWithOrNull(
             compareBy<PlayerId> { highest.getValue(it) }

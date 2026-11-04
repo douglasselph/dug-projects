@@ -319,8 +319,9 @@ internal fun candidatePacingObserved(
     assignReassessments(windows)
     val first = windows.first().beforeRows
     val wounds = result.engagements.sumOf { it.resolution.wounds.size }
-    // Candidate cleanup result exposes only totals today; returned Critters are visible in Chronicle Cleanup entries.
-    val returned = game.chronicle.entries.filterIsInstance<GameEntry.Cleanup>().takeLast(game.players.size).sumOf { it.returnedCritters }
+    // v38 cleanup occurs per Strike; final Refresh emits separate zero-discard events.
+    // The per-Strike aggregate is authoritative (not Chronicle.takeLast(players)).
+    val returned = result.returnedCrittersCount
     return BattlePacingObserved(PacingRuleSet.B_CANDIDATE, game.players.map { it.id }, windows,
         first.sumOf { row -> row.squares.sumOf { it.dice.size } }, result.engagements.size, wounds,
         result.doomCount, result.cleanupDiceCount, returned, remainingSupports)

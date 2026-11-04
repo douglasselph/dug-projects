@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.effect.special
 
 import dugsolutions.leaf.v35.battle.StrikeResolver
+import dugsolutions.leaf.v35.battle.StrikeFinishCoordinator
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
@@ -16,13 +17,10 @@ import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.game.operation.WoundResolver
 
 /**
- * Wisp's Last Word resolves one still-open Strike immediately, clears every
- * die/Critter from that row to its normal destination, and then closes the row
- * for the remainder of the Battle Round.
- *
- * The immediate resolution deliberately delegates to [StrikeResolver] so tie,
- * Wound, VP, Root & Scoot withdrawal, and Critter-value rules remain identical
- * to normal Battle Step 6 resolution.
+ * Wisp's Resolve finishes one unresolved Strike immediately. In v38 this means
+ * Resolve → Doom → row-only Cleanup (no early Refresh); the normal scheduler
+ * skips that row later. The old whole-Battle ruleset retains its historical
+ * resolve-and-clear behavior for explicit experimental replay.
  */
 class WispLastWordEffect : EffectHandler {
 
@@ -55,6 +53,16 @@ class WispLastWordEffect : EffectHandler {
             legalChoices = openStrikeRows(request)
         )
 
+        // v38: the normal per-Strike finalizer owns Resolve, Doom, row cleanup,
+        // the frozen result, and duplicate-resolution protection. No Refresh yet.
+        if (battleState.isThreeEngagements) {
+            StrikeFinishCoordinator().finish(request.game, battleState, row) { player ->
+                request.decisionContextFor(player)
+            }
+            return
+        }
+
+        // Legacy whole-Battle ruleset: preserve historical Wisp behavior.
         /* Printed order: resolve the Strike before removing anything. */
         StrikeResolver(
             WoundResolver(

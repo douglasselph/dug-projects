@@ -67,7 +67,7 @@ class GameEffectConverter(
                 .lowercase()
 
         private val effectsByText: Map<String, GameEffect> = buildMap {
-            // Explicit aliases for the official October 2026 card files.
+            // Explicit aliases for the October/November 2026 card files.
             // Do not replace these with approximate/fuzzy text matching.
             register("""Gain 1 worm. Each worm <worm/> is worth 1 more this round.""", GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND)
             register("""Gain 1 VP per 1 showing""", GameEffect.GAIN_VP_PER_ONE_SHOWING)
@@ -471,6 +471,14 @@ use gained die now
 Resolve a Strike immediately.
 Then return all dice & critters
 from that row.
+                """,
+                GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW
+            )
+
+            register(
+                """
+<battle/> Battle Only: Immediately finish 1 Strike:
+Resolve → Doom → Cleanup.
                 """,
                 GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW
             )

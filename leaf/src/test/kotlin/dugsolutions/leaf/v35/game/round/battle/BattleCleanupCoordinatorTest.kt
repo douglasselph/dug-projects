@@ -143,6 +143,46 @@ class BattleCleanupCoordinatorTest {
         assertTrue(p1.dice.discard.any { it === second })
     }
 
+    @Test
+    fun v38RowCleanupLeavesFutureDiceAndRoundBonusesUntilFinalRefresh() {
+        val top = die(6, 4)
+        val middle = die(8, 6)
+        val p1 = player(1, top, middle)
+        val p2 = player(2)
+        val game = GameEngineTestFixture.game(players = listOf(p1, p2))
+        val state = BattleState(listOf(p1, p2))
+        state.grid.placeDie(p1, StrikeRow.TOP, top)
+        state.grid.placeDie(p1, StrikeRow.MIDDLE, middle)
+        val grafted = graftRoot(game, p1) // Starts face down.
+        p1.butterflies.add(Butterfly.GREEN)
+        p1.butterflies.faceDown(Butterfly.GREEN)
+        p1.critterValues.boostForRound(Critter.WORM, 3)
+        game.grove.critters.remove(Critter.BEE)
+        p1.critters.add(Critter.BEE)
+        state.grid.placeCritter(p1, StrikeRow.TOP, Critter.BEE)
+        state.lockResolvedRow(StrikeRow.TOP)
+
+        val reclaimed = coordinator(game).executeRow(game, state, StrikeRow.TOP)
+        assertEquals(1, reclaimed.totalDiscardedDice)
+        assertEquals(1, reclaimed.totalReturnedCritters)
+        assertTrue(state.grid.square(p1.id, StrikeRow.TOP).isEmpty)
+        assertTrue(p1.dice.discard.any { it === top })
+        assertTrue(p1.dice.hand.any { it === middle })
+        assertTrue(p1.creature.get(grafted.id)!!.isFaceDown)
+        assertTrue(p1.butterflies.isFaceDown(Butterfly.GREEN))
+        assertEquals(4, p1.critterValues.valueOf(Critter.WORM))
+        assertEquals(emptyList(), reclaimed.refreshedPlayers)
+
+        state.lockResolvedRow(StrikeRow.MIDDLE)
+        coordinator(game).executeRow(game, state, StrikeRow.MIDDLE)
+        state.lockResolvedRow(StrikeRow.BOTTOM)
+        val refreshed = coordinator(game).executeFinalRefresh(game, state)
+        assertEquals(listOf(p1.id), refreshed.refreshedPlayers)
+        assertTrue(p1.creature.get(grafted.id)!!.isFaceUp)
+        assertTrue(p1.butterflies.isFaceUp(Butterfly.GREEN))
+        assertEquals(1, p1.critterValues.valueOf(Critter.WORM))
+    }
+
     private fun coordinator(game: dugsolutions.leaf.v35.game.Game) =
         BattleCleanupCoordinator(
             RefreshResolver(game.chronicle)

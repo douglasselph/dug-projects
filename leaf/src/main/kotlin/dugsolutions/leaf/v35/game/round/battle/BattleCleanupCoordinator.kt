@@ -28,7 +28,7 @@ data class BattleCleanupResult(
         get() = players.filter { it.refreshed }.map { it.playerId }
 }
 
-/** Executes Battle Step 8 cleanup in Battle/Grid order. */
+/** Legacy full-Battle cleanup plus v38 per-Strike cleanup/final Refresh. */
 class BattleCleanupCoordinator(
     private val refreshResolver: RefreshResolver
 ) {
@@ -131,6 +131,77 @@ class BattleCleanupCoordinator(
         }
 
         return BattleCleanupResult(results)
+    }
+
+
+    /**
+     * v38 Strike cleanup: reclaim only dice and Critters in the settled row.
+     * In particular this does NOT Refresh Plants/Butterflies or clear temporary
+     * round-wide Critter bonuses; those happen only after the Low Strike.
+     */
+    fun executeRow(game: Game, battleState: BattleState,
+                   row: dugsolutions.leaf.v35.battle.domain.StrikeRow): BattleCleanupResult {
+        stateCheck(battleState.grid.isRowClosed(row), context = "BattleCleanupCoordinator") {
+            "Cannot clean an unresolved Strike: $row"
+        }
+        val byPlayer = battleState.playersInBattleOrder.associate { it.id to MutablePlayerCleanup() }
+        battleState.grid.withResolvedRowRemoval(row) {
+            battleState.grid.diePlacements.filter { it.row == row }.toList().forEach { placement ->
+                val player = battleState.player(placement.playerId)
+                stateCheck(battleState.grid.removeDie(placement.die) != null,
+                    context = "BattleCleanupCoordinator") { "Could not reclaim Strike die: $placement" }
+                val removed = player.dice.removeExactFromHand(placement.die)
+                stateCheck(removed === placement.die, context = "BattleCleanupCoordinator") {
+                    "Strike cleanup lost exact Hand die: $placement"
+                }
+                player.dice.addToDiscard(placement.die)
+                byPlayer.getValue(placement.playerId).discardedDice++
+            }
+            battleState.grid.critterPlacements.filter { it.row == row }.toList().forEach { placement ->
+                stateCheck(battleState.grid.removeCritter(placement.playerId, row, placement.critter) != null,
+                    context = "BattleCleanupCoordinator") { "Could not reclaim Strike Critter: $placement" }
+                game.grove.critters.add(placement.critter)
+                byPlayer.getValue(placement.playerId).returnedCritters++
+            }
+        }
+        stateCheck(battleState.grid.diePlacements.none { it.row == row } &&
+            battleState.grid.critterPlacements.none { it.row == row }, context = "BattleCleanupCoordinator") {
+            "Settled Strike $row still contains game pieces"
+        }
+        return BattleCleanupResult(battleState.playersInBattleOrder.map { player ->
+            val reclaimed = byPlayer.getValue(player.id)
+            game.chronicle.record(Moment.Cleanup(
+                playerId = player.id, phase = ChroniclePhase.BATTLE,
+                discardedDice = reclaimed.discardedDice,
+                returnedCritters = reclaimed.returnedCritters, refreshed = false
+            ))
+            BattlePlayerCleanupResult(player.id, reclaimed.discardedDice, reclaimed.returnedCritters, false)
+        })
+    }
+
+    /** v38 Battle end: perform Refresh and round-boundary resets exactly once. */
+    fun executeFinalRefresh(game: Game, battleState: BattleState): BattleCleanupResult {
+        stateCheck(dugsolutions.leaf.v35.battle.domain.StrikeRow.entries.all {
+            battleState.grid.isRowClosed(it)
+        } && battleState.grid.diePlacements.isEmpty() &&
+            battleState.grid.critterPlacements.isEmpty(), context = "BattleCleanupCoordinator") {
+            "Final Refresh requires all Strikes resolved and physically cleared"
+        }
+        return BattleCleanupResult(battleState.playersInBattleOrder.map { player ->
+            stateCheck(player.dice.hand.isEmpty(), context = "BattleCleanupCoordinator") {
+                "Player ${player.id.value} has Hand dice after all Strikes"
+            }
+            var refreshed = false
+            game.chronicle.scoped(parent = {
+                Moment.Cleanup(playerId = player.id, phase = ChroniclePhase.BATTLE,
+                    discardedDice = 0, returnedCritters = 0, refreshed = refreshed)
+            }) {
+                refreshed = refreshResolver.refreshIfReady(player)
+                player.tokens.normalize()
+                player.critterValues.clearRound()
+            }
+            BattlePlayerCleanupResult(player.id, 0, 0, refreshed)
+        })
     }
 
     private class MutablePlayerCleanup(

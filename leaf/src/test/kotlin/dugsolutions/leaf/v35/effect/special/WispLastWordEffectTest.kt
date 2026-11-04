@@ -116,6 +116,38 @@ class WispLastWordEffectTest {
     }
 
     @Test
+    fun v38ResolveFinishesFutureStrikeWithDoomAndRowCleanupButNoRefresh() {
+        val actorTop = FixedEffectDie(12, 9)
+        val actorMiddle = FixedEffectDie(8, 6)
+        val opponentTop = FixedEffectDie(12, 5)
+        val opponentMiddle = FixedEffectDie(8, 4)
+        val actor = EffectTestFixture.player(1, listOf(actorTop, actorMiddle), ChooseMiddleStrategy())
+        val opponent = EffectTestFixture.player(2, listOf(opponentTop, opponentMiddle))
+        val game = EffectTestFixture.game(actor, opponent)
+        val state = BattleState(listOf(actor, opponent))
+        state.placeInitialHands() // Need explicit rows below for test fixture's sorted dice.
+        state.activateThreeEngagements()
+
+        WispLastWordEffect().execute(request(game, actor, state), GameEffectExecutor { })
+
+        val finished = requireNotNull(state.finishedStrike(StrikeRow.MIDDLE))
+        assertEquals(1, finished.doom.count)
+        assertEquals(4, finished.doom.dice.single().value)
+        assertEquals(1, finished.cleanup.totalDiscardedDice)
+        assertEquals(listOf(actor.id), finished.resolution.winnerIds)
+        assertTrue(state.grid.isRowClosed(StrikeRow.MIDDLE))
+        assertFalse(state.grid.isRowClosed(StrikeRow.TOP))
+        assertTrue(state.grid.square(actor.id, StrikeRow.MIDDLE).isEmpty)
+        assertTrue(state.grid.square(opponent.id, StrikeRow.MIDDLE).isEmpty)
+        assertTrue(actor.dice.discard.any { it === actorMiddle })
+        assertTrue(opponent.dice.hand.none { it === opponentMiddle })
+        assertTrue(actor.dice.hand.any { it === actorTop })
+        assertTrue(opponent.dice.hand.any { it === opponentTop })
+        assertEquals(6, state.frozenResolvedRow(StrikeRow.MIDDLE)!!.squares.first().dice.single().value)
+        assertEquals(null, state.finishedStrike(StrikeRow.TOP))
+    }
+
+    @Test
     fun cannotExecuteOutsideBattleOrWhenEveryRowIsAlreadyClosed() {
         val actor = EffectTestFixture.player(1)
         val opponent = EffectTestFixture.player(2)

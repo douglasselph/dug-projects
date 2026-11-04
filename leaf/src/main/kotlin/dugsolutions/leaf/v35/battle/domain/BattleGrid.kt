@@ -44,10 +44,11 @@ class BattleGrid(
         }
 
     private val closedRows = mutableSetOf<StrikeRow>()
+    private val rowsBeingReclaimed = mutableSetOf<StrikeRow>()
     private var postBattleRemoval = false
     val isPostBattleRemoval: Boolean get() = postBattleRemoval
 
-    /** Only call once ALL Strikes have resolved, before Doom and Cleanup. */
+    /** Legacy whole-Battle-only removal after ALL three Strikes have resolved. */
     fun beginPostBattleRemoval() {
         stateCheck(StrikeRow.entries.all { isRowClosed(it) }, context = "BattleGrid") {
             "Cannot finalize Battle while a Strike is unresolved"
@@ -55,8 +56,24 @@ class BattleGrid(
         postBattleRemoval = true
     }
 
+    /**
+     * Only the physical reclaim performed by Doom/Cleanup may remove contents
+     * of a settled row. Other rows remain immutable; the row is never reopened
+     * for placement, targeting, or score changes.
+     */
+    fun <T> withResolvedRowRemoval(row: StrikeRow, operation: () -> T): T {
+        stateCheck(isRowClosed(row) && !postBattleRemoval, context = "BattleGrid") {
+            "Can only reclaim an individually settled Strike: $row"
+        }
+        stateCheck(rowsBeingReclaimed.add(row), context = "BattleGrid") {
+            "Nested reclaim of Strike Row $row"
+        }
+        return try { operation() } finally { rowsBeingReclaimed.remove(row) }
+    }
+
     private fun ensureNotLocked(row: StrikeRow) {
-        stateCheck(!isRowClosed(row) || postBattleRemoval, context = "BattleGrid") {
+        stateCheck(!isRowClosed(row) || postBattleRemoval || row in rowsBeingReclaimed,
+            context = "BattleGrid") {
             "Cannot change resolved Strike Row $row"
         }
     }
@@ -275,7 +292,7 @@ class BattleGrid(
     fun removeDie(die: Die): BattleDiePlacement? {
         val placement = placementOf(die) ?: return null
         ensureNotLocked(placement.row)
-        if (postBattleRemoval) die.unlockAfterBattle()
+        if (postBattleRemoval || placement.row in rowsBeingReclaimed) die.unlockAfterBattle()
         val removed =
             square(placement.playerId, placement.row)
                 .removeDieIdentity(die)
@@ -507,7 +524,7 @@ class BattleGrid(
                 StrikeRow.entries.forEach { row ->
                     ensureNotLocked(row)
                     square(playerId, row).drainDice().forEach { die ->
-                        if (postBattleRemoval) die.unlockAfterBattle()
+                        if (postBattleRemoval || placement.row in rowsBeingReclaimed) die.unlockAfterBattle()
                         add(BattleDiePlacement(playerId, row, die))
                     }
                 }

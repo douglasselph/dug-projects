@@ -91,6 +91,132 @@ class ThreeEngagementBattleTest {
     }
 
     @Test
+    fun `full Wisp deck allows Resolve during an Engagement without double resolution`() {
+        val app = koinApplication { modules(appModules) }
+        try {
+            val koin = app.koin
+            val root = CardDataFiles.dataDirectory()
+            koin.get<PlantCardRegistry>().apply {
+                clear()
+                loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROOT_CARD_LIST, root),
+                    CardDataFiles.dataPath(CardDataFiles.VF_CARD_LIST, root))
+            }.also { koin.get<PlantCardManager>().loadCards(it) }
+            koin.get<WispCardRegistry>().apply {
+                clear()
+                loadFromCsv(CardDataFiles.dataPath(CardDataFiles.WISP_LIST, root))
+            }.also { koin.get<WispCardManager>().loadCards(it) }
+            koin.get<RoundCardRegistry>().apply {
+                clear()
+                loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST, root))
+            }.also { koin.get<RoundCardManager>().loadCards(it) }
+            val round = koin.get<BattleRound>()
+            val pair = PairedBattleOpeningReplay(koin.get<GameFactory>(), koin.get<RoundCoordinator>(), round)
+                .create(GameConfig(
+                    playerDecisionFactories = List(2) { PlayerDecisionFactory.mechanicalControl() },
+                    seed = 20261104L, strategySeed = 20261105L,
+                    roundSetup = GameRoundSetup.standard()
+                ))
+            val game = pair.candidateGame
+            val battle = pair.candidateBattle
+            val starter = EngagementOrderSelector.select(battle, game.players.map { it.id }, StrikeRow.TOP).starter
+            val resolve = koin.get<WispCardManager>().getAllCards().cards.first {
+                it.effect == GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW
+            }
+            battle.player(starter).wisps.add(resolve)
+            var used = false
+            val policy = EngagementPolicy { decision ->
+                val support = decision.legalSupports.firstOrNull { option ->
+                    val action = (option as? dugsolutions.leaf.v35.player.decision.battle.BattleSupportAction.Shared)?.action
+                    (action as? dugsolutions.leaf.v35.player.decision.support.SupportAction.PlayWisp)?.card?.effect ==
+                        GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW
+                }
+                if (!used && decision.row == StrikeRow.TOP && decision.playerId == starter && support != null) {
+                    used = true
+                    EngagementChoice.Support(support)
+                } else EngagementChoice.Pass
+            }
+            val result = ThreeEngagementBattle(round).execute(game, battle, policy)
+            assertTrue(used, "Wisp's Resolve must be a legal Support in Three Engagements")
+            assertEquals(3, result.engagements.size)
+            assertEquals(3, StrikeRow.entries.count { battle.finishedStrike(it) != null })
+            assertEquals(StrikeRow.entries.sumOf { battle.finishedStrike(it)!!.doom.count }, result.doomCount)
+            assertEquals(StrikeRow.entries.sumOf { battle.finishedStrike(it)!!.cleanup.totalDiscardedDice },
+                result.cleanupDiceCount)
+            assertTrue(StrikeRow.entries.all { battle.grid.isRowClosed(it) })
+            assertTrue(battle.grid.diePlacements.isEmpty())
+            assertTrue(battle.grid.critterPlacements.isEmpty())
+            assertTrue(game.players.all { it.dice.hand.isEmpty() })
+            assertEquals(0, battle.player(starter).wisps.cards.cards.count { it === resolve })
+        } finally { app.close() }
+    }
+
+    @Test
+    fun `Wisp Resolve finishes a future row and scheduler skips its turn sequence`() {
+        val app = koinApplication { modules(appModules) }
+        try {
+            val koin = app.koin
+            val root = CardDataFiles.dataDirectory()
+            koin.get<PlantCardRegistry>().apply {
+                clear()
+                loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROOT_CARD_LIST, root),
+                    CardDataFiles.dataPath(CardDataFiles.VF_CARD_LIST, root))
+            }.also { koin.get<PlantCardManager>().loadCards(it) }
+            koin.get<WispCardRegistry>().apply {
+                clear()
+                loadFromCsv(CardDataFiles.dataPath(CardDataFiles.WISP_LIST, root))
+            }.also { koin.get<WispCardManager>().loadCards(it) }
+            koin.get<RoundCardRegistry>().apply {
+                clear()
+                loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST, root))
+            }.also { koin.get<RoundCardManager>().loadCards(it) }
+            val targetMiddleFactory = PlayerDecisionFactory {
+                dugsolutions.leaf.v35.player.decision.DecisionDirector.mechanicalControl().copy(
+                    effect = object : dugsolutions.leaf.v35.player.decision.effect.EffectStrategy by
+                        dugsolutions.leaf.v35.player.decision.mechanical.effect.MechanicalEffectStrategy() {
+                        override fun chooseStrikeRow(
+                            request: dugsolutions.leaf.v35.player.decision.effect.ChooseEffectStrikeRowRequest
+                        ): StrikeRow = request.legalChoices.firstOrNull { it == StrikeRow.MIDDLE }
+                            ?: request.legalChoices.first()
+                    }
+                )
+            }
+            val round = koin.get<BattleRound>()
+            val pair = PairedBattleOpeningReplay(koin.get<GameFactory>(), koin.get<RoundCoordinator>(), round)
+                .create(GameConfig(
+                    playerDecisionFactories = List(2) { targetMiddleFactory },
+                    seed = 20261106L, strategySeed = 20261107L,
+                    roundSetup = GameRoundSetup.standard()
+                ))
+            val game = pair.candidateGame
+            val battle = pair.candidateBattle
+            val starter = EngagementOrderSelector.select(battle, game.players.map { it.id }, StrikeRow.TOP).starter
+            val resolve = koin.get<WispCardManager>().getAllCards().cards.first {
+                it.effect == GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW
+            }
+            battle.player(starter).wisps.add(resolve)
+            var played = false
+            val policy = EngagementPolicy { decision ->
+                val wisp = decision.legalSupports.firstOrNull { option ->
+                    val shared = (option as? dugsolutions.leaf.v35.player.decision.battle.BattleSupportAction.Shared)?.action
+                    (shared as? dugsolutions.leaf.v35.player.decision.support.SupportAction.PlayWisp)?.card?.effect ==
+                        GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW
+                }
+                if (!played && decision.row == StrikeRow.TOP && decision.playerId == starter && wisp != null) {
+                    played = true
+                    EngagementChoice.Support(wisp)
+                } else EngagementChoice.Pass
+            }
+            val result = ThreeEngagementBattle(round).execute(game, battle, policy)
+            assertTrue(played)
+            assertTrue(result.engagements[1].preempted)
+            assertTrue(result.engagements[1].opportunities.isEmpty())
+            assertTrue(result.trace.any { it == "ENGAGEMENT_PREEMPTED,row=MIDDLE,reason=WISP_RESOLVE" })
+            assertEquals(3, StrikeRow.entries.count { battle.finishedStrike(it) != null })
+            assertEquals(3, result.engagements.map { it.resolution.row }.distinct().size)
+        } finally { app.close() }
+    }
+
+    @Test
     fun `closed grid row rejects mutation until post battle reclaim`() {
         val p1 = dugsolutions.leaf.v35.player.Player(
             id = dugsolutions.leaf.v35.player.PlayerId(1),

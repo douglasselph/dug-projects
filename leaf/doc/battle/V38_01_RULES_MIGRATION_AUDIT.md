@@ -4,7 +4,7 @@
 **New rules:** `Leaf_and_Let_Die_v38-01-small(1).pdf`, 23 pages.  
 **New official Plant data:** attached `Cultivation_Cards - Root(6).csv` (12 cards) and `Cultivation_Cards - VF(6).csv` (24 cards).  
 **Audit scope:** repository inspection and card text comparison; no Kotlin source modifications or execution tests yet.  
-**Status:** MIGRATION NOT YET IMPLEMENTED; this package only installs the v38 rulebook and this checklist.
+**Status:** BATTLE ENGINE CHECKPOINT 1 IMPLEMENTED (source patch; Kotlin tests pending local execution). See `V38_01_BATTLE_ENGINE_IMPLEMENTATION.md`. Default/legacy rename, remaining Plant card synchronization, and Compost fallback are still pending.
 
 ## Rule-set identity and intended default
 

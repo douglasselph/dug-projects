@@ -21,7 +21,5 @@ same-size die
 4,Wisp_Upgrade_Die,Overgrowth,4,"Upgrade +2 steps — 
 skip missing sizes; 
 use gained die now",,40,{{ images.victory.url }},{{ images.cloud_overgrowth.url }}
-2,Wisps_Resolve,Wisp's Resolve,2,"<battle/> Battle:
-Resolve a Strike immediately.
-Then return all dice & critters
-from that row.",{{ images.battle.url }},40,{{ images.victory.url }},{{ images.cloud_theft.url }}
+2,Wisps_Resolve,Wisp's Resolve,2,"<battle/> Battle Only: Immediately finish 1 Strike:
+Resolve → Doom → Cleanup.",{{ images.battle.url }},40,{{ images.victory.url }},{{ images.cloud_theft.url }}

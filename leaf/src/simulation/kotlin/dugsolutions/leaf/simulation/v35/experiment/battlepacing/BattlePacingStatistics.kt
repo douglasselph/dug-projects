@@ -57,7 +57,8 @@ data class LastActorObservation(
 )
 
 fun lastActorObservation(engagement: EngagementResult): LastActorObservation {
-    val last = engagement.opportunities.last()
+    val last = engagement.opportunities.lastOrNull()
+        ?: return LastActorObservation(false, false, false, false) // Wisp-preempted row: no last actor.
     val actual = engagement.resolution.winnerIds.toSet()
     val before = projectedWinners(last.beforeTotals)
     return LastActorObservation(
@@ -136,6 +137,9 @@ class BattlePacingCohortSummary {
                 }
             }
         }
-        lastUniqueSharePerBattle.add((lastUniqueWins - uniqueBefore).toDouble() / result.candidate.engagements.size)
+        val engagedRows = result.candidate.engagements.count { it.opportunities.isNotEmpty() }
+        if (engagedRows > 0) {
+            lastUniqueSharePerBattle.add((lastUniqueWins - uniqueBefore).toDouble() / engagedRows)
+        }
     }
 }

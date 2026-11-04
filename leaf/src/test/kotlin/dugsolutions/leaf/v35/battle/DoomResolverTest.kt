@@ -110,6 +110,51 @@ class DoomResolverTest {
         assertTrue(resolver.execute(game, state).dice.isEmpty())
     }
 
+    @Test
+    fun v38DoomTargetsOnlyResolvedRowAndSingleLowestDie() {
+        val smallest = die(4, 1)
+        val topSurvivor = die(8, 4)
+        val futureOne = die(6, 1)
+        val p1 = player(1, smallest, futureOne)
+        val p2 = player(2, topSurvivor)
+        val game = GameEngineTestFixture.game(players = listOf(p1, p2))
+        val state = BattleState(listOf(p1, p2))
+        state.grid.placeDie(p1, StrikeRow.TOP, smallest)
+        state.grid.placeDie(p2, StrikeRow.TOP, topSurvivor)
+        state.grid.placeDie(p1, StrikeRow.MIDDLE, futureOne)
+        state.lockResolvedRow(StrikeRow.TOP)
+
+        val result = resolver.executeRow(game, state, StrikeRow.TOP)
+
+        assertEquals(1, result.count) // No v37 minimum-two rule in v38.
+        assertEquals(listOf(1), result.valuesTrashed)
+        assertTrue(result.dice.single().returnedToGraftBed)
+        assertEquals(1, game.grove.graftBed.count(DieSides.D4))
+        assertTrue(p1.dice.hand.any { it === futureOne }) // Later row untouched.
+        assertTrue(p2.dice.hand.any { it === topSurvivor }) // Cleanup is separate.
+        assertTrue(state.grid.locationOf(futureOne)?.row == StrikeRow.MIDDLE)
+        assertTrue(state.grid.locationOf(topSurvivor)?.row == StrikeRow.TOP)
+    }
+
+    @Test
+    fun v38DoomTrashesEveryDieTiedForMinimumWithinOneRow() {
+        val lowA = die(6, 2)
+        val lowB = die(8, 2)
+        val high = die(12, 9)
+        val p1 = player(1, lowA, high)
+        val p2 = player(2, lowB)
+        val game = GameEngineTestFixture.game(players = listOf(p1, p2))
+        val state = BattleState(listOf(p1, p2))
+        state.grid.placeDie(p1, StrikeRow.TOP, lowA)
+        state.grid.placeDie(p2, StrikeRow.TOP, lowB)
+        state.grid.placeDie(p1, StrikeRow.TOP, high)
+        state.lockResolvedRow(StrikeRow.TOP)
+
+        assertEquals(2, resolver.executeRow(game, state, StrikeRow.TOP).count)
+        assertTrue(p1.dice.hand.any { it === high })
+        assertEquals(1, state.grid.diePlacements.size)
+    }
+
     private fun player(id: Int, vararg dice: Die): Player =
         Player(
             id = PlayerId(id),

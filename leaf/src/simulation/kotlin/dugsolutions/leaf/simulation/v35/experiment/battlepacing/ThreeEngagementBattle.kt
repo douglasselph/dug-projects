@@ -2,12 +2,13 @@ package dugsolutions.leaf.simulation.v35.experiment.battlepacing
 
 import dugsolutions.leaf.v35.battle.BattleState
 import dugsolutions.leaf.v35.battle.StrikeResolution
-import dugsolutions.leaf.v35.battle.StrikeResolver
+import dugsolutions.leaf.v35.battle.StrikeFinishCoordinator
 import dugsolutions.leaf.v35.battle.domain.BattleGridSnapshot
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.game.Game
-import dugsolutions.leaf.v35.game.operation.WoundResolver
+import dugsolutions.leaf.v35.game.operation.RefreshResolver
+import dugsolutions.leaf.v35.game.round.battle.BattleCleanupCoordinator
 import dugsolutions.leaf.v35.game.round.battle.BattleMainActionStage
 import dugsolutions.leaf.v35.game.round.battle.BattleDecisionPlantSnapshot
 import dugsolutions.leaf.v35.game.round.battle.BattleDecisionResourceSnapshot
@@ -65,7 +66,7 @@ object SupportSpendingEngagementPolicy : EngagementPolicy {
     }
 }
 
-/** Explicit deck exclusion on BOTH A and B arms, before the first Cultivation round. */
+/** Historical A/B cohort helper only. Normal v38 uses the unmodified Wisp deck. */
 object BattlePacingWispDeck {
     fun withoutResolve(manager: WispCardManager, seed: Long): List<WispCard> {
         val cards = manager.getAllCards().cards.filterNot {
@@ -77,21 +78,15 @@ object BattlePacingWispDeck {
     }
 }
 
-/** Snapshot uses reference identity, not Die.equals (which compares current value). */
+/** A finished Strike is now empty, with its scoring snapshot frozen in BattleState. */
 private class LockedStrikeEvidence(battle: BattleState, val row: StrikeRow) {
-    private val entries = battle.grid.playerIdsInGridOrder.map { id ->
-        val square = battle.grid.square(id, row)
-        Triple(id, square.dice.map { it to it.value }, square.critters.toList())
-    }
+    private val frozen = requireNotNull(battle.frozenResolvedRow(row))
 
     fun verify(battle: BattleState) {
-        check(battle.grid.isRowClosed(row)) { "Locked Strike reopened: $row" }
-        entries.forEach { (id, dice, critters) ->
-            val square = battle.grid.square(id, row)
-            check(square.dice.size == dice.size && square.dice.zip(dice).all { (actual, expected) ->
-                actual === expected.first && actual.value == expected.second
-            }) { "Locked Strike dice changed: row=$row player=${id.value}" }
-            check(square.critters == critters) { "Locked Strike Critters changed: row=$row player=${id.value}" }
+        check(battle.grid.isRowClosed(row)) { "Finished Strike reopened: $row" }
+        check(battle.frozenResolvedRow(row) === frozen) { "Finished Strike snapshot changed: $row" }
+        check(battle.grid.playerIdsInGridOrder.all { battle.grid.square(it, row).isEmpty }) {
+            "Finished Strike not cleared: $row"
         }
     }
 }
@@ -147,19 +142,22 @@ data class EngagementResult(
     val actions: List<EngagementActionRecord>,
     val resolution: StrikeResolution,
     val initialTotals: Map<PlayerId, Int>,
-    val opportunities: List<EngagementOpportunity>
+    val opportunities: List<EngagementOpportunity>,
+    /** True when a prior Wisp finished this Strike before its normal Engagement. */
+    val preempted: Boolean = false
 )
 
 data class ThreeEngagementBattleResult(
     val engagements: List<EngagementResult>,
     val doomCount: Int,
     val cleanupDiceCount: Int,
-    val trace: List<String>
+    val trace: List<String>,
+    val returnedCrittersCount: Int = 0
 )
 
 /**
- * Research-only Candidate B. Called on a real, independently replayed Game/Battle opening.
- * The existing BattleRound remains the v37.03 control implementation.
+ * v38 Three Engagements. Called on an independently replayed Game/Battle opening.
+ * The existing BattleRound remains the selectable legacy whole-Battle implementation.
  *
  * All chosen actions run through the canonical legal generator and executors;
  * violations of locked-row invariants fail the experiment rather than emit invalid outcomes.
@@ -177,16 +175,20 @@ class ThreeEngagementBattle(
         val rawCard = requireNotNull(game.currentRound)
         val card = game.config.roundValues.cardFor(rawCard)
         require(game.players.map { it.id }.toSet() == battle.playerIdsInBattleOrder.toSet())
-        check(game.grove.wispDeck.cards.cards.none {
-            it.effect == GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW
-        } && game.players.all { player -> player.wisps.cards.cards.none {
-            it.effect == GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW
-        } }) { "Candidate B requires a Resolve-free deck from game creation" }
+        battle.activateThreeEngagements()
+        // Full v38 Wisp deck is legal. Historical A/B runners can still opt into
+        // BattlePacingWispDeck.withoutResolve() for their old controlled cohort.
 
         val actions = battleRound.researchActionCoordinator(game, battle)
         val normalUsed = game.players.associate { it.id to 0 }.toMutableMap()
         val locked = mutableListOf<LockedStrikeEvidence>()
         val trace = mutableListOf<String>()
+        fun verifyFinished() {
+            StrikeRow.entries.filter { battle.finishedStrike(it) != null }.forEach { settled ->
+                if (locked.none { it.row == settled }) locked += LockedStrikeEvidence(battle, settled)
+            }
+            locked.forEach { it.verify(battle) }
+        }
         fun currentTotals(row: StrikeRow): Map<PlayerId, Int> =
             BattleGridSnapshot.row(battle, row).squares
                 .filterNot { it.withdrawn }
@@ -211,7 +213,17 @@ class ThreeEngagementBattle(
             )
         }
         val engagements = StrikeRow.entries.map { row ->
-            locked.forEach { it.verify(battle) }
+            verifyFinished()
+            if (battle.grid.isRowClosed(row)) {
+                val finished = requireNotNull(battle.finishedStrike(row)) {
+                    "Strike $row was closed without full Resolve/Doom/Cleanup"
+                }
+                trace += "ENGAGEMENT_PREEMPTED,row=$row,reason=WISP_RESOLVE"
+                return@map EngagementResult(
+                    EngagementOrderSelector.selectSettled(battle, game.players.map { it.id }, row),
+                    emptyList(), finished.resolution, emptyMap(), emptyList(), preempted = true
+                )
+            }
             val selected = EngagementOrderSelector.select(battle, game.players.map { it.id }, row)
             val shifted = starterRotation % selected.clockwiseActors.size
             val rotated = selected.clockwiseActors.drop(shifted) + selected.clockwiseActors.take(shifted)
@@ -223,6 +235,7 @@ class ThreeEngagementBattle(
             val initialTotals = currentTotals(row)
             val opportunities = mutableListOf<EngagementOpportunity>()
             for ((position, id) in order.clockwiseActors.withIndex()) {
+                if (battle.grid.isRowClosed(row)) break // Wisp finished active Strike early
                 val before = currentTotals(row)
                 val opportunityBeforeRows = gridSnapshot()
                 val opportunityBeforePlants = plantSnapshot()
@@ -240,7 +253,7 @@ class ThreeEngagementBattle(
                 var normalThisTurn = false
                 var supportsThisTurn = 0
                 var actionCount = 0
-                while (true) {
+                while (!battle.grid.isRowClosed(row)) {
                     val remaining = 2 - normalUsed.getValue(id)
                     val mains = if (remaining > 0 && !normalThisTurn) {
                         actions.researchLegalMains(game, player, card, battle)
@@ -286,7 +299,7 @@ class ThreeEngagementBattle(
                             supportsThisTurn++
                         }
                     }
-                    locked.forEach { it.verify(battle) }
+                    verifyFinished()
                     steps += EngagementDecisionStep(
                         choice = next, legalMainCount = mains.size, legalSupportCount = supports.size,
                         beforeRows = stepBeforeRows, afterRows = gridSnapshot(),
@@ -318,20 +331,24 @@ class ThreeEngagementBattle(
                     decisionSteps = steps.toList()
                 )
             }
-            val resolution = StrikeResolver(WoundResolver(
-                grove = game.grove, chronicle = game.chronicle,
+            val finished = battle.finishedStrike(row) ?: StrikeFinishCoordinator().finish(
+                game, battle, row,
                 decisionContext = { player -> battleRound.researchDecisionContext(game, player, battle) }
-            )).resolveRow(game, battle, row)
-            battle.lockResolvedRow(row, game.assetProvenance)
-            locked += LockedStrikeEvidence(battle, row)
-            trace += "ENGAGEMENT_RESOLVE,row=$row,winners=${resolution.winnerIds.joinToString("|") { it.value.toString() }},wounds=${resolution.wounds.size},vpEach=${resolution.vpPerWinner}"
+            )
+            verifyFinished()
+            val resolution = finished.resolution
+            trace += "ENGAGEMENT_RESOLVE,row=$row,winners=${resolution.winnerIds.joinToString("|") { it.value.toString() }},wounds=${resolution.wounds.size},vpEach=${resolution.vpPerWinner},doom=${finished.doom.count},discard=${finished.cleanup.totalDiscardedDice}"
             EngagementResult(order, records.toList(), resolution, initialTotals, opportunities.toList())
         }
-        locked.forEach { it.verify(battle) }
-        // Post-resolution removal permits Doom and Cleanup, never another action.
-        battle.grid.beginPostBattleRemoval()
-        val doom = battleRound.executeDoom(game, battle)
-        val cleanup = battleRound.executeCleanup(game, battle)
-        return ThreeEngagementBattleResult(engagements, doom.count, cleanup.totalDiscardedDice, trace)
+        verifyFinished()
+        val completed = StrikeRow.entries.map { row ->
+            requireNotNull(battle.finishedStrike(row)) { "Strike $row was not completed" }
+        }
+        BattleCleanupCoordinator(RefreshResolver(game.chronicle)).executeFinalRefresh(game, battle)
+        return ThreeEngagementBattleResult(
+            engagements, completed.sumOf { it.doom.count },
+            completed.sumOf { it.cleanup.totalDiscardedDice }, trace,
+            completed.sumOf { it.cleanup.totalReturnedCritters }
+        )
     }
 }

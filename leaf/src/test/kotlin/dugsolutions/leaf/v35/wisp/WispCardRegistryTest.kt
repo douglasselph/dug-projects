@@ -127,6 +127,7 @@ class WispCardRegistryTest {
         assertEquals(false, quake.playImmediately)
         assertEquals(false, quake.battleOnly)
         assertEquals("Wisp's Resolve", resolve.title)
+        assertEquals(GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW, resolve.effect)
         assertEquals(true, resolve.battleOnly)
         assertEquals(true, pollenTheft.battleOnly)
         assertNull(registry.getCard("Wisp_Reckoning"))
