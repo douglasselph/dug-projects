@@ -217,6 +217,155 @@ class ThreeEngagementBattleTest {
     }
 
     @Test
+    fun `two Resolve Wisps finish two future Strikes in one capped Support turn`() {
+        val app = koinApplication { modules(appModules) }
+        try {
+            val koin = app.koin
+            val root = CardDataFiles.dataDirectory()
+            koin.get<PlantCardRegistry>().apply {
+                clear()
+                loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROOT_CARD_LIST, root),
+                    CardDataFiles.dataPath(CardDataFiles.VF_CARD_LIST, root))
+            }.also { koin.get<PlantCardManager>().loadCards(it) }
+            koin.get<WispCardRegistry>().apply {
+                clear()
+                loadFromCsv(CardDataFiles.dataPath(CardDataFiles.WISP_LIST, root))
+            }.also { koin.get<WispCardManager>().loadCards(it) }
+            koin.get<RoundCardRegistry>().apply {
+                clear()
+                loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST, root))
+            }.also { koin.get<RoundCardManager>().loadCards(it) }
+
+            val chooseFutureRow = PlayerDecisionFactory {
+                dugsolutions.leaf.v35.player.decision.DecisionDirector.mechanicalControl().copy(
+                    effect = object : dugsolutions.leaf.v35.player.decision.effect.EffectStrategy by
+                        dugsolutions.leaf.v35.player.decision.mechanical.effect.MechanicalEffectStrategy() {
+                        override fun chooseStrikeRow(
+                            request: dugsolutions.leaf.v35.player.decision.effect.ChooseEffectStrikeRowRequest
+                        ): StrikeRow = request.legalChoices.firstOrNull { it == StrikeRow.MIDDLE }
+                            ?: request.legalChoices.firstOrNull { it == StrikeRow.BOTTOM }
+                            ?: request.legalChoices.first()
+                    }
+                )
+            }
+            val round = koin.get<BattleRound>()
+            val pair = PairedBattleOpeningReplay(koin.get<GameFactory>(), koin.get<RoundCoordinator>(), round)
+                .create(GameConfig(
+                    playerDecisionFactories = List(2) { chooseFutureRow },
+                    seed = 20261108L, strategySeed = 20261109L,
+                    roundSetup = GameRoundSetup.standard()
+                ))
+            val game = pair.candidateGame
+            val battle = pair.candidateBattle
+            val starter = EngagementOrderSelector.select(battle, game.players.map { it.id }, StrikeRow.TOP).starter
+            val resolve = koin.get<WispCardManager>().getAllCards().cards.single {
+                it.effect == GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW
+            }
+            assertTrue(resolve.quantity >= 2, "Official v38 deck must supply two copies")
+            repeat(2) { battle.player(starter).wisps.add(resolve) }
+            var played = 0
+            val policy = EngagementPolicy { decision ->
+                val wisp = decision.legalSupports.firstOrNull { option ->
+                    val shared = (option as? dugsolutions.leaf.v35.player.decision.battle.BattleSupportAction.Shared)?.action
+                    (shared as? dugsolutions.leaf.v35.player.decision.support.SupportAction.PlayWisp)?.card?.effect ==
+                        GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW
+                }
+                if (played < 2 && decision.row == StrikeRow.TOP && decision.playerId == starter && wisp != null) {
+                    played++
+                    EngagementChoice.Support(wisp)
+                } else EngagementChoice.Pass
+            }
+            val result = ThreeEngagementBattle(round).execute(game, battle, policy)
+            assertEquals(2, played)
+            assertEquals(2, result.engagements.first().actions.count {
+                it.playerId == starter && it.choice is EngagementChoice.Support
+            })
+            assertTrue(result.engagements[1].preempted)
+            assertTrue(result.engagements[2].preempted)
+            assertTrue(result.engagements[1].opportunities.isEmpty())
+            assertTrue(result.engagements[2].opportunities.isEmpty())
+            assertEquals(3, StrikeRow.entries.count { battle.finishedStrike(it) != null })
+            assertEquals(3, result.engagements.map { it.resolution.row }.distinct().size)
+            assertEquals(3, StrikeRow.entries.count { battle.grid.isRowClosed(it) })
+            assertEquals(StrikeRow.entries.sumOf { battle.finishedStrike(it)!!.doom.count }, result.doomCount)
+            assertTrue(battle.grid.diePlacements.isEmpty())
+            assertTrue(game.players.all { it.dice.hand.isEmpty() })
+            assertEquals(0, battle.player(starter).wisps.cards.cards.count { it == resolve })
+        } finally { app.close() }
+    }
+
+    @Test
+    fun `Sunlight funds extra Main inside one Support slot without spending normal Main`() {
+        val app = koinApplication { modules(appModules) }
+        try {
+            val koin = app.koin
+            val root = CardDataFiles.dataDirectory()
+            koin.get<PlantCardRegistry>().apply {
+                clear()
+                loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROOT_CARD_LIST, root),
+                    CardDataFiles.dataPath(CardDataFiles.VF_CARD_LIST, root))
+            }.also { koin.get<PlantCardManager>().loadCards(it) }
+            koin.get<WispCardRegistry>().apply {
+                clear()
+                loadFromCsv(CardDataFiles.dataPath(CardDataFiles.WISP_LIST, root))
+            }.also { koin.get<WispCardManager>().loadCards(it) }
+            koin.get<RoundCardRegistry>().apply {
+                clear()
+                loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST, root))
+            }.also { koin.get<RoundCardManager>().loadCards(it) }
+            val round = koin.get<BattleRound>()
+            val pair = PairedBattleOpeningReplay(koin.get<GameFactory>(), koin.get<RoundCoordinator>(), round)
+                .create(GameConfig(
+                    playerDecisionFactories = List(2) { PlayerDecisionFactory.mechanicalControl() },
+                    seed = 20261110L, strategySeed = 20261111L,
+                    roundSetup = GameRoundSetup.standard()
+                ))
+            val game = pair.candidateGame
+            val battle = pair.candidateBattle
+            val starter = EngagementOrderSelector.select(battle, game.players.map { it.id }, StrikeRow.TOP).starter
+            val player = battle.player(starter)
+            // Ensure exactly one available token, independently of earlier Cultivation.
+            val beforeSunlight = player.tokens.sunlightCount
+            assertTrue(dugsolutions.leaf.v35.game.operation.SunlightTokenResolver.gain(game, player))
+            val beforeEvents = game.chronicle.entries
+                .filterIsInstance<dugsolutions.leaf.v35.chronicle.domain.GameEntry.SunlightMainAction>().size
+            var sunlightUsed = false
+            var normalUsed = false
+            val policy = EngagementPolicy { decision ->
+                if (decision.row != StrikeRow.TOP || decision.playerId != starter) {
+                    EngagementChoice.Pass
+                } else {
+                    val sunlight = decision.legalSupports
+                        .filterIsInstance<dugsolutions.leaf.v35.player.decision.battle.BattleSupportAction.UseSunlight>()
+                        .firstOrNull { it.mainAction == dugsolutions.leaf.v35.player.decision.battle.BattleMainAction.Draw }
+                    when {
+                        !sunlightUsed && sunlight != null -> {
+                            sunlightUsed = true
+                            EngagementChoice.Support(sunlight)
+                        }
+                        !normalUsed && dugsolutions.leaf.v35.player.decision.battle.BattleMainAction.Draw in decision.legalMains -> {
+                            normalUsed = true
+                            EngagementChoice.Main(dugsolutions.leaf.v35.player.decision.battle.BattleMainAction.Draw)
+                        }
+                        else -> EngagementChoice.Pass
+                    }
+                }
+            }
+            val result = ThreeEngagementBattle(round).execute(game, battle, policy)
+            assertTrue(sunlightUsed)
+            assertTrue(normalUsed)
+            val starterActions = result.engagements.first().actions.filter { it.playerId == starter }
+            assertEquals(1, starterActions.count { it.choice is EngagementChoice.Support })
+            assertEquals(1, starterActions.count { it.choice is EngagementChoice.Main })
+            assertEquals(1, starterActions.last().normalMainsRemainingAfter,
+                "Sunlight does not consume either normal Main token")
+            assertEquals(beforeSunlight, player.tokens.sunlightCount)
+            assertEquals(beforeEvents + 1, game.chronicle.entries
+                .filterIsInstance<dugsolutions.leaf.v35.chronicle.domain.GameEntry.SunlightMainAction>().size)
+        } finally { app.close() }
+    }
+
+    @Test
     fun `closed grid row rejects mutation until post battle reclaim`() {
         val p1 = dugsolutions.leaf.v35.player.Player(
             id = dugsolutions.leaf.v35.player.PlayerId(1),

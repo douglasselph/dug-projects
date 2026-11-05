@@ -1,6 +1,8 @@
 package dugsolutions.leaf.v35.effect.special
 
 import dugsolutions.leaf.v35.battle.BattleState
+import dugsolutions.leaf.v35.battle.StrikeFinishCoordinator
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.EffectTestFixture
@@ -45,6 +47,49 @@ class WispquakeEffectTest {
         assertEquals(7, actorRerolled.value)
         assertEquals(9, opponentRerolled.value)
     }
+    @Test
+    fun battleWispquakeAfterRealStrikeCleanupOnlyRerollsRemainingHandDice() {
+        val doomedTop = SequenceEffectDie(8, 5, 1)
+        val keptMiddle = SequenceEffectDie(6, 4, 2)
+        val discardedTop = SequenceEffectDie(10, 7, 1)
+        val rerolledMiddle = SequenceEffectDie(6, 3, 6)
+        val actor = EffectTestFixture.player(
+            id = 1, hand = listOf(doomedTop, keptMiddle),
+            effectStrategy = FirstEffectChoiceStrategy()
+        )
+        val opponent = EffectTestFixture.player(
+            id = 2, hand = listOf(discardedTop, rerolledMiddle)
+        )
+        val game = EffectTestFixture.game(actor, opponent)
+        val battle = BattleState(listOf(actor, opponent))
+        battle.grid.placeDie(actor, StrikeRow.TOP, doomedTop)
+        battle.grid.placeDie(actor, StrikeRow.MIDDLE, keptMiddle)
+        battle.grid.placeDie(opponent, StrikeRow.TOP, discardedTop)
+        battle.grid.placeDie(opponent, StrikeRow.MIDDLE, rerolledMiddle)
+        battle.activateThreeEngagements()
+        val finished = StrikeFinishCoordinator().finish(game, battle, StrikeRow.TOP) {
+            DecisionContext.EMPTY
+        }
+        assertEquals(listOf(5), finished.doom.dice.map { it.value })
+        val frozen = battle.frozenResolvedRow(StrikeRow.TOP)
+        val request = EffectTestFixture.request(
+            game, actor, GameEffect.REROLL_ALL_PLAYERS_DICE_KEEP_ONE_OWN,
+            source = GameEffectSource.Wisp(EffectTestFixture.wispquake())
+        ).copy(phase = GameEffectPhase.BATTLE, battleState = battle)
+
+        WispquakeEffect().execute(request, GameEffectExecutor { })
+
+        assertEquals(5, doomedTop.value, "Doomed dice are not rerolled")
+        assertEquals(7, discardedTop.value, "Already reclaimed dice are not rerolled")
+        assertEquals(4, keptMiddle.value, "One current Hand die may be kept")
+        assertEquals(6, rerolledMiddle.value, "Open-row opponents still reroll")
+        assertEquals(frozen, battle.frozenResolvedRow(StrikeRow.TOP))
+        assertEquals(null, battle.grid.locationOf(doomedTop))
+        assertEquals(null, battle.grid.locationOf(discardedTop))
+        assertEquals(StrikeRow.MIDDLE, battle.grid.locationOf(keptMiddle)?.row)
+        assertEquals(StrikeRow.MIDDLE, battle.grid.locationOf(rerolledMiddle)?.row)
+    }
+
     @Test
     fun battleWispquakeRerollsOnlyDiceInUnresolvedRows() {
         val lockedActor = SequenceEffectDie(6, 4, 6)

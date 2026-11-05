@@ -8,13 +8,14 @@ This checkpoint adds a **simulationTest** suite covering every supported player 
 (7 Cultivation + 3 Battle = 10 Rounds) **twice** with the same mechanical and strategy
 seeds, freshly constructing the mutable Game each time within a reused application.
 
-**Do not confuse created tests with executed tests.** The new full-game suite was **not
-executed in the packaging environment**: the Gradle 8.13 distribution is absent,
-and `services.gradle.org` is unreachable. The first task on Ubuntu is to run the
-commands below and address any reported failures before treating the v38 engine as
-regression-verified. A standalone Kotlin compile/run of `BattleStructureSettings`
-did pass (missing file default, both explicit names, legacy name rejected); that
-is a configuration smoke test **only**, not full-game evidence.
+**Completed evidence (November 5, 2026):** Ubuntu verification archive
+`leaf-v38-verification-20261105-135919-2148522.tgz` (HEAD `3304fa6f1351376d249ab2be443a44532a8ed3cd`)
+contains passing targeted/full JUnit results and both Gradle exit codes 0:
+6/6 targeted dynamic cases, 1740/1740 unit tests, 88/88 integration tests, and
+242/243 simulation tests. The only skip is `BaselineLongRunMemoryTest`,
+an intentionally opt-in 3,000-game stress test. The strict checker accepts **only**
+that exact exceptional skip; all other skipped/failed/missing cases remain a gate failure.
+The replay/ruleset evidence is accepted as **V38-4 PASS**; this is not coverage of every special card interaction.
 
 ## Matrix
 

@@ -1,6 +1,6 @@
 # Leaf & Let Die - Active Research and Engineering Tasks
 
-**Status date:** November 4, 2026
+**Status date:** November 5, 2026
 
 This is the **active top-level backlog**. It is intentionally shorter than the many historical phase/checkpoint documents under `doc/`.
 
@@ -15,12 +15,18 @@ The current source contains the following **implemented** v38 changes. They stil
 | **V38-1** | Per-Strike **Resolve → Doom → Cleanup**, lowest-value-only Doom, row-only dice/Critter return, final Refresh, Wisp's Resolve early finish | **Implemented in source** with focused tests; full regression results not supplied in this archive |
 | **V38-2** | Make `THREE_ENGAGEMENTS` the default and preserve `LEGACY_WHOLE_BATTLE` explicitly | **Implemented**, including missing-file fallback and rejection of old `CANONICAL`; production-only runtime remains limited |
 | **V38-3** | Synchronize two official Plant CSVs, 14 converter additions, Wisp's Resolve definition and Compost unavailable-upgrade Trash fallback | **Implemented**; prior focused converter/valuation smoke checks passed, but complete Gradle regression verification is not recorded here |
-| **V38-4** | Execute deterministic **2/3/4-player × both Battle structures** 3/2/2 full-game matrix (two identical-seed runs each), plus `test integrationTest simulationTest` | **TESTS STRENGTHENED / EXECUTION UNVERIFIED**. `bin/verify_v38_full_game` now runs both Gradle gates, checks exact JUnit case coverage and saves logs/XML/provenance into one `~/Downloads` archive, including on failure. Its Python checker passes six unit tests; Gradle execution remains required on Ubuntu. |
-| **V38-5** | Audit special interactions not proved by the matrix (Wisp's Resolve mid-action and multiple uses; Wispquake locked rows; Pollen Theft ownership; Root & Scoot withdrawal; Sunlight action accounting; per-row cleanup/Refresh and other card targeting) | **OPEN** — use legal deterministic fixtures and v38 rulebook, not aggregate win rates |
+| **V38-4** | Execute deterministic **2/3/4-player × both Battle structures** 3/2/2 full-game matrix (two identical-seed runs each), plus `test integrationTest simulationTest` | **PASS — November 5 Ubuntu archive reviewed.** All six targeted cases, 1,740 unit tests, 88 integration tests and 242 simulation tests passed; Gradle returned zero for both runs. One explicitly opt-in 3,000-game memory stress test was skipped by design. The strict checker now permits *only* that named skip. Evidence: `leaf-v38-verification-20261105-135919-2148522.tgz`, git `3304fa6f1351376d249ab2be443a44532a8ed3cd`. |
+| **V38-5** | Audit special interactions not proved by the matrix (Wisp's Resolve mid-action and multiple uses; Wispquake locked rows; Pollen Theft ownership; Root & Scoot withdrawal; Sunlight action accounting; per-row cleanup/Refresh and other card targeting) | **TARGETED TESTS ADDED / AWAITING UBUNTU EXECUTION.** New cross-effect/Strike-finish tests, two-Resolve-Wisp and Sunlight scheduling tests, and a real settled-row Wispquake test complement existing coverage. Run `bin/verify_v38_special_interactions`, upload its `.tgz`, close only after passing and reviewing any remaining card-targeting gaps. See `doc/battle/V38_01_SPECIAL_INTERACTION_AUDIT.md`. |
 | **V38-6** | Decide whether/how to move the adopted scheduler into `src/main/` so a main-only runtime can execute the default | **OPEN** architectural limitation; never silently fall back to legacy |
 | **V38-7** | Record rulebook/CSV/ruleset fingerprints and distinguish archived v37 cohorts from new v38 research | **OPEN research provenance gate** for new comparative studies; existing historical R3A adapters intentionally force legacy |
 
-**Run next on Ubuntu from the repository root** (recommended single-command evidence collection):
+**V38-4 completed; run the V38-5 focused gate next on Ubuntu from the repository root:**
+
+```bash
+bin/verify_v38_special_interactions
+```
+
+**To repeat the full v38 regression evidence collection** (optional after code changes):
 
 ```bash
 bin/verify_v38_full_game
