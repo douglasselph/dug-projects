@@ -14,9 +14,9 @@ python3 -m unittest discover -s bin/tests -p 'test_plant_question*.py' -v
 
 ## Execution adapter and critical limitations
 
-`--run-r3a-official --condition official --players 2` invokes the preserved R3A script **only when** the question's selected stages are exactly `targeted_discovery`, `unrestricted_discovery`, `heldout_evaluation`; rules are LEGACY_WHOLE_BATTLE, policies are Buy/Human with full seat rotation and no frozen weights; and the explicitly declared Grove exactly equals the legacy R3A context-zero Grove. The caller must use an intentionally restricted question file satisfying these conditions; the two full research example files do **not** qualify because they request additional stages and player counts. Failing the gate produces an error before any build or game. No hidden stages or alternative Groves are substituted.
+`--run-r3a-official --condition official --players 2` invokes the preserved R3A script **only when** the question's selected stages are exactly `targeted_discovery`, `unrestricted_discovery`, `heldout_evaluation`; the requested ruleset is explicitly `LEGACY_WHOLE_BATTLE` or `THREE_ENGAGEMENTS` (v38 support awaiting JVM pilot), policies are Buy/Human with full seat rotation and no frozen weights; and the explicitly declared Grove exactly equals the legacy R3A context-zero Grove. The caller must use an intentionally restricted question file satisfying these conditions; the two full research example files do **not** qualify because they request additional stages and player counts. Failing the gate produces an error before any build or game. No hidden stages or alternative Groves are substituted.
 
-The legacy R3A adapter owns the compile-once/direct-Java process model, its separate training/evaluation JVMs, locks, checkpoint/resume validation, manifests, progress/ETA, and verified `.tgz` archive. The launcher verifies held-out evidence in that archive and copies it to `~/Downloads`, printing `UPLOAD THIS FILE:`. Do not claim this adapter executes target-seat effect isolation, cost changes, noncanonical Battle, multiplayer, frozen comparisons, adapted comparisons or countersearch. Those require explicit implementations and verification in A1.5. A1.4 remains **partially complete** until the full planned execution path works; status is deliberately not overstated.
+The legacy R3A adapter owns the compile-once/direct-Java process model, its separate training/evaluation JVMs, locks, checkpoint/resume validation, manifests, progress/ETA, and verified `.tgz` archive. The launcher verifies held-out evidence in that archive and copies it to `~/Downloads`, printing `UPLOAD THIS FILE:`. Do not claim this adapter executes target-seat effect isolation, cost changes, unsupported Battle variants, multiplayer, frozen comparisons, adapted comparisons or countersearch. Those require explicit implementations and verification in A1.5. A1.4 remains **partially complete** until the full planned execution path works; status is deliberately not overstated.
 
 Potential research interpretation issue: the R3A training and evaluation seed derivation is preserved, but its historical CLI seeds do not natively distinguish the specification's held-out seed from the evolutionary training seed. Mapping the declared holdout value to R3A's evolution seed is merely a compatibility mapping, not independent held-out RNG isolation certification. Verify that before making inferential claims.
 
@@ -99,11 +99,12 @@ is produced. Countersearch in this slice tests the strongest available
 *official* specialist, not every adapted variant. Additional repetitions,
 policy diversity, countersearch against the adapted specialist, full
 condition coverage, and 3-/4-player cohorts remain for later A1.5/A2.
-The new Kotlin execution path has not been run in this packaging environment.
+The Kotlin stage adapter and newly selectable v38 execution path have not been run in this packaging environment.
 
-**Ruleset migration (v38):** Historical R3A execution is pinned to
-`LEGACY_WHOLE_BATTLE` in both training and evaluation code, regardless of the
-current `game-rules-current.properties` default. The generic research question
-validator accepts `THREE_ENGAGEMENTS` for future studies, but the historical
-R3A/paired/countersearch adapters reject it until a v38-capable adapter is
-implemented. Do not relabel pre-v38 research as v38 evidence.
+**Ruleset migration (v38):** The R3A, paired and adapted/countersearch engines now pass the explicitly declared `--battle-structure` into both Kotlin Buy training and held-out evaluation. The direct historical R3A script defaults to `LEGACY_WHOLE_BATTLE`, while the generic question always selects the declared structure. New v38 integration is unverified until the Ubuntu pilot passes. Do not relabel pre-v38 research as v38 evidence.
+
+## V38 explicit ruleset and provenance (November 5 engineering patch)
+
+The adopted `THREE_ENGAGEMENTS` Battle structure is now wired through the R3A Kotlin engine's training and evaluation paths via `--battle-structure`. The R3A direct-script default remains `LEGACY_WHOLE_BATTLE` for historical compatibility; the reusable question runner always passes the requested structure explicitly. Output roots are namespaced by Battle structure; research manifests now include ruleset/content fingerprints (v38-01 rulebook, canonical CSVs, optional research inputs, Kotlin sources and launchers).
+
+**Do not** conclude that the older descriptions above saying “legacy only” apply after this patch *passes Ubuntu validation*. Before a passing pilot, the v38 support is implemented but not empirically verified. Run `bin/verify_v38_question_runner` and upload its result archive. The two example `*-v38.json` questions are minimal integration pilots, not balance studies. See `V38_07_RESEARCH_PROVENANCE_AND_PILOT.md`.

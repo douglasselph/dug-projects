@@ -17,14 +17,14 @@ The current source contains the following **implemented** v38 changes. They stil
 | **V38-3** | Synchronize two official Plant CSVs, 14 converter additions, Wisp's Resolve definition and Compost unavailable-upgrade Trash fallback | **Implemented**; prior focused converter/valuation smoke checks passed, but complete Gradle regression verification is not recorded here |
 | **V38-4** | Execute deterministic **2/3/4-player × both Battle structures** 3/2/2 full-game matrix (two identical-seed runs each), plus `test integrationTest simulationTest` | **PASS — November 5 Ubuntu archive reviewed.** All six targeted cases, 1,740 unit tests, 88 integration tests and 242 simulation tests passed; Gradle returned zero for both runs. One explicitly opt-in 3,000-game memory stress test was skipped by design. The strict checker now permits *only* that named skip. Evidence: `leaf-v38-verification-20261105-135919-2148522.tgz`, git `3304fa6f1351376d249ab2be443a44532a8ed3cd`. |
 | **V38-5** | Audit special interactions not proved by the matrix (Wisp's Resolve mid-action and multiple uses; Wispquake locked rows; Pollen Theft ownership; Root & Scoot withdrawal; Sunlight action accounting; per-row cleanup/Refresh and other card targeting) | **PASS — November 5 Ubuntu evidence reviewed.** Both focused Gradle runs succeeded; 16 tests passed (Wispquake 3, Wisp's Resolve 4, cross-effect 2, Engagement scheduler 7), zero failed/skipped. Evidence: `leaf-v38-interactions-20261105-141414-2152905.tgz`. This closes the focused V38-5 acceptance, not a claim of exhaustive all-card interactions. See `doc/battle/V38_01_SPECIAL_INTERACTION_AUDIT.md`. |
-| **V38-6** | Decide whether/how to move the adopted scheduler into `src/main/` so a main-only runtime can execute the default | **PATCH PREPARED / AWAITING UBUNTU VERIFICATION.** Move scheduler and its Human decision adapter to `src/main` (preserving public names for legacy research), wire the executor directly through `GameModule`, remove runtime ServiceLoader dependency, and prove main-only test classpath can complete a Battle. Run `bin/install_v38_main_runtime` after extracting the ZIP, then `bin/verify_v38_main_runtime`. See `doc/battle/V38_06_MAIN_RUNTIME_MIGRATION.md`. Do not close until tests pass. |
-| **V38-7** | Record rulebook/CSV/ruleset fingerprints and distinguish archived v37 cohorts from new v38 research | **OPEN research provenance gate** for new comparative studies; existing historical R3A adapters intentionally force legacy |
+| **V38-6** | Move Three Engagements scheduler into `src/main/` and verify a main-only runtime executes the adopted default | **PASS — November 5 Ubuntu evidence reviewed.** Main-only tests 2, Battle routing 4, full-game default routing 1, full-game matrix 6, scheduler 7: **20 passed, zero failed/skipped.** Evidence: `leaf-v38-main-runtime-20261105-142950-2153929.tgz`, Git `7fbad74cf11364de7818aeab92cd84fa6ab47e14`; see `doc/battle/V38_06_MAIN_RUNTIME_MIGRATION.md`. |
+| **V38-7** | Record rulebook/CSV/ruleset fingerprints and distinguish archived v37 cohorts from new v38 research | **PATCH PREPARED / AWAITING UBUNTU VERIFICATION.** Added content-addressed research ruleset manifests and explicit Battle selector throughout the generic R3A/question path; old R3A direct entry defaults to legacy for compatibility. Two v38 questions have a compile-once direct-Java verification pilot. Run `bin/verify_v38_question_runner`; see `doc/research/experiments/card-balance/V38_07_RESEARCH_PROVENANCE_AND_PILOT.md`. Do not treat pilot results as balance findings. |
 
-**V38-4 and the focused V38-5 gate passed. Next: V38-6 source relocation and main-only executable verification:**
+**V38-4, V38-5 and V38-6 passed. Next: V38-7 provenance and v38 reusable question pilot on Ubuntu:**
 
 ```bash
-bin/install_v38_main_runtime
-bin/verify_v38_main_runtime
+bin/verify_v38_question_runner --plan-only
+bin/verify_v38_question_runner
 ```
 
 **To repeat the full v38 regression evidence collection** (optional after code changes):
@@ -63,11 +63,11 @@ Do not collapse these into one metric. A good effect can be overpriced; a weak e
 
 ### A1 - Generalize the question runner beyond one bespoke card study
 
-**Status:** IN PROGRESS — A1.1–A1.3 complete; A1.4/A1.5 partial and awaiting broader JVM validation; A1.6 exploratory 36-card foundation exists. Once v38 is mechanically verified, run the small catalog pilot under an explicitly supported/recorded Battle structure before any all-36 exploratory first pass. The current legacy R3A adapters do not yet execute v38 questions.**
+**Status:** IN PROGRESS — A1.1–A1.3 complete; A1.4/A1.5 v38 selector and provenance integration prepared, awaiting a two-question Ubuntu pilot; A1.6 exploratory foundation exists. Legacy R3A direct entry still defaults to legacy explicitly; v38 is selectable with a fingerprinted question. A1.7 acceptance requires real JVM results.**
 
 This is the correct next step for the current repository. The source already contains much of the machinery needed for reusable Plant research, but it is spread across several generations of focused experiments:
 
-- `R3APlantScreenMain` already accepts an arbitrary current Plant target and legal nine-card Grove, and can run targeted versus unrestricted Buy-policy searches, **but its historical runner is pinned to LEGACY_WHOLE_BATTLE**;
+- `R3APlantScreenMain` accepts an arbitrary current Plant target and legal nine-card Grove, and can run targeted versus unrestricted Buy-policy searches; its direct historical runner defaults to legacy, and the new question adapter explicitly selects either v38 or legacy;
 - `PlantExperimentConfig` / `PlantExperimentConfigLoader` already provide generic research-only Plant overrides without mutating canonical card data;
 - R3B/R3B.1 already provide disabled/positive controls, seat-scoped effect isolation, actual mechanical-output telemetry, fixed-policy comparisons, resumability and provenance safeguards;
 - R1/R2 remain Sapping-specific, while R3B/R3B.1 orchestration and the R3A `effect-variant` path still contain card-specific control names/guards for Root Four More and Queen's Blossom;
@@ -129,7 +129,7 @@ Required work:
 
 #### A1.4 - Introduce one reusable question execution plan and launcher
 
-**Status:** PARTIAL — declarative planning, strict official R3A adapter and a verified-in-upload two-player official/suppressed target-seat frozen comparison. Expanded Buy-only adapted/countersearch stages are implemented but await JVM verification; remaining stages and player counts still require A1.5.
+**Status:** PARTIAL — question planning, explicit v38-capable R3A adapter and official/suppressed target-seat comparison wired. Expanded Buy-only adapted/countersearch stages are implemented but require Ubuntu v38 JVM verification; unsupported conditions/player counts remain for A1.5.
 
 Create one top-level entry point (name is implementation choice, e.g. `bin/plant_question`) that reads a validated question specification and expands it into an explicit stage/condition plan.
 
@@ -146,7 +146,7 @@ Required behavior:
 
 #### A1.5 - Generalize stage adapters for discovery, comparison and countersearch
 
-**Status:** IN PROGRESS — generic target-seat suppressed frozen comparison is verified by uploaded pilot integrity checks; an adapted Buy training/evaluation and frozen-specialist countersearch pilot is implemented but requires Ubuntu JVM verification. Stronger opponent portfolios, additional effect conditions and multiplayer remain open.
+**Status:** IN PROGRESS — generic target-seat suppressed frozen comparison was verified historically under legacy rules. New v38 selection is wired through training/evaluation, but the adapted Buy and countersearch pilots require Ubuntu JVM evidence. Stronger opponent portfolios, additional effect conditions and multiplayer remain open.
 
 Make the reusable launcher able to invoke the existing research operations by role rather than by historical experiment name.
 

@@ -63,7 +63,8 @@ object R3APlantScreenMain {
         val targetBoost: Double, val targetMinPurchaseRate: Double, val targetPurchaseBonus: Double,
         val flowerEnablerBoost: Double, val effectVariant: String, val effectAudience: String,
         val grove: List<String>, val outputDir: File, val fingerprint: String,
-        val targeted: File?, val unrestricted: File?, val fixedOpponent: File?
+        val targeted: File?, val unrestricted: File?, val fixedOpponent: File?,
+        val battleStructure: BattleStructure = BattleStructure.LEGACY_WHOLE_BATTLE
     ) {
         init {
             require(phase in setOf("train", "evaluate"))
@@ -100,7 +101,7 @@ object R3APlantScreenMain {
                 val names = setOf("phase", "objective", "target-id", "generations", "population", "elites", "games",
                     "sigma", "mutations", "evolution-seed", "seed", "strategy-seed", "holdout-games",
                     "target-boost", "target-min-purchase-rate", "target-purchase-bonus", "flower-enabler-boost", "effect-variant", "effect-audience", "grove", "output-dir", "fingerprint")
-                require(fields.keys - names - setOf("targeted", "unrestricted", "fixed-opponent") == emptySet<String>())
+                require(fields.keys - names - setOf("targeted", "unrestricted", "fixed-opponent", "battle-structure") == emptySet<String>())
                 require((names - setOf("effect-variant", "effect-audience")).all(fields::containsKey)) { "Missing options: ${names - fields.keys}" }
                 return Options(
                     fields.getValue("phase"), fields.getValue("objective"), fields.getValue("target-id"),
@@ -113,7 +114,8 @@ object R3APlantScreenMain {
                     fields.getValue("flower-enabler-boost").toDouble(),
                     fields["effect-variant"] ?: "official", fields["effect-audience"] ?: "all", fields.getValue("grove").split(','),
                     File(fields.getValue("output-dir")), fields.getValue("fingerprint"),
-                    fields["targeted"]?.let(::File), fields["unrestricted"]?.let(::File), fields["fixed-opponent"]?.let(::File)
+                    fields["targeted"]?.let(::File), fields["unrestricted"]?.let(::File), fields["fixed-opponent"]?.let(::File),
+                    fields["battle-structure"]?.let(BattleStructure::valueOf) ?: BattleStructure.LEGACY_WHOLE_BATTLE
                 )
             }
         }
@@ -151,7 +153,7 @@ object R3APlantScreenMain {
                 PlantExperimentConfig.of(o.targetId to PlantExperimentOverride(effect = calibratedEffect))
             require(o.outputDir.isDirectory || o.outputDir.mkdirs())
             val initial = LearnedBuyCardCatalog.prepare(LearnedBuyWeights.zeros(), all)
-            println("R3A ${o.phase}: ${o.targetId} / ${target.title} / ${o.objective} / effect=${o.effectVariant} / nine official cards")
+            println("R3A ${o.phase}: ${o.targetId} / ${target.title} / ${o.objective} / effect=${o.effectVariant} / rules=${o.battleStructure} / nine official cards")
             println("Grove: " + grove.joinToString("; ") { it.title })
             if (o.phase == "train") train(o, initial, grove, values, calibratedEffect, koin.get(), koin.get())
             else evaluate(o, all, grove, values, calibratedEffect, koin.get(), koin.get())
@@ -208,7 +210,7 @@ object R3APlantScreenMain {
                         } }
                         val game = factory(GameConfig(
                             selectedPlantCards = grove, playerDecisionFactories = policies,
-                            battleStructure = BattleStructure.LEGACY_WHOLE_BATTLE,
+                            battleStructure = o.battleStructure,
                             seed = o.seed + sample, strategySeed = o.strategySeed + sample,
                             plantValues = values,
                             researchPlantEffectsBySeat = if (o.effectAudience == "targeted" && calibratedEffect != null)
@@ -292,7 +294,7 @@ object R3APlantScreenMain {
                     val game = factory(GameConfig(
                         selectedPlantCards = grove,
                         playerDecisionFactories = roleAt.map { role -> getWeights(role)?.let(::buyFactory) ?: PlayerDecisionFactory.humanBaseline() },
-                        battleStructure = BattleStructure.LEGACY_WHOLE_BATTLE,
+                        battleStructure = o.battleStructure,
                         seed = o.seed + 1000000L + mi * o.holdoutGames + sample,
                         strategySeed = o.strategySeed + 1000000L + mi * o.holdoutGames + sample,
                         plantValues = values,

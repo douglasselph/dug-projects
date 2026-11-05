@@ -281,3 +281,7 @@ The repository is the handoff. A fresh conversation should not require a separat
 ## Repository-root file conventions
 
 The root keeps `README.md` (orientation), `TASKS.md` (active backlog), and `AGENTS.md` (coding-agent Kotlin style rules). Gradle configuration and wrapper entry points stay at the root. Subject-specific historical notes live under `doc/`; see [documentation index](doc/README.md).
+
+### v38 reusable Plant-question research checkpoint
+
+`V38-6` main-runtime integration passed on November 5 (20 focused Kotlin tests). `V38-7` research provenance and explicit question-runner ruleset selection are ready for Ubuntu pilot verification: `bin/verify_v38_question_runner --plan-only`, then `bin/verify_v38_question_runner`. See `doc/research/experiments/card-balance/V38_07_RESEARCH_PROVENANCE_AND_PILOT.md` and `TASKS.md`. Do not use archived legacy Battle results as v38 evidence.

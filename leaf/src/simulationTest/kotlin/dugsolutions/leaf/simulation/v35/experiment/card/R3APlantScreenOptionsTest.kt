@@ -1,5 +1,6 @@
 package dugsolutions.leaf.simulation.v35.experiment.card
 
+import dugsolutions.leaf.v35.game.BattleStructure
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
@@ -16,6 +17,18 @@ class R3APlantScreenOptionsTest {
         "--grove=${grove.joinToString(",")}", "--output-dir=output/experiments/r3a-test",
         "--fingerprint=${"b".repeat(64)}"
     )
+
+    @Test fun `historical R3A remains legacy unless explicitly changed`() {
+        assertEquals(BattleStructure.LEGACY_WHOLE_BATTLE, R3APlantScreenMain.Options.parse(args()).battleStructure)
+        val adopted = R3APlantScreenMain.Options.parse(args() + "--battle-structure=THREE_ENGAGEMENTS")
+        assertEquals(BattleStructure.THREE_ENGAGEMENTS, adopted.battleStructure)
+    }
+
+    @Test fun `R3A rejects old CANONICAL ruleset alias`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            R3APlantScreenMain.Options.parse(args() + "--battle-structure=CANONICAL")
+        }
+    }
 
     @Test fun `Bee-loved Bloom is a valid focus for a generic Grove`() {
         val options = R3APlantScreenMain.Options.parse(args())
