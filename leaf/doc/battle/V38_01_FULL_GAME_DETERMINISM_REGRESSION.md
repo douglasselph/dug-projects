@@ -93,3 +93,51 @@ architecture change, not part of this regression-only checkpoint.
 Only a new test class and this document are added. No game rules, card effects,
 configuration, policy weights, round schedulers, data files or experiment launch
 scripts are changed.
+
+## November 5 verification handoff: strict Ubuntu runner
+
+A follow-up patch strengthens `V38BattleStructureFullGameRegressionTest`:
+
+- Compare each v38 Doom event against the exact **pre-Doom** row snapshot,
+  proving the minimum-value group (not merely any one value) was Trashed.
+- Confirm every Doom is confined to its just-resolved Strike and follows
+  that Strike's `StrikeResolved` event. This pairs events by chronology so
+  a Wisp-resolved *future* Strike does not break the assertion.
+- Verify that every resolved row has one non-Refresh cleanup per player after
+  Doom, with no pieces reclaimed again during the final Refresh.
+
+The deterministic matrix remains **execution unverified** until Gradle runs.
+This patch does not change the Battle rules, card CSVs, policies or engine.
+
+For an automatic run on Ubuntu from the top-level `leaf` directory:
+
+```bash
+bin/verify_v38_full_game
+```
+
+This executes the targeted matrix and, if it passes, the complete
+`test integrationTest simulationTest` matrix using `--rerun-tasks`. It retains:
+
+- Both Gradle console logs and the actual JUnit XML copied immediately after
+  each command (so the second suite cannot overwrite targeted evidence).
+- The six exact dynamic-case identifiers with pass/fail status; full-suite test
+  counts; missing/skipped/failing cases are **not** accepted as success.
+- Git SHA/status if available, rulebook/official CSV and source hashes, Java/
+  Gradle versions, timestamps and exit codes in a time-stamped directory.
+- One `.tgz` in `~/Downloads` even when the gate **fails**, for upload and
+  diagnosis. The wrapper prints `UPLOAD THIS FILE:` with its absolute path.
+
+The JUnit checker has independent, dependency-free tests:
+
+```bash
+python3 -m unittest discover -s bin/tests -p test_verify_v38_junit.py -v
+```
+
+A passing wrapper concludes only that the **specified regression suite** ran;
+additional forced-card edge-case tests remain under V38-5, and neither this
+matrix nor its replay assertions establish game balance.
+
+**Execution environment note:** in the November 5 packaging environment,
+Gradle 8.13 was not installed, and the wrapper's attempt to download the
+Gradle distribution failed due to DNS/network unavailability. The Python
+checker tests passed (6/6). Do not reinterpret this as a Kotlin pass.

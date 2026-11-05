@@ -15,12 +15,18 @@ The current source contains the following **implemented** v38 changes. They stil
 | **V38-1** | Per-Strike **Resolve → Doom → Cleanup**, lowest-value-only Doom, row-only dice/Critter return, final Refresh, Wisp's Resolve early finish | **Implemented in source** with focused tests; full regression results not supplied in this archive |
 | **V38-2** | Make `THREE_ENGAGEMENTS` the default and preserve `LEGACY_WHOLE_BATTLE` explicitly | **Implemented**, including missing-file fallback and rejection of old `CANONICAL`; production-only runtime remains limited |
 | **V38-3** | Synchronize two official Plant CSVs, 14 converter additions, Wisp's Resolve definition and Compost unavailable-upgrade Trash fallback | **Implemented**; prior focused converter/valuation smoke checks passed, but complete Gradle regression verification is not recorded here |
-| **V38-4** | Execute deterministic **2/3/4-player × both Battle structures** 3/2/2 full-game matrix (two identical-seed runs each), plus `test integrationTest simulationTest` | **TESTS ADDED / EXECUTION UNVERIFIED**. Run on Ubuntu, retain JUnit XML/logs, fix failures and record exact pass counts before claiming acceptance |
+| **V38-4** | Execute deterministic **2/3/4-player × both Battle structures** 3/2/2 full-game matrix (two identical-seed runs each), plus `test integrationTest simulationTest` | **TESTS STRENGTHENED / EXECUTION UNVERIFIED**. `bin/verify_v38_full_game` now runs both Gradle gates, checks exact JUnit case coverage and saves logs/XML/provenance into one `~/Downloads` archive, including on failure. Its Python checker passes six unit tests; Gradle execution remains required on Ubuntu. |
 | **V38-5** | Audit special interactions not proved by the matrix (Wisp's Resolve mid-action and multiple uses; Wispquake locked rows; Pollen Theft ownership; Root & Scoot withdrawal; Sunlight action accounting; per-row cleanup/Refresh and other card targeting) | **OPEN** — use legal deterministic fixtures and v38 rulebook, not aggregate win rates |
 | **V38-6** | Decide whether/how to move the adopted scheduler into `src/main/` so a main-only runtime can execute the default | **OPEN** architectural limitation; never silently fall back to legacy |
 | **V38-7** | Record rulebook/CSV/ruleset fingerprints and distinguish archived v37 cohorts from new v38 research | **OPEN research provenance gate** for new comparative studies; existing historical R3A adapters intentionally force legacy |
 
-**Run next on Ubuntu from the repository root:**
+**Run next on Ubuntu from the repository root** (recommended single-command evidence collection):
+
+```bash
+bin/verify_v38_full_game
+```
+
+Or run the underlying commands manually:
 
 ```bash
 set -o pipefail
