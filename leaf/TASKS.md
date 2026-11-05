@@ -18,9 +18,9 @@ The current source contains the following **implemented** v38 changes. They stil
 | **V38-4** | Execute deterministic **2/3/4-player × both Battle structures** 3/2/2 full-game matrix (two identical-seed runs each), plus `test integrationTest simulationTest` | **PASS — November 5 Ubuntu archive reviewed.** All six targeted cases, 1,740 unit tests, 88 integration tests and 242 simulation tests passed; Gradle returned zero for both runs. One explicitly opt-in 3,000-game memory stress test was skipped by design. The strict checker now permits *only* that named skip. Evidence: `leaf-v38-verification-20261105-135919-2148522.tgz`, git `3304fa6f1351376d249ab2be443a44532a8ed3cd`. |
 | **V38-5** | Audit special interactions not proved by the matrix (Wisp's Resolve mid-action and multiple uses; Wispquake locked rows; Pollen Theft ownership; Root & Scoot withdrawal; Sunlight action accounting; per-row cleanup/Refresh and other card targeting) | **PASS — November 5 Ubuntu evidence reviewed.** Both focused Gradle runs succeeded; 16 tests passed (Wispquake 3, Wisp's Resolve 4, cross-effect 2, Engagement scheduler 7), zero failed/skipped. Evidence: `leaf-v38-interactions-20261105-141414-2152905.tgz`. This closes the focused V38-5 acceptance, not a claim of exhaustive all-card interactions. See `doc/battle/V38_01_SPECIAL_INTERACTION_AUDIT.md`. |
 | **V38-6** | Move Three Engagements scheduler into `src/main/` and verify a main-only runtime executes the adopted default | **PASS — November 5 Ubuntu evidence reviewed.** Main-only tests 2, Battle routing 4, full-game default routing 1, full-game matrix 6, scheduler 7: **20 passed, zero failed/skipped.** Evidence: `leaf-v38-main-runtime-20261105-142950-2153929.tgz`, Git `7fbad74cf11364de7818aeab92cd84fa6ab47e14`; see `doc/battle/V38_06_MAIN_RUNTIME_MIGRATION.md`. |
-| **V38-7** | Record rulebook/CSV/ruleset fingerprints and distinguish archived v37 cohorts from new v38 research | **PATCH PREPARED / AWAITING UBUNTU VERIFICATION.** Added content-addressed research ruleset manifests and explicit Battle selector throughout the generic R3A/question path; old R3A direct entry defaults to legacy for compatibility. Two v38 questions have a compile-once direct-Java verification pilot. Run `bin/verify_v38_question_runner`; see `doc/research/experiments/card-balance/V38_07_RESEARCH_PROVENANCE_AND_PILOT.md`. Do not treat pilot results as balance findings. |
+| **V38-7** | Record rulebook/CSV/ruleset fingerprints and distinguish archived v37 cohorts from new v38 research | **PASS — November 5 Ubuntu evidence reviewed.** Seven pilot stages completed successfully: Python question/provenance tests, Kotlin compile/option tests, and both paired-frozen and adapted/countersearch stages for Root Four More and Sapping Snapdragon. Each stage archive is checksum-verified; ruleset fingerprint is v38-01 `THREE_ENGAGEMENTS`. Evidence: `leaf-v38-question-runner-verification-20261105-144745.tgz`. Engineering verification only; no card-balance verdict. |
 
-**V38-4, V38-5 and V38-6 passed. Next: V38-7 provenance and v38 reusable question pilot on Ubuntu:**
+**V38-4 through V38-7 passed. Optional repeat of the provenance/question-runner pilot:**
 
 ```bash
 bin/verify_v38_question_runner --plan-only
@@ -63,7 +63,7 @@ Do not collapse these into one metric. A good effect can be overpriced; a weak e
 
 ### A1 - Generalize the question runner beyond one bespoke card study
 
-**Status:** IN PROGRESS — A1.1–A1.3 complete; A1.4/A1.5 v38 selector and provenance integration prepared, awaiting a two-question Ubuntu pilot; A1.6 exploratory foundation exists. Legacy R3A direct entry still defaults to legacy explicitly; v38 is selectable with a fingerprinted question. A1.7 acceptance requires real JVM results.**
+**Status:** IN PROGRESS — A1.1–A1.3 complete; A1.4/A1.5 v38 two-card functional path verified on Ubuntu. The new A1.6 evidence reader produces a common schema and human report for that pilot; A1.7 functional vertical slice passed, while its full arbitrary-condition acceptance remains open. Unsupported effect/price conditions, additional player counts, robust uncertainty, and A2 learning strength remain open.**
 
 This is the correct next step for the current repository. The source already contains much of the machinery needed for reusable Plant research, but it is spread across several generations of focused experiments:
 
@@ -129,7 +129,7 @@ Required work:
 
 #### A1.4 - Introduce one reusable question execution plan and launcher
 
-**Status:** PARTIAL — question planning, explicit v38-capable R3A adapter and official/suppressed target-seat comparison wired. Expanded Buy-only adapted/countersearch stages are implemented but require Ubuntu v38 JVM verification; unsupported conditions/player counts remain for A1.5.
+**Status:** PARTIAL — official/suppressed paired-frozen and adapted/countersearch Buy-only execution passed November 5 v38 Ubuntu pilot for two unrelated cards. Unsupported conditions/player counts and full declared-stage coverage remain open.
 
 Create one top-level entry point (name is implementation choice, e.g. `bin/plant_question`) that reads a validated question specification and expands it into an explicit stage/condition plan.
 
@@ -146,7 +146,7 @@ Required behavior:
 
 #### A1.5 - Generalize stage adapters for discovery, comparison and countersearch
 
-**Status:** IN PROGRESS — generic target-seat suppressed frozen comparison was verified historically under legacy rules. New v38 selection is wired through training/evaluation, but the adapted Buy and countersearch pilots require Ubuntu JVM evidence. Stronger opponent portfolios, additional effect conditions and multiplayer remain open.
+**Status:** IN PROGRESS — November 5 v38 Ubuntu pilot verified frozen, adapted Buy and countersearch stages for Root Four More and Sapping Snapdragon. Stronger opponent portfolios, additional conditions and multiplayer remain open.
 
 Make the reusable launcher able to invoke the existing research operations by role rather than by historical experiment name.
 
@@ -165,7 +165,7 @@ Keep each stage's policy scope explicit. If only Buy is learned and all other de
 
 #### A1.6 - Standardize the per-question evidence bundle and report contract
 
-**Status:** PARTIAL — first-pass 36-card catalog screen and standardized exploratory evidence index implemented; see [`PLANT_CATALOG_SCREEN.md`](doc/research/experiments/card-balance/PLANT_CATALOG_SCREEN.md). Full research-grade reports (uncertainty, adapted/countersearch, broader effect attribution and multi-Grove validation) remain open.
+**Status:** PARTIAL — November 5 v38 two-card evidence reader now consumes the verified pilot archive, verifies cross-stage identity/controls, and produces a common `evidence.json` + `ASSESSMENT.md` with explicit insufficiency findings. See [`PLANT_QUESTION_EVIDENCE.md`](doc/research/experiments/card-balance/PLANT_QUESTION_EVIDENCE.md). Arbitrary conditions, adequate uncertainty, effect-specific attribution and multi-Grove studies remain open.
 
 Create one generic result layout and schema so later A2-A5 work can consume results without knowing whether the historical origin was R2, R3A or R3B.
 
@@ -186,7 +186,7 @@ Do not make A1 invent missing causal measurements just to fill columns. Missing 
 
 #### A1.7 - Prove the generalized path with two unrelated Plant questions
 
-**Status:** BLOCKED on accepted A1.4–A1.6 JVM execution, stage coverage and evidence-bundle contracts (A1.2–A1.3 are complete).
+**Status:** FUNCTIONAL v38 TWO-CARD SLICE PASS — November 5 Ubuntu pilot successfully ran both unrelated card questions using one generic path, with discovery, paired-frozen, adapted and countersearch stages. A1.6 common evidence reader verified those outputs. Full acceptance remains open for arbitrary effects/conditions and research-quality reports.
 
 Run a deliberately small engineering/functional vertical slice, not a balance study.
 
