@@ -27,12 +27,16 @@ properties file triggers a clear error instead of silently selecting the wrong
 version. Other unrelated uses of `CANONICAL` (official Plant/Round definitions)
 are unchanged.
 
-**Runtime boundary:** Three Engagements currently lives in the `simulation`
-source set and is discovered via `BattleStructureProvider`. Ordinary simulation
-launchers include this source set. A main-only runtime that does not include
-`simulation` fails explicitly when asked to execute Three Engagements; it will
-**not** silently substitute the legacy engine. Main-source Kotlin unit tests
-and historical integration fixtures intentionally request `LEGACY_WHOLE_BATTLE`.
+**Runtime boundary (V38-6 patch, pending Ubuntu acceptance):** Three Engagements
+scheduler and its Human decision adapter now compile in the `main` source set.
+`GameModule` wires `ThreeEngagementRoundExecutor` directly; coordinators
+constructed without explicit injection can construct it from a real
+`BattleRound`. No ServiceLoader extension or simulation-only dependency is
+necessary, and legacy is never used as a fallback. The original Kotlin
+package names remain unchanged for source/binary compatibility with historical
+research. The deprecated `BattleStructureProvider` interface is retained as a
+compatibility marker, but no provider is registered. New main-only Kotlin
+runtime tests enforce this independent source-set boundary.
 
 **Historical research:** The dedicated v37-03 pacing A/B runner invokes its
 comparison conditions directly; it ignores this settings file. Historical R3A

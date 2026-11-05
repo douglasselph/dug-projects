@@ -27,13 +27,13 @@ The 2/3/4-player deterministic matrix checks a standard ten-round game under eac
 
 Uploaded verification artifact: `leaf-v38-verification-20261105-135919-2148522.tgz`, checkout SHA `3304fa6f1351376d249ab2be443a44532a8ed3cd`. Both Gradle commands exited 0. JUnit: 6/6 targeted, 1740/1740 unit, 88/88 integration and 242/243 simulation (last is the explicitly opt-in `BaselineLongRunMemoryTest`; no failures). The corrected strict checker verifies that only this exact skipped test is accepted. **V38-4 is closed.**
 
-## Run next on Ubuntu (V38-5 focused interaction acceptance)
+## November 5 focused V38-5 acceptance evidence
 
-```bash
-bin/verify_v38_special_interactions
-```
+Uploaded artifact `leaf-v38-interactions-20261105-141414-2152905.tgz`: both focused Gradle runs succeeded; Wispquake 3, Wisp's Resolve 4, cross-effect 2, ThreeEngagementBattle 7 = **16 passed, 0 failed/skipped**. Focused special-interaction gate **closed**, broader untested cross-card interactions remain for catalog research.
 
-This checks focused effect handlers and the actual Three Engagements scheduler, collects JUnit/log/provenance into one `~/Downloads` archive, and prints `UPLOAD THIS FILE:` even on failure. The authored V38-5 tests are not yet certified until the archive is reviewed.
+## Run next on Ubuntu (V38-6 main-only runtime acceptance)
+
+After applying the V38-6 changed-files ZIP from `~/Downloads`, run `bin/install_v38_main_runtime` (hash-guarded relocation cleanup) and `bin/verify_v38_main_runtime`. Upload its `.tgz` so the new main-only Kotlin tests can be reviewed. The relocation is not accepted on authorship alone. See `V38_06_MAIN_RUNTIME_MIGRATION.md`.
 
 ### Re-running the entire regression matrix (if needed)
 
@@ -52,8 +52,8 @@ Record actual pass counts and failures with JUnit XML/log paths before closing t
 
 ## Open follow-ups
 
-1. **Complete rules fidelity:** focused deterministic fixtures for Wisp's Resolve (including two uses), Wispquake after completed-row cleanup, Pollen Theft then Doom, Root & Scoot then Doom, and Sunlight-funded Main were added November 5. **They still require an Ubuntu run.** See `V38_01_SPECIAL_INTERACTION_AUDIT.md` for covered paths and remaining broad cross-row/card-targeting work. Compare the v38 rulebook and official CSV wordings to actual executable paths.
-2. **Runtime architecture:** `THREE_ENGAGEMENTS` currently resides in the `src/simulation/` source set. Main-only runtimes lacking its `BattleStructureProvider` cannot execute the new default; they must not silently use legacy. Decide on a narrowly-scoped move into main only when appropriate.
+1. **Complete rules fidelity:** focused deterministic fixtures for Wisp's Resolve (including two uses), Wispquake after completed-row cleanup, Pollen Theft then Doom, Root & Scoot then Doom, and Sunlight-funded Main were added November 5. **They passed the focused November 5 Ubuntu run.** See `V38_01_SPECIAL_INTERACTION_AUDIT.md` for covered paths and remaining broad cross-row/card-targeting work. Compare the v38 rulebook and official CSV wordings to actual executable paths.
+2. **Runtime architecture:** A V38-6 patch moves the scheduler and Human timing adapter into `src/main/`, wires a direct Koin executor, and eliminates the ServiceLoader dependency; it awaits Ubuntu main-only proof. No fallback to legacy is permitted.
 3. **Experiment provenance:** existing v37 pacing, R3A and card-screen work was performed with historical Battle rules. R3A-based research adapters currently force `LEGACY_WHOLE_BATTLE`. New v38 card/balance studies need ruleset-aware adapters and fingerprints, not silent reuse of legacy outputs.
 4. **Design evaluation:** Task 7 fairness/counterfactual package is not fully validated; human pacing estimates are uncalibrated proxies. Re-evaluate order bias, High-Wound cascades, resource stranding, card and Wisp interactions, and actual downtime under v38 before making design claims.
 

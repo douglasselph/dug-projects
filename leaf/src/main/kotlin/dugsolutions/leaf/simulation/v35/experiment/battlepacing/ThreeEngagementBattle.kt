@@ -5,7 +5,6 @@ import dugsolutions.leaf.v35.battle.StrikeResolution
 import dugsolutions.leaf.v35.battle.StrikeFinishCoordinator
 import dugsolutions.leaf.v35.battle.domain.BattleGridSnapshot
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
-import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.operation.RefreshResolver
 import dugsolutions.leaf.v35.game.round.battle.BattleCleanupCoordinator
@@ -18,9 +17,6 @@ import dugsolutions.leaf.v35.player.decision.battle.BattleMainAction
 import dugsolutions.leaf.v35.player.decision.battle.BattleSupportAction
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.round.domain.RoundCard
-import dugsolutions.leaf.v35.wisp.WispCardManager
-import dugsolutions.leaf.v35.wisp.domain.WispCard
-import java.util.Random
 
 /** Explicit experimental policy interface; canonical Human/Battle policies are NOT silently reused. */
 sealed interface EngagementChoice {
@@ -66,17 +62,6 @@ object SupportSpendingEngagementPolicy : EngagementPolicy {
     }
 }
 
-/** Historical A/B cohort helper only. Normal v38 uses the unmodified Wisp deck. */
-object BattlePacingWispDeck {
-    fun withoutResolve(manager: WispCardManager, seed: Long): List<WispCard> {
-        val cards = manager.getAllCards().cards.filterNot {
-            it.effect == GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW
-        }.flatMap { card -> List(card.quantity) { card } }.toMutableList()
-        check(cards.isNotEmpty()) { "No experimental Wisps" }
-        java.util.Collections.shuffle(cards, Random(seed))
-        return cards
-    }
-}
 
 /** A finished Strike is now empty, with its scoring snapshot frozen in BattleState. */
 private class LockedStrikeEvidence(battle: BattleState, val row: StrikeRow) {
@@ -156,7 +141,7 @@ data class ThreeEngagementBattleResult(
 )
 
 /**
- * v38 Three Engagements. Called on an independently replayed Game/Battle opening.
+ * Adopted v38 Three Engagements. Used by the main game engine and research A/B replays.
  * The existing BattleRound remains the selectable legacy whole-Battle implementation.
  *
  * All chosen actions run through the canonical legal generator and executors;

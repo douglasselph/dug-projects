@@ -11,17 +11,17 @@ import dugsolutions.leaf.v35.player.decision.wisp.WispPlayDecision
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 
 /** Exposes one frozen timing plan for each actor/Engagement, for research traces. */
-internal interface EngagementMainPlanSource {
+interface EngagementMainPlanSource {
     fun mainPlan(playerId: PlayerId, row: StrikeRow): EngagementMainTimingDecision?
 }
 
 /**
- * Exploratory B adapter: delegates actual Main choices to v37 Human Baseline.
+ * v38 production adapter: delegates actual Main choices to the existing Human Baseline.
  * Timing uses action-specific v37 Main valuations; Support continuation is
  * budget-gated through production B10-B14 logic (Task 3).
- * No changes to canonical Battle or C04 calibration.
+ * This preserves the existing choice policy while enforcing v38 timing.
  */
-internal class HumanGuidedEngagementPolicy(private val game: Game) : EngagementPolicy, EngagementMainPlanSource {
+class HumanGuidedEngagementPolicy(private val game: Game) : EngagementPolicy, EngagementMainPlanSource {
     private val supportContinuation = EngagementSupportContinuation()
     private val mainTiming = EngagementMainTimingPlanner()
     // The row decision is fixed for the actor's opportunity; recompute at the

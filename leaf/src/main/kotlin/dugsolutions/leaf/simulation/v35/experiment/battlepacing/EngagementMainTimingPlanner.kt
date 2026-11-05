@@ -12,7 +12,7 @@ import dugsolutions.leaf.v35.round.domain.RoundCard
  * action to execute. Task 2 uses action-specific v37 tactical score sensitivity
  * across unresolved rows; these heuristic points are NOT objective VP.
  */
-internal data class EngagementMainTimingDecision(
+data class EngagementMainTimingDecision(
     val row: StrikeRow,
     val mainsRemaining: Int,
     val openRows: List<StrikeRow>,
@@ -40,10 +40,53 @@ internal data class EngagementMainTimingDecision(
  * Task 2: forecast real v37 Main candidates across open rows without consuming
  * mechanical or strategy RNG. Preserve the Task 1 pure scheduling seam/tests.
  */
-internal class EngagementMainTimingPlanner(
+class EngagementMainTimingPlanner(
     private val placement: BattleDiePlacementAnalyzer = BattleDiePlacementAnalyzer(),
     private val forecaster: BaselineMainActionForecaster = BaselineMainActionForecaster()
 ) {
+    companion object {
+        /** Deterministic and directly testable; no strategy or mechanical RNG. */
+        fun planFromScores(
+            row: StrikeRow,
+            mainsRemaining: Int,
+            openRows: List<StrikeRow>,
+            scores: Map<StrikeRow, Double>
+        ): EngagementMainTimingDecision {
+            require(mainsRemaining in 1..2)
+            val open = StrikeRow.entries.filter { it in openRows && it.ordinal >= row.ordinal }
+            if (row !in open) return EngagementMainTimingDecision(
+                row, mainsRemaining, open, scores, emptyList(), false,
+                EngagementMainTimingDecision.Reason.ROW_UNAVAILABLE
+            )
+            // With two normal Mains and two remaining Engagements, passing is
+            // not allowed to accidentally strand a token; similarly at Low.
+            val forced = open.size <= mainsRemaining
+            val projected = scores.isNotEmpty()
+            val ranked = if (projected) {
+                open.sortedWith(compareByDescending<StrikeRow> { scores[it] ?: Double.NEGATIVE_INFINITY }
+                    .thenBy { it.ordinal })
+            } else open
+            val planned = ranked.take(mainsRemaining)
+            val reason = when {
+                forced -> EngagementMainTimingDecision.Reason.MUST_SPEND_TO_USE_BOTH
+                projected -> EngagementMainTimingDecision.Reason.EXPECTED_DRAW_PROJECTION
+                else -> EngagementMainTimingDecision.Reason.NO_DRAW_PROJECTION
+            }
+            return EngagementMainTimingDecision(
+                row, mainsRemaining, open, scores, planned,
+                forced || !projected || row in planned, reason
+            )
+        }
+
+        /** Backward-compatible pure entry point used by existing timing tests. */
+        fun shouldSpendInRow(
+            row: StrikeRow,
+            mainsRemaining: Int,
+            openRows: List<StrikeRow>,
+            scores: Map<StrikeRow, Double>
+        ): Boolean = planFromScores(row, mainsRemaining, openRows, scores).spendNow
+    }
+
     fun shouldUseMain(context: DecisionContext, row: StrikeRow, mainsRemaining: Int): Boolean =
         plan(context, row, mainsRemaining).spendNow
 
@@ -104,46 +147,4 @@ internal class EngagementMainTimingPlanner(
         )
     }
 
-    companion object {
-        /** Deterministic and directly testable; no strategy or mechanical RNG. */
-        internal fun planFromScores(
-            row: StrikeRow,
-            mainsRemaining: Int,
-            openRows: List<StrikeRow>,
-            scores: Map<StrikeRow, Double>
-        ): EngagementMainTimingDecision {
-            require(mainsRemaining in 1..2)
-            val open = StrikeRow.entries.filter { it in openRows && it.ordinal >= row.ordinal }
-            if (row !in open) return EngagementMainTimingDecision(
-                row, mainsRemaining, open, scores, emptyList(), false,
-                EngagementMainTimingDecision.Reason.ROW_UNAVAILABLE
-            )
-            // With two normal Mains and two remaining Engagements, passing is
-            // not allowed to accidentally strand a token; similarly at Low.
-            val forced = open.size <= mainsRemaining
-            val projected = scores.isNotEmpty()
-            val ranked = if (projected) {
-                open.sortedWith(compareByDescending<StrikeRow> { scores[it] ?: Double.NEGATIVE_INFINITY }
-                    .thenBy { it.ordinal })
-            } else open
-            val planned = ranked.take(mainsRemaining)
-            val reason = when {
-                forced -> EngagementMainTimingDecision.Reason.MUST_SPEND_TO_USE_BOTH
-                projected -> EngagementMainTimingDecision.Reason.EXPECTED_DRAW_PROJECTION
-                else -> EngagementMainTimingDecision.Reason.NO_DRAW_PROJECTION
-            }
-            return EngagementMainTimingDecision(
-                row, mainsRemaining, open, scores, planned,
-                forced || !projected || row in planned, reason
-            )
-        }
-
-        /** Backward-compatible pure entry point used by existing timing tests. */
-        internal fun shouldSpendInRow(
-            row: StrikeRow,
-            mainsRemaining: Int,
-            openRows: List<StrikeRow>,
-            scores: Map<StrikeRow, Double>
-        ): Boolean = planFromScores(row, mainsRemaining, openRows, scores).spendNow
-    }
 }

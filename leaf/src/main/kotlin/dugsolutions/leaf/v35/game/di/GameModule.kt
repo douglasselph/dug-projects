@@ -3,6 +3,7 @@ package dugsolutions.leaf.v35.game.di
 import dugsolutions.leaf.v35.game.GameRunner
 import dugsolutions.leaf.v35.game.round.RoundCoordinator
 import dugsolutions.leaf.v35.game.round.battle.BattleRound
+import dugsolutions.leaf.v35.game.round.battle.ThreeEngagementRoundExecutor
 import dugsolutions.leaf.v35.game.round.cultivation.CultivationRound
 import dugsolutions.leaf.v35.game.scoring.FinalScorer
 import org.koin.core.module.Module
@@ -28,7 +29,8 @@ val gameModule: Module = module {
     single {
         RoundCoordinator(
             cultivation = get<CultivationRound>(),
-            battle = get<BattleRound>()
+            battle = get<BattleRound>(),
+            threeEngagements = ThreeEngagementRoundExecutor(get<BattleRound>())
         )
     }
 

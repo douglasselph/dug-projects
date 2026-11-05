@@ -21,7 +21,7 @@ import dugsolutions.leaf.v35.tokens.Critter
  * The original scorers and choice policy remain authoritative for which action
  * to take; this class decides only which Supports have a credible continuation.
  */
-internal class EngagementSupportContinuation(
+class EngagementSupportContinuation(
     private val orchestrator: BattleTurnOrchestrator = BattleTurnOrchestrator(),
     private val capacityAssessor: BattleSupportCapacityAssessor = BattleSupportCapacityAssessor(),
     private val reachability: BattleSupportReachability = BattleSupportReachability()
@@ -75,7 +75,7 @@ internal class EngagementSupportContinuation(
     }
 
     /** Exhaustive two-slot budget; never expands branches with dice rolls or RNG. */
-    internal fun feasibleCumulativePairs(
+    fun feasibleCumulativePairs(
         slots: Int,
         availableBees: Int,
         availableButterflies: Int,

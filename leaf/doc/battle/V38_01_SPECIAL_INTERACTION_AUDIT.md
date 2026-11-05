@@ -2,7 +2,7 @@
 
 **Patch authored:** November 5, 2026  
 **Authority:** `doc/rules/Leaf_and_Let_Die_v38-01.pdf`, pp. 15–17, 19–21; official Plant and Wisp CSVs.  
-**Status:** focused tests authored; **not yet run on Ubuntu**. The passing V38-4 full-game regression does not guarantee these rare interactions.
+**Status:** focused test suite **PASSED on Ubuntu, November 5, 2026**. Uploaded `leaf-v38-interactions-20261105-141414-2152905.tgz`: 16 tests passed, zero failures/skips, both Gradle builds successful. The full-game regression does not guarantee all rare interactions.
 
 ## Why this increment
 

@@ -4,9 +4,6 @@ import dugsolutions.leaf.v35.battle.BattleState
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.player.PlayerId
 
-/** Research-only ruleset identity. Neither value changes canonical scheduling. */
-enum class BattlePacingRuleset { V37_03, THREE_ENGAGEMENTS }
-
 /** Frozen, independent of any later die reroll, removal or move. */
 data class EngagementOrder(
     val row: StrikeRow,

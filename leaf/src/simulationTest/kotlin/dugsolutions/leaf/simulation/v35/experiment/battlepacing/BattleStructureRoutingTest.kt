@@ -6,15 +6,20 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
+import dugsolutions.leaf.v35.di.appModules
+import dugsolutions.leaf.v35.game.round.RoundCoordinator
+import org.koin.dsl.koinApplication
 import kotlin.test.assertTrue
 import java.nio.file.Files
 
 class BattleStructureRoutingTest {
-    @Test fun adapterIsDiscoverableInSimulationRuntime() {
-        val providers = java.util.ServiceLoader.load(
-            dugsolutions.leaf.v35.game.round.BattleStructureProvider::class.java
-        ).toList()
-        assertNotNull(providers.firstOrNull { it is SimulationBattleStructureProvider })
+    @Test fun adoptedExecutorIsWiredByMainGameModule() {
+        val app = koinApplication { modules(appModules) }
+        try {
+            assertNotNull(app.koin.get<RoundCoordinator>())
+        } finally {
+            app.close()
+        }
     }
 
     @Test fun absentSettingsFileDefaultsToThreeEngagements() {

@@ -6,6 +6,8 @@ import dugsolutions.leaf.v35.chronicle.domain.PlayerRoundSummarySnapshot
 import dugsolutions.leaf.v35.chronicle.domain.stateSnapshot
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.BattleStructure
+import dugsolutions.leaf.v35.game.round.battle.BattleRound
+import dugsolutions.leaf.v35.game.round.battle.ThreeEngagementRoundExecutor
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.tokens.Critter
@@ -82,11 +84,11 @@ class RoundCoordinator(
             RoundCardType.BATTLE -> when (game.config.battleStructure) {
                 BattleStructure.LEGACY_WHOLE_BATTLE -> battle.execute(game, effectiveCard)
                 BattleStructure.THREE_ENGAGEMENTS -> {
-                    val candidate = threeEngagements ?: java.util.ServiceLoader.load(
-                        BattleStructureProvider::class.java
-                    ).firstOrNull()?.create(battle)
-                    requireNotNull(candidate) {
-                        "THREE_ENGAGEMENTS requires the simulation runtime on the classpath"
+                    val executor = threeEngagements ?: (battle as? BattleRound)?.let {
+                        ThreeEngagementRoundExecutor(it)
+                    }
+                    requireNotNull(executor) {
+                        "THREE_ENGAGEMENTS requires a BattleRound or an explicitly supplied Three Engagements executor"
                     }.execute(game, effectiveCard)
                 }
             }

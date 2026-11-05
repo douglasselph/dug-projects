@@ -22,7 +22,7 @@ import dugsolutions.leaf.v35.round.domain.RoundCard
  * whose scorer does not model row impact retains its global score, but gets no
  * fabricated row benefit. Its contribution is visible as unattributed.
  */
-internal data class BaselineMainActionForecast(
+data class BaselineMainActionForecast(
     val action: BattleMainAction,
     val fullScore: Int,
     val noOpenRowScore: Int,
@@ -39,12 +39,12 @@ internal data class BaselineMainActionForecast(
 }
 
 /** Injectable scorer enables pure scheduling tests without creating a game. */
-internal fun interface BaselineMainScore {
+fun interface BaselineMainScore {
     fun score(context: DecisionContext, card: RoundCard, action: BattleMainAction, mainsRemaining: Int): Int
 }
 
 /** Calls the genuine v37 First/Final Main consequence-aware scorers. */
-internal class V37BaselineMainScore : BaselineMainScore {
+class V37BaselineMainScore : BaselineMainScore {
     private val cardScorers = HumanBaselineCardScorerRegistry()
     private val firstMain = BattleFirstMainPriority(cardScorers)
     private val influences = BaselineInfluenceRegistry(cardScorers)
@@ -70,7 +70,7 @@ internal class V37BaselineMainScore : BaselineMainScore {
     }
 }
 
-internal class BaselineMainActionForecaster(
+class BaselineMainActionForecaster(
     private val scorer: BaselineMainScore = V37BaselineMainScore()
 ) {
     fun forecast(
