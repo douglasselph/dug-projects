@@ -164,7 +164,7 @@ fun main(args: Array<String>) {
             appendLine("task6Reassessment=changed rows + leader/margin changes + capped dice/Plant changes, capped at 10")
             listOf(
                 "data/Cultivation_Cards - Root.csv", "data/Cultivation_Cards - VF.csv",
-                "data/Wisp_Cards.csv", "data/Turn_Cards.csv",
+                "data/Wisp_Cards.csv", "data/Round_Cards.csv",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/BattlePacingScenario.kt",
                 "src/main/kotlin/dugsolutions/leaf/v35/game/round/battle/BattleActionCoordinator.kt",
                 "src/main/kotlin/dugsolutions/leaf/v35/game/round/battle/BattleRound.kt",

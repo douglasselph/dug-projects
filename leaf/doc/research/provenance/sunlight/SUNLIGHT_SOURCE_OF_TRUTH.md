@@ -3,7 +3,7 @@
 ## Status and invariant
 
 **Canonical Cultivation Sunlight is `Gain Sunlight token`, never `Raise a die +3`.**
-The authoritative definition is `data/Turn_Cards.csv`: all three `Resource_Sunlight_*` cards contain `effect_1_text=Gain Sunlight token`. The `GameEffectConverter` maps that exact wording to `GameEffect.GAIN_SUNLIGHT_TOKEN`; `RoundCardRegistry` loads it without inventing card-identity-specific rules; `RoundValueResolver.CANONICAL` preserves it. `DefaultGameEffectExecutor` routes the resolved effect to `ResourceEffectHandler`, which uses `SunlightTokenResolver.gain` to transfer a token from shared Grove supply to the player and records the transaction. It does **not** modify a die.
+The authoritative definition is `data/Round_Cards.csv`: all three `Resource_Sunlight_*` cards contain `effect_1_text=Gain Sunlight token`. The `GameEffectConverter` maps that exact wording to `GameEffect.GAIN_SUNLIGHT_TOKEN`; `RoundCardRegistry` loads it without inventing card-identity-specific rules; `RoundValueResolver.CANONICAL` preserves it. `DefaultGameEffectExecutor` routes the resolved effect to `ResourceEffectHandler`, which uses `SunlightTokenResolver.gain` to transfer a token from shared Grove supply to the player and records the transaction. It does **not** modify a die.
 
 The tests added under A05 check all three actual CSV records, canonical resolution, and actual effect execution with a visible die that must remain unchanged.
 

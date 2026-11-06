@@ -138,8 +138,18 @@ The official data files are the primary simulator sources for current card defin
 data/Cultivation_Cards - Root.csv
 data/Cultivation_Cards - VF.csv
 data/Wisp_Cards.csv
-data/Turn_Cards.csv
+data/Round_Cards.csv
 ```
+
+**November 5 catalog refresh:** `Round_Cards.csv` is now the only official Round CSV;
+`Turn_Cards.csv` has been removed. Run the catalog audit before research:
+
+```bash
+python3 bin/audit_authoritative_cards.py --out ~/Downloads/leaf-cards-manifest.json
+```
+
+It validates and fingerprints the four canonical files. New effect implementations (NC-03 onward) are still
+pending, so this data-source migration does not certify full-game execution.
 
 Card **names** are preferred human-facing identifiers. IDs are trace keys and can change as catalogs are reorganized. Preserve fingerprints/checksums when comparing historical results.
 

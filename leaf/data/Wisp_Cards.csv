@@ -1,6 +1,7 @@
 quantity,name,title,count,effect,line_icons,line_icons_height,vp_icon,main_backdrop
-2,Wisp_Award_VP,Wisp of Honor,2,Gain 1 VP,,80,{{ images.victory_victory.url }},{{ images.cloud_honor.url }}
-1,Wisp_Award_VP2,Berry Patient,1,Gain 1 VP,,80,{{ images.victory_victory_victory.url }},{{ images.cloud_honor.url }}
+2,Wisp_Award_VP,Wisp of Honor,2,"Choose 1 player with Wisps. 
+They Trash 1.",,80,{{ images.victory_victory.url }},{{ images.cloud_honor.url }}
+1,Wisp_Award_VP2,Berry Patient,1,Each player with Wisps Trashes 1,,80,{{ images.victory_victory_victory.url }},{{ images.cloud_honor.url }}
 3,Wisp_Gain_Critters,Whispering Wings,3,"Gain any 2 critters
 (🪱/🐝)",,80,{{ images.victory.url }},{{ images.cloud_whispering_wings.url }}
 4,Wisp_Gain_Green,Pollinating Wisp,4,"Gain or Refresh
@@ -21,5 +22,6 @@ same-size die
 4,Wisp_Upgrade_Die,Overgrowth,4,"Upgrade +2 steps — 
 skip missing sizes; 
 use gained die now",,40,{{ images.victory.url }},{{ images.cloud_overgrowth.url }}
-2,Wisps_Resolve,Wisp's Resolve,2,"<battle/> Battle Only: Immediately finish 1 Strike:
+2,Wisps_Last_Word,Wisp's Last Word,2,"<battle/>
+Immediately finish any unresolved Strike: 
 Resolve → Doom → Cleanup.",{{ images.battle.url }},40,{{ images.victory.url }},{{ images.cloud_theft.url }}

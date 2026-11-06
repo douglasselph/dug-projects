@@ -9,7 +9,7 @@ These files describe the game itself and are not learned policies:
 
 - `Cultivation_Cards - Root.csv`
 - `Cultivation_Cards - VF.csv`
-- `Turn_Cards.csv`
+- `Round_Cards.csv`
 - `Wisp_Cards.csv`
 - `icon/`
 - `images/`

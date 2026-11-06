@@ -1,10 +1,236 @@
 # Leaf & Let Die - Active Research and Engineering Tasks
 
-**Status date:** November 5, 2026
+**Status date:** November 5, 2026 — NC-01/NC-02 catalog audit and Round loader migration implemented
 
 This is the **active top-level backlog**. It is intentionally shorter than the many historical phase/checkpoint documents under `doc/`.
 
 A historical task ID appearing in an older document does **not** mean that task is still open. Inspect current source/tests/results, then use this file as the current prioritization unless the user explicitly changes it.
+
+## NEXT ACTIVE PROGRAM — November 5 authoritative CSV integration (NC-01–NC-27)
+
+**Status: NC-01 and NC-02 implemented and statically verified; NC-03 onward open.** This section was originally prepared by comparing the newly attached
+`leaf(20261105-234756).tgz` with `leaf(20261105-234502).tgz`, and checking the then-current Kotlin
+converter, registry, action scheduler, effect handlers, policy references, and selected tests.
+The user has designated the newly supplied files under `data/` as **the new card source of truth**.
+They supersede older v38-01 card definitions *for card content*, but do not silently change the
+adopted **Three Engagements** Battle structure or the 3/2/2 Round schedule.
+
+**Start here, before A2/A3 or new large research runs.** Previously verified V38-4–V38-7
+results belong to the **previous card catalog**. Preserve those results and do not label the new
+catalog verified until the new tests and full-game matrix pass.
+
+### Audited input and why a migration is required
+
+| File | New inventory | Comparison against immediately preceding archive |
+| --- | --- | --- |
+| `data/Cultivation_Cards - Root.csv` | 12 Roots, 4 per cost 5/7/9 | **2** changed effects |
+| `data/Cultivation_Cards - VF.csv` | 12 Vines + 12 Flowers, 4 per legal cost slot | **11** changed Plant rows, including two title/effect swaps and printed VP-icon changes |
+| `data/Wisp_Cards.csv` | 12 Wisp definitions, **32 physical copies** by `quantity` (includes Wispquake quantity 0) | **2** rewritten play effects; **1** Wisp renamed/rekeyed and reworded |
+| **Canonical** `data/Round_Cards.csv` | 12 Round definitions, 18 copies | **2** revised Battle Round effects (Surge, Swell); now the single official Round path |
+| `data/Turn_Cards.csv` | **Absent** in the November 5 23:57 source archive | Obsolete file intentionally removed by the user; not a fallback |
+| `data/research/resync/*-current.csv` | Empty override tables (headers only) | Unchanged; not a substitute for checking the official catalogs |
+
+**NC-02 source conflict resolved (source routing only):** The user deleted
+`data/Turn_Cards.csv` in `leaf(20261105-235751).tgz`. Official Kotlin loading,
+active research provenance, R0, Sunlight parity, regression evidence scripts and
+current documentation now use `data/Round_Cards.csv`. Historical protected-baseline
+manifests and legacy documents retain the old path/hash as *archival evidence*.
+The new Surge/Swell effect text is authoritative, but its converter/execution support
+remains outstanding in **NC-03, NC-21 and NC-22**. Full Kotlin game execution with
+these revised CSVs is **not** claimed to pass until those tasks are complete.
+
+**Static converter audit:** `GameEffectConverter` has no exact mapping for **12 revised Plant
+texts**, **3 Wisp texts**, and **2 new Round texts**: **17 unmapped effect texts** in the intended
+new authoritative set. The remaining changed Plant row, `Vine_11_03` (Rise and Vine), already
+maps to `RAISE_ALL_DICE_PLUS_2` but still needs identity, printed-VP, policy and test review.
+This is a source-level check, **not** a Gradle/Kotlin test run. `PlantCardRegistry`,
+`WispCardRegistry`, and `RoundCardRegistry` reject `GameEffect.UNKNOWN`; new-catalog loading
+will therefore fail until the mappings and implementations are updated.
+
+New incoming SHA-256 fingerprints (record these in manifests, not as permanently hardcoded
+expected hashes):
+
+```text
+c1bc70b7d02db2fef139744169170b99b36ae43fbfeca48e7c6e0996cfe6c897  data/Cultivation_Cards - Root.csv
+7471bd8c0f05d6f738d9683c930de27cdd33659dd82158db3ce5446fd8e278ad  data/Cultivation_Cards - VF.csv
+b2ef7563ca1a09d15af2b6a1f12a016469a14fbfd5d2ea54eb85cb59658470aa  data/Wisp_Cards.csv
+7f6378cb62076da69ad16ffe7454b92e708940922b5e4d40a9525478afcd1f1b  data/Round_Cards.csv
+# historical e0be7625d20d2689fb4772b2d12919f28f88d68098eda39d8a4d2af992604e93  data/Turn_Cards.csv (archived prior baseline, not present)
+```
+
+### Work order and acceptance gates
+
+Complete in the order shown. A checkbox means **work still to do**, not a claim that all underlying
+features are missing; many reusable primitives already exist. Keep implementation in small,
+reviewable commits and changed-files ZIPs rooted at `leaf/`. Do not change official CSV content
+without an explicit design decision.
+
+#### P0 — Establish one executable source of truth (do first)
+
+- [x] **NC-01 — Freeze and validate incoming catalogs.** A new read-only
+  `bin/audit_authoritative_cards.py` validates all four canonical CSVs, verifies
+  36 Plant definitions / nine 4-option legal slots, normalized IDs and duplicate
+  rejection, 12 Wisp definitions / 32 copies (Wispquake 0), and 12 Round
+  definitions / 18 copies (6 Battle ×1; 6 Cultivation ×2). It emits exact
+  definition rows, per-card and per-file fingerprints, git HEAD/dirty status
+  when available, and a composite catalog fingerprint. The pinned manifest is
+  `doc/research/provenance/card-catalogs/NC01_02_MANIFEST_2026-11-05.json`.
+  Run `python3 bin/audit_authoritative_cards.py --out ~/Downloads/leaf-cards-manifest.json`.
+  The supplied tarball lacks Git metadata, so its snapshot says unavailable;
+  Ubuntu will record the actual checkout. **Static audit passed; no claim of
+  executable card-effect coverage.**
+- [x] **NC-02 — Migrate official Round source to `Round_Cards.csv`.**
+  `CardDataFiles.ROUND_CARD_LIST` now selects the new file; active provenance,
+  R0 input audit, Sunlight rule parity, applicable evidence scripts, and active
+  research scripts are updated. No code falls back to the obsolete file; the
+  audit rejects it if it reappears beside the canonical file. Historical
+  baselines remain intact. Tests cover exact new Surge/Swell raw wording and
+  strict path selection. **Filename/provenance migration complete; runtime
+  effect mappings and whole-game regression remain blocked by NC-03/NC-21/NC-22.**
+- [ ] **NC-03 — Convert all exact new texts, then fail closed.** Add the required `GameEffect`
+  identities and exact `GameEffectConverter` mappings for the 17 new/unmatched texts; reuse an
+  existing effect **only** where its semantics are genuinely identical. Preserve historical
+  aliases for replay, not for current-rule substitution. Update `GameEffectConverterTest`,
+  `OfficialCardSourceTest` and Wisp/Round registry tests to assert *all* official entries are
+  recognized and have executable routing. **Done:** zero UNKNOWN definitions across all 36
+  Plants, 12 Wisps and both effects on each of 12 Round cards.
+- [ ] **NC-04 — Record minimal rule interpretations before coding ambiguous effects.** Write
+  explicit testable rulings for (a) how free Bee/Worm/Butterfly Support is acquired, retained and
+  whether multiple activations stack; (b) whether free uses remain legal after two paid Supports
+  and how they interact with one-opportunity-per-Engagement and Sunlight; (c) whether a partially
+  possible two-step upgrade takes a one-step fallback, skips missing sizes, or fails; (d) how
+  repeated **"Raise 2 dice"** selects distinct/repeated dice when fewer than two are legal;
+  (e) whether a Wisp owner may select themselves, including the currently played Wisp, for
+  forced Wisp Trash; (f) how **"Use it now"** behaves in Battle when no Strike Square has room.
+  Resolve what existing core rules settle; flag only genuine ambiguities for Doug rather than
+  inventing behavior. **Done:** short decisions/fixture matrix in `doc/` and tests tied to it.
+
+#### P1 — Plant mechanics: revised effect execution (13 changed rows)
+
+- [ ] **NC-05 — Root Awakening (`Root_07_01`, cost 7).** Replace unconditional one-step
+  `UPGRADE_DIE_AND_USE_NOW` with **two steps if the selected die shows 3; otherwise one step;
+  use the replacement immediately**. Cover D4–D20 ladder, missing inventory, roll rewards,
+  ownership, player Dice Hand and live Battle Grid placement, and capacity/locked rows. Do not
+  reuse Wisp Overgrowth's “skip missing” semantics without an explicit rule basis.
+- [ ] **NC-06 — Root Appreciation (`Root_07_02`, cost 7).** Retain gain-1-Worm and stacking
+  **+1 per Worm per activation this round**; add **"Battle: Playing a Worm costs no Support
+  Action."** This is a Battle action-economy rule, not just a different Critter value.
+- [ ] **NC-07 — Vine Yield (`Vine_07_04`, cost 7).** Replace flat Raise +1 with **Raise one die
+  +1 per grafted Flower**. Count the correct current grafted cards (face-up/down as the rules
+  define), choose and cap the target die, and verify both phases and Battle row legality.
+- [ ] **NC-08 — Saplink Trellis (`Vine_09_03`, cost 9).** The cost-9 row used to be Rise and
+  Vine. It is now Saplink Trellis: **for each Root or Vine, Raise 2 dice +1**. Implement
+  multi-target/per-graft iteration and legal target decisions, maxima and capacities. Its
+  incoming VP icon is **1 VP**, not the previous 2 at this ID.
+- [ ] **NC-09 — Berry Tasty (`Vine_11_02`, cost 11).** Change **all owned D8s +1 → +2**,
+  observing die-face cap, phase and Battle row constraints. Reuse the all-D8 mechanism with an
+  explicit magnitude, not a card-name shortcut.
+- [ ] **NC-10 — Rise and Vine (`Vine_11_03`, cost 11).** This ID was Saplink Trellis; it is now
+  **Raise all your dice +2** (already a known effect) with incoming **2 VP**. Swap name,
+  policy/scorer identity and effect semantics consistently with NC-08; update ID/title-based
+  fixtures, market selection, research overrides and development reporting.
+- [ ] **NC-11 — Alluring Nectar (`Flower_11_01`, cost 11).** Keep gain/steal Butterfly and
+  refresh all owned Butterflies; add **"Battle: Using a Butterfly costs no Support Action."**
+  Cover theft, unavailable colors, Refresh, ordinary resource consumption and free-use timing.
+- [ ] **NC-12 — Bloom Backbone (`Flower_11_02`, cost 11).** Replace **one die +1 per grafted
+  Vine/Flower** with **all your dice +1 for each grafted Vine or Flower**. Test per-die caps,
+  card counting, repeated raises, filled/locked Battle rows and absence of dice.
+- [ ] **NC-13 — Someday Sunflower (`Flower_11_04`, cost 11).** This was Transplant Tulip;
+  now **Gain 2 Sunlight**. Implement bounded Grove supply and ownership, add/verify
+  provenance and a reusable count-based gain, and update old Transplant-specific decisions,
+  scorer/market identity and tests. Test gaining 0/1/2 when supply is constrained.
+- [ ] **NC-14 — Bee-loved Bloom (`Flower_14_01`, cost 14).** Keep gain/steal one Bee and
+  stacking **+2 Bee value per activation this round**; add **"Battle: Using a Bee costs no
+  Support Action."** Cover stolen/placed Bees and same-round repeat activations.
+- [ ] **NC-15 — Bloom Backflip (`Flower_14_02`, cost 14).** Replace old **Raise +1 and flip
+  every higher opposing die in the same Strike** with **flip one of your dice; in Battle,
+  flip one opponent's die**. Implement both chosen targets with valid face/opposite-face
+  semantics, lock restrictions, no-reward rules and the phase-specific second step.
+- [ ] **NC-16 — Petal To Die 4 (`Flower_14_04`, cost 14).** Remove old gain-or-steal path;
+  instead **gain a D4 and use it now**, then **discard any number of your D4s and draw the
+  same number of dice**. Keep proper supply scarcity, draw order, Roll Rewards, exact dice
+  ownership, replacement/placement in a Battle row, and zero-D4 edge cases. Preserve old
+  research variants as opt-in history only.
+- [ ] **NC-17 — Forget-Me-Not (`Flower_17_02`, cost 17).** Replace **roll one die from
+  Discard into Hand** with **choose a die from Discard and "Use it now"**. Confirm the
+  intended new phase-specific behavior (possibly existing machinery in Cultivation, but
+  Battle grid entry/capacity is an added requirement), then test it explicitly.
+
+#### P2 — Wisp and Round mechanics (not secondary for correctness)
+
+- [ ] **NC-18 — Wisp of Honor (`Wisp_Award_VP`).** Replace old **play for +1 VP** with
+  **choose one player who has Wisps; that player Trashes one**. This includes the actor if
+  allowed by the rule decision. Implement target choice, the target's Wisp choice, timing and
+  supply/empty-hand behavior. Preserve its printed **2 end-game VP** if unplayed.
+- [ ] **NC-19 — Berry Patient (`Wisp_Award_VP2`).** Replace old **play for +1 VP** with
+  **each player who has Wisps Trashes one**. Include self as the wording specifies, resolve
+  simultaneous/ordered selection deterministically, and preserve printed **3 end-game VP**.
+- [ ] **NC-20 — Wisp's Last Word (new ID `Wisps_Last_Word`).** Replace retired
+  `Wisps_Resolve` identity and old `"Wisp's Resolve"` title with **"Wisp's Last Word"**:
+  **immediately finish any unresolved Strike: Resolve → Doom → Cleanup**. Reuse the verified
+  v38 per-row `StrikeFinishCoordinator` where behavior matches; update *all* hard-coded
+  references in Wisp evaluators, tests, fixture names, scenario specs, frozen-weight
+  compatibility and reports. Confirm it can target the current or later unresolved row and
+  cannot touch an already closed row. Keep the legacy alias only for historical replay if needed.
+- [ ] **NC-21 — Round Surge, `Battle_Bloom_Surge`.** In new `Round_Cards.csv`, Surge is
+  **"Gain up to a D12. Place in Discard."**, not fixed D12. Add legal die-size selection
+  from available D4/D6/D8/D10/D12 as defined, handle zero available supply and record actual
+  gained type. Do not silently map to `GAIN_D12_TO_DISCARD`.
+- [ ] **NC-22 — Round Swell, `Battle_Scatter_Swell`.** It is now
+  **"Gain up to a D8. Use it now."**, replacing fixed **D10 to Discard**. Add legal
+  die-size selection and immediate Battle placement/roll/rewards without exceeding a Strike
+  Square's 3-die capacity or changing locked rows. Its incoming image/icon fields still
+  refer to D12/D10: **flag for card-layout correction**, not a simulator assumption.
+
+#### P3 — Cross-cutting scheduling, decisions, and regressions
+
+- [ ] **NC-23 — Fix free-Support scheduling end to end.** The adopted Three Engagements
+  scheduler currently assumes **2 total paid Support uses** and enforces
+  `actionCount <= 3` (1 Main + 2 Supports) inside
+  `src/main/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/ThreeEngagementBattle.kt`.
+  A newly free Worm/Bee/Butterfly use must not consume a paid slot, but must consume the
+  resource/ready Butterfly normally. Update legal generation, action counting, policy
+  opportunities, Wisp/Sunlight interactions and telemetry; prevent free-action infinite loops.
+  Ensure legacy Battle comparison is either supported consistently or explicitly constrained.
+- [ ] **NC-24 — Update legal choices, strategy/policy valuation, and reports.** Audit
+  `GameEffectDecisionRequirements`, family handlers, Human Baseline Plant/Wisp/Round scorers,
+  `BattleRoundEffectPriority`, multi-die target strategy, learned/frozen effect features,
+  support-capacity/reachability and direct/indirect tactical projections. Replace stale effect
+  and title assumptions (especially old Transplant Tulip, Saplink/Rise identities,
+  `Wisps_Resolve`, gain-1-VP Wisps and Swell D10). Preserve historical policies and mark
+  fingerprint-incompatible weights instead of silently using them for the new catalog.
+- [ ] **NC-25 — Establish deterministic coverage for *every* changed effect and catalog.** Test
+  current CSV → converter → correct handler → exact state changes, with no synthetic hard-coded
+  definitions taking the place of the new official CSV. Cover both phases where applicable,
+  Critter/Butterfly free actions, chaining, scarcity, caps, multi-target Raise, choice legality,
+  immediate-use dice, last-row/locked-row cases, Wisp self-targeting, Wispquake, Doom and
+  Cleanup. Verify printed VP, name/cost/tier, physical quantity and 4-per-slot invariants.
+- [ ] **NC-26 — Run full v38 and research smoke gates on new definitions.** Execute focused
+  new tests, `./gradlew test integrationTest simulationTest`, and the verified deterministic
+  2/3/4-player × THREE_ENGAGEMENTS/LEGACY_WHOLE_BATTLE full-game 3/2/2 matrix. Then run
+  **two structurally different revised-card questions** through the generic v38 runner,
+  checking actual activation, suppressed-effect zero output, policy scope, provenance,
+  resumability and report completeness. These are functional checks, **not balance verdicts**.
+- [ ] **NC-27 — Rebaseline provenance, update handoff and release in small patches.** Make the
+  question runner, manifest, official CSV hash collection and `data/README.md` identify the
+  new Round path and all four canonical catalogs; flag archived results/policy weights as
+  historical. Keep experimental overrides opt-in, and update the known-effect catalog,
+  documentation, `TASKS.md` statuses and repeatable Ubuntu commands. Provide changed-files
+  ZIPs rooted at `leaf/`, a Git commit message per increment and verified failure evidence.
+
+**Stop/go:** NC-01–NC-03 establish that the new catalog is loadable; NC-04–NC-24 establish
+real effect and policy parity; NC-25–NC-27 establish that the simulator and generic research
+runner can be trusted on **this** card set. Only then progress to A2 targeted evidence-strength
+checks and A3/A4 all-36-card effect/purchase analysis. A2 enhancements can be built narrowly
+when an individual effect actually requires them; do **not** start an unrelated generalized AI
+rewrite or multi-hour balance run now.
+
+**Scope of this planning increment:** updated `TASKS.md` only. No changes have yet been made
+in Kotlin, official CSV data, test expectations, learned weights or the Battle rules. No new
+Gradle tests were run; catalog differences and converter mismatches above were established
+by static inspection of the supplied archives and current source.
+
+---
 
 ## Immediate engineering gate — validate the adopted v38-01 rules
 

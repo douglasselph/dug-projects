@@ -8,7 +8,7 @@ import dugsolutions.leaf.v35.round.domain.RoundCardType
 import java.io.File
 
 /**
- * Loads Round card definitions from the v35 Turn_Cards CSV.
+ * Loads Round card definitions from the canonical Round_Cards.csv.
  *
  * Each CSV row contains two independent game effects. Both are converted
  * through the shared GameEffectConverter.
