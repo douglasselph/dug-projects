@@ -32,9 +32,9 @@ class OfficialCardSourceTest {
             registry.getCard("Flower_14_04"),
             registry.getCard("zFlower_14_04")
         )
-        assertEquals(GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND, registry.getCard("Root_07_02")?.effect)
+        assertEquals(GameEffect.GAIN_WORM_BOOST_AND_FREE_BATTLE_SUPPORT, registry.getCard("Root_07_02")?.effect)
         assertEquals(GameEffect.GAIN_VP_PER_ONE_SHOWING, registry.getCard("Root_07_03")?.effect)
-        assertEquals(GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW, registry.getCard("Flower_14_04")?.effect)
+        assertEquals(GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S, registry.getCard("Flower_14_04")?.effect)
         assertEquals(GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW, registry.getCard("Flower_11_03")?.effect)
         assertEquals(GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE, registry.getCard("Flower_17_03")?.effect)
     }
@@ -48,5 +48,10 @@ class OfficialCardSourceTest {
         val rounds = RoundCardRegistry(converter)
         rounds.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST))
         assertEquals(12, rounds.getAllCards().size)
+        assertEquals(GameEffect.CHOOSE_PLAYER_WITH_WISPS_TRASH_ONE, wisps.getCard("Wisp_Award_VP")?.effect)
+        assertEquals(GameEffect.EACH_PLAYER_WITH_WISPS_TRASH_ONE, wisps.getCard("Wisp_Award_VP2")?.effect)
+        assertEquals(GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW, wisps.getCard("Wisps_Last_Word")?.effect)
+        assertEquals(GameEffect.GAIN_UP_TO_D12_TO_DISCARD, rounds.getCard("Battle_Bloom_Surge")?.secondEffect?.effect)
+        assertEquals(GameEffect.GAIN_UP_TO_D8_AND_USE_NOW, rounds.getCard("Battle_Scatter_Swell")?.secondEffect?.effect)
     }
 }

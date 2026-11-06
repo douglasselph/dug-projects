@@ -41,7 +41,7 @@ class HumanBaselineCardScorerRegistryTest {
             "Wisp_Award_VP", "Wisp_Award_VP2", "Wisp_Gain_Critters",
             "Wisp_Gain_Green", "Wisp_Gain_Purple", "Wisp_Gain_Red", "Wisp_Gain_Yellow",
             "Wisp_Mulch_Die", "Wisp_Quake", "Wisp_Swap_Die",
-            "Wisp_Upgrade_Die", "Wisps_Resolve"
+            "Wisp_Upgrade_Die", "Wisps_Resolve", "Wisps_Last_Word"
         )
         assertEquals(expected, HumanBaselineCardScorerRegistry().registeredNames())
     }

@@ -67,6 +67,27 @@ class GameEffectConverter(
                 .lowercase()
 
         private val effectsByText: Map<String, GameEffect> = buildMap {
+
+            // Current authoritative catalog wordings. Preserve old aliases below
+            // for explicit historical replay, never as substitute mechanics.
+            register("""Upgrade 1 die by 2 steps if it shows 3; otherwise, 1 step. Use the new die now.""", GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW)
+            register("""Gain 1 worm. Each worm <worm/> is worth 1 more this round. <battle/> Playing a Worm costs no Support Action.""", GameEffect.GAIN_WORM_BOOST_AND_FREE_BATTLE_SUPPORT)
+            register("""Raise one die +1 per grafted Flower""", GameEffect.RAISE_ONE_DIE_PLUS_1_PER_GRAFTED_FLOWER)
+            register("""For each Root or Vine, Raise 2 dice +1""", GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE)
+            register("""Raise all your D8s +2""", GameEffect.RAISE_ALL_D8S_PLUS_2)
+            register("""Gain or steal a Butterfly. Turn all your Butterflies face up. <battle/> Using a Butterfly costs no Support Action.""", GameEffect.GAIN_OR_STEAL_BUTTERFLY_REFRESH_AND_FREE_BATTLE_SUPPORT)
+            register("""For each grafted Vine or Flower, Raise all your dice +1""", GameEffect.RAISE_ALL_DICE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER)
+            register("""Gain 2 Sunlight""", GameEffect.GAIN_TWO_SUNLIGHT_TOKENS)
+            register("""Gain or Steal a Bee <bee/>. Each of your bees is worth 2 more this round. <battle/> Using a Bee costs no Support Action.""", GameEffect.GAIN_OR_STEAL_BEE_BOOST_AND_FREE_BATTLE_SUPPORT)
+            register("""Flip one of your dice. <battle/> Flip an opponent's die.""", GameEffect.FLIP_OWN_DIE_AND_OPPONENT_DIE_IN_BATTLE)
+            register("""Gain a D4. Use it now. Then discard any number of D4's. Draw a die for each D4 discarded.""", GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S)
+            register("""Choose any 1 die from your Discard. Use it now.""", GameEffect.USE_DIE_FROM_DISCARD_NOW)
+            register("""Choose 1 player with Wisps. They Trash 1.""", GameEffect.CHOOSE_PLAYER_WITH_WISPS_TRASH_ONE)
+            register("""Each player with Wisps Trashes 1""", GameEffect.EACH_PLAYER_WITH_WISPS_TRASH_ONE)
+            register("""<battle/> Immediately finish any unresolved Strike: Resolve → Doom → Cleanup.""", GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW)
+            register("""Gain up to a D12. Place in Discard.""", GameEffect.GAIN_UP_TO_D12_TO_DISCARD)
+            register("""Gain up to a D8. Use it now.""", GameEffect.GAIN_UP_TO_D8_AND_USE_NOW)
+
             // Explicit aliases for the October/November 2026 card files.
             // Do not replace these with approximate/fuzzy text matching.
             // v38-01 official Plant CSVs (Nov 2026).  These are deliberate text

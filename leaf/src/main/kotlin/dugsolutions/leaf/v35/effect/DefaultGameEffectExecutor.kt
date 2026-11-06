@@ -70,6 +70,9 @@ class DefaultGameEffectExecutor(
         request: GameEffectRequest
     ): Boolean =
         effectiveRequest(request).let { effective ->
+            require(effective.effect !in CardEffectReadiness.pending) {
+                "Card effect ${effective.effect} is recognized but not yet implemented"
+            }
             handlerFor(effective.effect)?.canExecute(effective) ?: false
         }
 
@@ -85,6 +88,9 @@ class DefaultGameEffectExecutor(
         request: GameEffectRequest
     ) {
         val effective = effectiveRequest(request)
+        require(effective.effect !in CardEffectReadiness.pending) {
+            "Card effect ${effective.effect} is recognized but not yet implemented"
+        }
         require(effective.effect != GameEffect.RAISE_DIE_PLUS_3) {
             "Obsolete Sunlight Raise +3 cannot execute; official Sunlight gains a token. " +
                 "Replace outdated Round/research input explicitly."

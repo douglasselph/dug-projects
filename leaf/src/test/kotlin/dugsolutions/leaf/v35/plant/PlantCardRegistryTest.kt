@@ -54,7 +54,7 @@ class PlantCardRegistryTest {
             assertNotNull(registry.getCard("Vine_07_01")).scoringRule
         )
         assertEquals(
-            PlantScoringRule.Fixed(2),
+            PlantScoringRule.Fixed(1),
             assertNotNull(registry.getCard("Vine_09_03")).scoringRule
         )
         assertEquals(

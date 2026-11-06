@@ -2,6 +2,24 @@ package dugsolutions.leaf.v35.effect
 
 enum class GameEffect {
     UNKNOWN,
+    // Official catalog identities awaiting their actual mechanics (see TASKS.md).
+    // Recognition is deliberately separate from executable effect resolution.
+    UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW,
+    GAIN_WORM_BOOST_AND_FREE_BATTLE_SUPPORT,
+    RAISE_ONE_DIE_PLUS_1_PER_GRAFTED_FLOWER,
+    RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE,
+    RAISE_ALL_D8S_PLUS_2,
+    GAIN_OR_STEAL_BUTTERFLY_REFRESH_AND_FREE_BATTLE_SUPPORT,
+    RAISE_ALL_DICE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
+    GAIN_TWO_SUNLIGHT_TOKENS,
+    GAIN_OR_STEAL_BEE_BOOST_AND_FREE_BATTLE_SUPPORT,
+    FLIP_OWN_DIE_AND_OPPONENT_DIE_IN_BATTLE,
+    GAIN_D4_USE_NOW_THEN_CYCLE_D4S,
+    USE_DIE_FROM_DISCARD_NOW,
+    CHOOSE_PLAYER_WITH_WISPS_TRASH_ONE,
+    EACH_PLAYER_WITH_WISPS_TRASH_ONE,
+    GAIN_UP_TO_D12_TO_DISCARD,
+    GAIN_UP_TO_D8_AND_USE_NOW,
     // Research calibration only. Never referenced from canonical card CSVs.
     RESEARCH_NO_EFFECT,
     RESEARCH_RAISE_DIE_PLUS_20,

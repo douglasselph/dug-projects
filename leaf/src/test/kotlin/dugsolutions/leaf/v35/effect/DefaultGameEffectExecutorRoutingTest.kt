@@ -290,7 +290,8 @@ class DefaultGameEffectExecutorRoutingTest {
         GameEffect.values()
             .filterNot {
                 it == GameEffect.UNKNOWN ||
-                    it == GameEffect.RAISE_DIE_PLUS_3
+                    it == GameEffect.RAISE_DIE_PLUS_3 ||
+                    it in CardEffectReadiness.pending
             }
             .forEach { effect ->
                 assertTrue(
@@ -298,6 +299,14 @@ class DefaultGameEffectExecutorRoutingTest {
                     "GameEffect has no DefaultGameEffectExecutor route: $effect"
                 )
             }
+    }
+
+    @Test
+    fun pendingCatalogEffectsAreRecognizedButNotRouted() {
+        val executor = DefaultGameEffectExecutor()
+        CardEffectReadiness.pending.forEach { effect ->
+            assertFalse(executor.supports(effect), "Pending $effect accidentally routed")
+        }
     }
 
     @Test

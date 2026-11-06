@@ -1,6 +1,6 @@
 # Leaf & Let Die - Active Research and Engineering Tasks
 
-**Status date:** November 5, 2026 — catalog audit and Round loader migration implemented
+**Status date:** November 5, 2026 — catalog effect recognition added; mechanical parity pending
 
 This is the **active top-level backlog**. It is intentionally shorter than the many historical phase/checkpoint documents under `doc/`.
 
@@ -8,7 +8,7 @@ A historical task ID appearing in an older document does **not** mean that task 
 
 ## NEXT ACTIVE PROGRAM — November 5 authoritative CSV integration (NC-01–NC-27)
 
-**Status: NC-01 and NC-02 implemented and statically verified; NC-03 onward open.** This section was originally prepared by comparing the newly attached
+**Status: NC-01, NC-02 and NC-03 recognition implemented and statically verified; NC-04–NC-27 remain open.** This section was originally prepared by comparing the newly attached
 `leaf(20261105-234756).tgz` with `leaf(20261105-234502).tgz`, and checking the then-current Kotlin
 converter, registry, action scheduler, effect handlers, policy references, and selected tests.
 The user has designated the newly supplied files under `data/` as **the new card source of truth**.
@@ -35,17 +35,20 @@ catalog verified until the new tests and full-game matrix pass.
 active research provenance, R0, Sunlight parity, regression evidence scripts and
 current documentation now use `data/Round_Cards.csv`. Historical protected-baseline
 manifests and legacy documents retain the old path/hash as *archival evidence*.
-The new Surge/Swell effect text is authoritative, but its converter/execution support
-remains outstanding in **NC-03, NC-21 and NC-22**. Full Kotlin game execution with
+The new Surge/Swell effect text is authoritative and is now converted to distinct pending
+mechanical identities. Execution support remains outstanding in **NC-21 and NC-22**. Full Kotlin game execution with
 these revised CSVs is **not** claimed to pass until those tasks are complete.
 
-**Static converter audit:** `GameEffectConverter` has no exact mapping for **12 revised Plant
-texts**, **3 Wisp texts**, and **2 new Round texts**: **17 unmapped effect texts** in the intended
-new authoritative set. The remaining changed Plant row, `Vine_11_03` (Rise and Vine), already
-maps to `RAISE_ALL_DICE_PLUS_2` but still needs identity, printed-VP, policy and test review.
-This is a source-level check, **not** a Gradle/Kotlin test run. `PlantCardRegistry`,
-`WispCardRegistry`, and `RoundCardRegistry` reject `GameEffect.UNKNOWN`; new-catalog loading
-will therefore fail until the mappings and implementations are updated.
+**Converter status:** All **17 previously unmatched exact texts** now map to deliberate
+`GameEffect` identities (16 new identities, plus the existing compatible early-Strike
+resolver for Wisp's Last Word). All **72 official effect cells** across the 60 CSV
+card definitions were recognized in an independently compiled Kotlin converter
+smoke check; no `UNKNOWN` was encountered. The 16 changed behaviors remain
+**recognized but not yet executable** until their individual mechanics tasks are
+implemented. `CardEffectReadiness` explicitly rejects those effects and prevents
+full-game research from proceeding with incomplete selected decks. The older
+effect aliases remain for historical inputs; they are not current-rule substitutes.
+The Kotlin test suite has not yet been run against this new patch on Ubuntu.
 
 New incoming SHA-256 fingerprints (record these in manifests, not as permanently hardcoded
 expected hashes):
@@ -86,14 +89,18 @@ without an explicit design decision.
   audit rejects it if it reappears beside the canonical file. Historical
   baselines remain intact. Tests cover exact new Surge/Swell raw wording and
   strict path selection. **Filename/provenance migration complete; runtime
-  effect mappings and whole-game regression remain blocked by NC-03/NC-21/NC-22.**
-- [ ] **NC-03 — Convert all exact new texts, then fail closed.** Add the required `GameEffect`
-  identities and exact `GameEffectConverter` mappings for the 17 new/unmatched texts; reuse an
-  existing effect **only** where its semantics are genuinely identical. Preserve historical
-  aliases for replay, not for current-rule substitution. Update `GameEffectConverterTest`,
-  `OfficialCardSourceTest` and Wisp/Round registry tests to assert *all* official entries are
-  recognized and have executable routing. **Done:** zero UNKNOWN definitions across all 36
-  Plants, 12 Wisps and both effects on each of 12 Round cards.
+  mechanical implementation and whole-game regression remain blocked by NC-05–NC-24.**
+- [x] **NC-03 — Recognize all exact new texts and fail closed on pending mechanics.** Added
+  16 dedicated `GameEffect` identities, 17 explicit converters (Wisp's Last Word
+  reuses the existing equivalent early-Strike handler), and tests covering all
+  36 Plants, 12 Wisps and both effects on each of 12 Round cards. Unknown text
+  remains `UNKNOWN`; known but incomplete mechanics are explicitly listed in
+  `CardEffectReadiness` and rejected at full-game startup or effect execution.
+  Historical aliases retain their original meaning. The converter independently
+  compiled and recognized 72/72 official effect cells; full Gradle tests await
+  Ubuntu. **Do not interpret this checkmark as mechanics complete:** each pending
+  identity must receive a real handler, legal targeting and policy support in
+  NC-05–NC-24 before production gameplay/research can resume.
 - [ ] **NC-04 — Record minimal rule interpretations before coding ambiguous effects.** Write
   explicit testable rulings for (a) how free Bee/Worm/Butterfly Support is acquired, retained and
   whether multiple activations stack; (b) whether free uses remain legal after two paid Supports
@@ -218,7 +225,7 @@ without an explicit design decision.
   documentation, `TASKS.md` statuses and repeatable Ubuntu commands. Provide changed-files
   ZIPs rooted at `leaf/`, a Git commit message per increment and verified failure evidence.
 
-**Stop/go:** NC-01–NC-03 establish that the new catalog is loadable; NC-04–NC-24 establish
+**Stop/go:** NC-01–NC-03 establish that the new catalog is recognizable (not yet executable); NC-04–NC-24 establish
 real effect and policy parity; NC-25–NC-27 establish that the simulator and generic research
 runner can be trusted on **this** card set. Only then progress to A2 targeted evidence-strength
 checks and A3/A4 all-36-card effect/purchase analysis. A2 enhancements can be built narrowly

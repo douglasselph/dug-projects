@@ -1,7 +1,7 @@
 # Authoritative card catalogs and Round CSV source of truth
 
 **Baseline supplied:** `leaf(20261105-235751).tgz` (November 5, 2026).
-**Status:** Catalog validation and Round CSV source-path migration are complete. **Conversion and execution of newly revised effects still require implementation and regression testing**; this audit does not establish full-game compatibility.
+**Status:** Catalog validation, Round CSV source-path migration, and explicit recognition of all authoritative effect texts are complete. **New effect execution remains incomplete**; these audits do not establish full-game compatibility.
 
 ## Source-of-truth contract
 
@@ -39,7 +39,7 @@ Verified structural invariants:
 | Wisps | 12 | 32 | `count` matches `quantity`; Wispquake has quantity 0 |
 | Round cards | 12 | 18 | 6 Battle ×1; 6 Cultivation ×2; each has 2 effects |
 
-**Round behavior source:** `Battle_Bloom_Surge` has `Gain up to a D12. Place in Discard.`; `Battle_Scatter_Swell` has `Gain up to a D8. Use it now.` The old Round CSV is not read. The current `GameEffectConverter` does not yet recognize these texts. **Do not replace them with previous D12/D10 simple effects or interpret a successful catalog audit as successful game execution.** Implement the new effect conversions and Surge/Swell behavior, then run the full Kotlin regressions.
+**Round behavior source:** `Battle_Bloom_Surge` has `Gain up to a D12. Place in Discard.`; `Battle_Scatter_Swell` has `Gain up to a D8. Use it now.` The old Round CSV is not read. The converter recognizes both with **dedicated, currently pending** effect identities. **Do not replace them with previous D12/D10 simple effects or interpret a successful catalog audit as successful game execution.** Implement Surge/Swell mechanics, then run the full Kotlin regressions.
 
 ## Art-only discrepancy for later review
 
@@ -47,7 +47,7 @@ The incoming Swell definition says **up to D8**, but its `effect_2_image` refere
 
 ## Evidence limits
 
-`bin/audit_authoritative_cards.py` validates **catalog structure and identity**, not whether all textual effects have Kotlin implementations. An unsupported effect is still an explicit, expected failure at card-registry load time until converter support is added. Previously collected Battle regression evidence belongs to the earlier card definitions; it must not be misattributed to this new fingerprint.
+`bin/audit_authoritative_cards.py` validates **catalog structure and identity**, not whether all textual effects have Kotlin implementations. All 72 official effect fields now convert to known identities. Sixteen new semantics intentionally lack executable handlers. The game runner and effect dispatcher fail closed instead of silently treating them as harmless no-ops. Previously collected Battle regression evidence belongs to the earlier card definitions; it must not be misattributed to this new fingerprint.
 
 ## Documentation naming convention
 

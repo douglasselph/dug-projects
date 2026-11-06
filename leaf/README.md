@@ -150,7 +150,7 @@ python3 bin/audit_authoritative_cards.py --out ~/Downloads/leaf-cards-manifest.j
 
 The [catalog source-of-truth guide](doc/research/provenance/card-catalogs/CARD_CATALOG_SOURCE_OF_TRUTH.md) describes the four official input files, validation boundaries, and reproducible manifests. Active code, tests, and documentation are named for their purpose rather than transient task IDs; milestone IDs belong in `TASKS.md` and historical records.
 
-It validates and fingerprints the four canonical files. Revised card-effect implementations are still pending, so this data-source migration does not certify full-game execution.
+It validates and fingerprints the four canonical files. Every authoritative effect text now has a deliberate `GameEffect` identity, but 16 revised mechanical identities remain explicitly unimplemented. `CardEffectReadiness` rejects incomplete effects before simulation instead of treating them as old behavior or harmless no-ops. **Full-game runs against the updated catalog remain blocked until the individual effect implementations and policies are ready.**
 
 Card **names** are preferred human-facing identifiers. IDs are trace keys and can change as catalogs are reorganized. Preserve fingerprints/checksums when comparing historical results.
 

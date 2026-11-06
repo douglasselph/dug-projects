@@ -38,7 +38,7 @@ class WispCardRegistryTest {
         assertEquals(2, card.quantity)
         assertEquals("Wisp of Honor", card.title)
         assertEquals(2, card.count)
-        assertEquals(GameEffect.GAIN_ONE_VP, card.effect)
+        assertEquals(GameEffect.CHOOSE_PLAYER_WITH_WISPS_TRASH_ONE, card.effect)
         assertNull(card.lineIcons)
         assertEquals(80, card.lineIconsHeight)
         assertEquals("{{ images.victory_victory.url }}", card.vpIcon)
@@ -53,7 +53,7 @@ class WispCardRegistryTest {
         assertEquals(3, assertNotNull(registry.getCard("Wisp_Award_VP2")).endGameVp)
         assertEquals(1, assertNotNull(registry.getCard("Wisp_Gain_Critters")).endGameVp)
         assertEquals(0, assertNotNull(registry.getCard("Wisp_Quake")).endGameVp)
-        assertEquals(1, assertNotNull(registry.getCard("Wisps_Resolve")).endGameVp)
+        assertEquals(1, assertNotNull(registry.getCard("Wisps_Last_Word")).endGameVp)
     }
 
     @Test
@@ -117,7 +117,7 @@ class WispCardRegistryTest {
         registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.WISP_LIST))
 
         val quake = assertNotNull(registry.getCard("Wisp_Quake"))
-        val resolve = assertNotNull(registry.getCard("Wisps_Resolve"))
+        val resolve = assertNotNull(registry.getCard("Wisps_Last_Word"))
         val pollenTheft = assertNotNull(registry.getCard("Wisp_Swap_Die"))
 
         assertEquals(0, quake.quantity)
@@ -126,7 +126,7 @@ class WispCardRegistryTest {
         assertEquals("", quake.mainBackdrop)
         assertEquals(false, quake.playImmediately)
         assertEquals(false, quake.battleOnly)
-        assertEquals("Wisp's Resolve", resolve.title)
+        assertEquals("Wisp's Last Word", resolve.title)
         assertEquals(2, resolve.quantity)
         assertEquals(GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW, resolve.effect)
         assertEquals(true, resolve.battleOnly)

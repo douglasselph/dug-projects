@@ -1,6 +1,8 @@
 package dugsolutions.leaf.v35.game
 
 import dugsolutions.leaf.v35.error.stateNotNull
+import dugsolutions.leaf.v35.error.lifecycleCheck
+import dugsolutions.leaf.v35.effect.CardEffectReadiness
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.game.round.RoundCoordinator
 import dugsolutions.leaf.v35.game.scoring.FinalScorer
@@ -18,6 +20,11 @@ class GameRunner(
 ) {
 
     fun run(game: Game): GameRunResult {
+        lifecycleCheck(game.status == GameStatus.READY) {
+            "Game can only start from READY: ${game.status}"
+        }
+        // Reject partially implemented official effects before mutating game state.
+        CardEffectReadiness.requireExecutableGame(game)
         game.start()
 
         var roundsCompleted = 0

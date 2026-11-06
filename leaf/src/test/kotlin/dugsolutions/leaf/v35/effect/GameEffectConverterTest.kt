@@ -6,6 +6,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.test.assertFalse
 
 class GameEffectConverterTest {
 
@@ -136,6 +137,42 @@ class GameEffectConverterTest {
      * tests/scenarios are migrated; current CSV data never produces them.
      */
     @Test
+    fun currentCatalogText_isRecognizedWithoutPretendingToBeImplemented() {
+        val newTextByEffect = listOf(
+            "Upgrade 1 die by 2 steps if it shows 3; otherwise, 1 step. Use the new die now." to GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW,
+            "Gain 1 worm. Each worm <worm/> is worth 1 more this round. <battle/> Playing a Worm costs no Support Action." to GameEffect.GAIN_WORM_BOOST_AND_FREE_BATTLE_SUPPORT,
+            "Raise one die +1 per grafted Flower" to GameEffect.RAISE_ONE_DIE_PLUS_1_PER_GRAFTED_FLOWER,
+            "For each Root or Vine, Raise 2 dice +1" to GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE,
+            "Raise all your D8s +2" to GameEffect.RAISE_ALL_D8S_PLUS_2,
+            "Gain or steal a Butterfly. Turn all your Butterflies face up. <battle/> Using a Butterfly costs no Support Action." to GameEffect.GAIN_OR_STEAL_BUTTERFLY_REFRESH_AND_FREE_BATTLE_SUPPORT,
+            "For each grafted Vine or Flower, Raise all your dice +1" to GameEffect.RAISE_ALL_DICE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
+            "Gain 2 Sunlight" to GameEffect.GAIN_TWO_SUNLIGHT_TOKENS,
+            "Gain or Steal a Bee <bee/>. Each of your bees is worth 2 more this round. <battle/> Using a Bee costs no Support Action." to GameEffect.GAIN_OR_STEAL_BEE_BOOST_AND_FREE_BATTLE_SUPPORT,
+            "Flip one of your dice. <battle/> Flip an opponent's die." to GameEffect.FLIP_OWN_DIE_AND_OPPONENT_DIE_IN_BATTLE,
+            "Gain a D4. Use it now. Then discard any number of D4's. Draw a die for each D4 discarded." to GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S,
+            "Choose any 1 die from your Discard. Use it now." to GameEffect.USE_DIE_FROM_DISCARD_NOW,
+            "Choose 1 player with Wisps. They Trash 1." to GameEffect.CHOOSE_PLAYER_WITH_WISPS_TRASH_ONE,
+            "Each player with Wisps Trashes 1" to GameEffect.EACH_PLAYER_WITH_WISPS_TRASH_ONE,
+            "<battle/> Immediately finish any unresolved Strike: Resolve → Doom → Cleanup." to GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW,
+            "Gain up to a D12. Place in Discard." to GameEffect.GAIN_UP_TO_D12_TO_DISCARD,
+            "Gain up to a D8. Use it now." to GameEffect.GAIN_UP_TO_D8_AND_USE_NOW
+        )
+        assertEquals(17, newTextByEffect.size)
+        val executor = DefaultGameEffectExecutor()
+        for ((text, effect) in newTextByEffect) {
+            assertEquals(effect, converter(text), text)
+            if (effect in CardEffectReadiness.pending) {
+                assertFalse(executor.supports(effect), "Premature handler for $effect")
+            } else {
+                assertTrue(executor.supports(effect), "Known compatible handler missing for $effect")
+            }
+        }
+        assertEquals(16, CardEffectReadiness.pending.size)
+        // Changed quantities or targeting are not approximate legacy aliases.
+        assertTrue(converter("Gain up to a D10. Use it now.") == GameEffect.UNKNOWN)
+    }
+
+    @Test
     fun csvSources_andGameEffects_areInSync() {
         // Arrange
         val sourceEffects = readAllSourceEffects()
@@ -171,6 +208,21 @@ class GameEffectConverterTest {
             .toSet()
 
         val retiredCompatibilityEffects = setOf(
+            // Historical official text now superseded by authoritative CSV effects.
+            GameEffect.UPGRADE_DIE_AND_USE_NOW,
+            GameEffect.DRAW_ONE_DIE_AND_SWAP_TWO_OWN_DICE_RAISE_ONE_PLUS_2_IN_BATTLE,
+            GameEffect.RAISE_ANY_DIE_PLUS_1,
+            GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW,
+            GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND,
+            GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE,
+            GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
+            GameEffect.RAISE_ALL_D8S_PLUS_1,
+            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND,
+            GameEffect.GAIN_OR_STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES,
+            GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW,
+            GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND,
+            GameEffect.GAIN_D10_TO_DISCARD,
+            GameEffect.GAIN_D12_TO_DISCARD,
             GameEffect.RESEARCH_NO_EFFECT, // calibration-only, never canonical CSV
             GameEffect.RESEARCH_RAISE_DIE_PLUS_20,
             GameEffect.RESEARCH_DRAW_FOUR_DICE,

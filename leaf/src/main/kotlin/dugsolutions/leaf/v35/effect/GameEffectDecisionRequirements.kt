@@ -65,7 +65,23 @@ object GameEffectDecisionRequirements {
     fun forEffect(effect: GameEffect): GameEffectDecisionRequirement? =
         when (effect) {
             GameEffect.UNKNOWN,
-            GameEffect.RAISE_DIE_PLUS_3 -> null // Retired; never a legal decision request
+            GameEffect.RAISE_DIE_PLUS_3,
+            GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW,
+            GameEffect.GAIN_WORM_BOOST_AND_FREE_BATTLE_SUPPORT,
+            GameEffect.RAISE_ONE_DIE_PLUS_1_PER_GRAFTED_FLOWER,
+            GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE,
+            GameEffect.RAISE_ALL_D8S_PLUS_2,
+            GameEffect.GAIN_OR_STEAL_BUTTERFLY_REFRESH_AND_FREE_BATTLE_SUPPORT,
+            GameEffect.RAISE_ALL_DICE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
+            GameEffect.GAIN_TWO_SUNLIGHT_TOKENS,
+            GameEffect.GAIN_OR_STEAL_BEE_BOOST_AND_FREE_BATTLE_SUPPORT,
+            GameEffect.FLIP_OWN_DIE_AND_OPPONENT_DIE_IN_BATTLE,
+            GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S,
+            GameEffect.USE_DIE_FROM_DISCARD_NOW,
+            GameEffect.CHOOSE_PLAYER_WITH_WISPS_TRASH_ONE,
+            GameEffect.EACH_PLAYER_WITH_WISPS_TRASH_ONE,
+            GameEffect.GAIN_UP_TO_D12_TO_DISCARD,
+            GameEffect.GAIN_UP_TO_D8_AND_USE_NOW -> null // Retired or recognized-but-pending; never fabricate a legal decision
             GameEffect.RESEARCH_NO_EFFECT -> same()
 
             GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,

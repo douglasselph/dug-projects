@@ -73,10 +73,10 @@ class RoundCardRegistryTest {
         registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST))
 
         val surge = assertNotNull(registry.getCard("Battle_Bloom_Surge"))
-        assertEquals(GameEffect.GAIN_D12_TO_DISCARD, surge.secondEffect.effect)
+        assertEquals(GameEffect.GAIN_UP_TO_D12_TO_DISCARD, surge.secondEffect.effect)
 
         val swell = assertNotNull(registry.getCard("Battle_Scatter_Swell"))
-        assertEquals(GameEffect.GAIN_D10_TO_DISCARD, swell.secondEffect.effect)
+        assertEquals(GameEffect.GAIN_UP_TO_D8_AND_USE_NOW, swell.secondEffect.effect)
 
         val bath = assertNotNull(registry.getCard("Battle_Sprawl_Bath"))
         assertEquals(GameEffect.REFRESH_CREATURE, bath.secondEffect.effect)
