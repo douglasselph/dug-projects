@@ -1,6 +1,6 @@
 # Leaf & Let Die - Active Research and Engineering Tasks
 
-**Status date:** November 5, 2026 — catalog effect recognition added; mechanical parity pending
+**Status date:** November 6, 2026 — updated-card interpretation audit prepared; mechanical parity pending
 
 This is the **active top-level backlog**. It is intentionally shorter than the many historical phase/checkpoint documents under `doc/`.
 
@@ -101,16 +101,16 @@ without an explicit design decision.
   Ubuntu. **Do not interpret this checkmark as mechanics complete:** each pending
   identity must receive a real handler, legal targeting and policy support in
   NC-05–NC-24 before production gameplay/research can resume.
-- [ ] **NC-04 — Record minimal rule interpretations before coding ambiguous effects.** Write
-  explicit testable rulings for (a) how free Bee/Worm/Butterfly Support is acquired, retained and
-  whether multiple activations stack; (b) whether free uses remain legal after two paid Supports
-  and how they interact with one-opportunity-per-Engagement and Sunlight; (c) whether a partially
-  possible two-step upgrade takes a one-step fallback, skips missing sizes, or fails; (d) how
-  repeated **"Raise 2 dice"** selects distinct/repeated dice when fewer than two are legal;
-  (e) whether a Wisp owner may select themselves, including the currently played Wisp, for
-  forced Wisp Trash; (f) how **"Use it now"** behaves in Battle when no Strike Square has room.
-  Resolve what existing core rules settle; flag only genuine ambiguities for Doug rather than
-  inventing behavior. **Done:** short decisions/fixture matrix in `doc/` and tests tied to it.
+- [ ] **NC-04 — Approve the recorded interpretations for revised card mechanics.** A source-backed
+  interpretation register and deterministic fixture plan have been prepared in
+  `doc/rules/CARD_EFFECT_INTERPRETATIONS.md` and
+  `doc/rules/CARD_EFFECT_SCENARIOS.md`. Settled core rules are distinguished from proposed
+  decisions about free Bee/Worm/Butterfly actions, conditional upgrade steps, repeated Raise
+  targets, Wisp self-targeting and source-card exclusion, and mandatory immediate-use Battle
+  placement/capacity. **Designer approval is still needed for the marked PROPOSED decisions;**
+  the register must not be mistaken for newly adopted rules. After approval, record accepted
+  choices in the register and use its fixture IDs for Kotlin regression tests in NC-05–NC-25.
+  No production mechanics or card CSVs were changed by this interpretation work.
 
 #### P1 — Plant mechanics: revised effect execution (13 changed rows)
 
@@ -232,10 +232,9 @@ checks and A3/A4 all-36-card effect/purchase analysis. A2 enhancements can be bu
 when an individual effect actually requires them; do **not** start an unrelated generalized AI
 rewrite or multi-hour balance run now.
 
-**Scope of this planning increment:** updated `TASKS.md` only. No changes have yet been made
-in Kotlin, official CSV data, test expectations, learned weights or the Battle rules. No new
-Gradle tests were run; catalog differences and converter mismatches above were established
-by static inspection of the supplied archives and current source.
+**Current scope:** catalog path and converter recognition have already been implemented. The
+November 6 interpretation record adds rule recommendations and pending mechanical fixture
+specifications only; no new gameplay changes, effect handlers, or Kotlin tests are claimed.
 
 ---
 

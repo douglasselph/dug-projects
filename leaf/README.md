@@ -172,6 +172,8 @@ The intended current research/game structure is **3/2/2**:
 
 The **authoritative current tabletop rulebook** is [`doc/rules/Leaf_and_Let_Die_v38-01.pdf`](doc/rules/Leaf_and_Let_Die_v38-01.pdf). The previous [`v37-03`](doc/legacy/Leaf_and_Let_Die_v37-03.pdf) and [`v36-01`](doc/legacy/Leaf_and_Let_Die_v36-01.pdf) rulebooks are historical references only. For the simulator, the official CSVs above are the card-definition source of truth; a research override is **never** automatically an official rule.
 
+For proposed interpretations of revised CSV card effects, see [Card Effect Interpretation Register](doc/rules/CARD_EFFECT_INTERPRETATIONS.md) and its [mechanical test-scenario matrix](doc/rules/CARD_EFFECT_SCENARIOS.md). These distinguish existing procedural rules from **unapproved design choices**; they are not substitutes for approved card wording.
+
 ---
 
 ## Architecture and policy roles
