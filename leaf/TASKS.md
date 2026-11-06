@@ -1,6 +1,6 @@
 # Leaf & Let Die - Active Research and Engineering Tasks
 
-**Status date:** November 5, 2026 — NC-01/NC-02 catalog audit and Round loader migration implemented
+**Status date:** November 5, 2026 — catalog audit and Round loader migration implemented
 
 This is the **active top-level backlog**. It is intentionally shorter than the many historical phase/checkpoint documents under `doc/`.
 
@@ -74,7 +74,7 @@ without an explicit design decision.
   definitions / 18 copies (6 Battle ×1; 6 Cultivation ×2). It emits exact
   definition rows, per-card and per-file fingerprints, git HEAD/dirty status
   when available, and a composite catalog fingerprint. The pinned manifest is
-  `doc/research/provenance/card-catalogs/NC01_02_MANIFEST_2026-11-05.json`.
+  `doc/research/provenance/card-catalogs/CARD_CATALOG_SNAPSHOT_2026-11-05.json`.
   Run `python3 bin/audit_authoritative_cards.py --out ~/Downloads/leaf-cards-manifest.json`.
   The supplied tarball lacks Git metadata, so its snapshot says unavailable;
   Ubuntu will record the actual checkout. **Static audit passed; no claim of

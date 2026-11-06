@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/** NC-02 filename and raw-catalog guard, independent of unfinished NC-03 mappings. */
+/** Guard the canonical Round CSV filename and raw definitions, independently of effect conversion. */
 class CardDataFilesRoundCatalogTest {
 
     @Test

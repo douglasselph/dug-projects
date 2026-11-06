@@ -141,15 +141,16 @@ data/Wisp_Cards.csv
 data/Round_Cards.csv
 ```
 
-**November 5 catalog refresh:** `Round_Cards.csv` is now the only official Round CSV;
+**Canonical catalog contract:** `Round_Cards.csv` is the only official Round CSV;
 `Turn_Cards.csv` has been removed. Run the catalog audit before research:
 
 ```bash
 python3 bin/audit_authoritative_cards.py --out ~/Downloads/leaf-cards-manifest.json
 ```
 
-It validates and fingerprints the four canonical files. New effect implementations (NC-03 onward) are still
-pending, so this data-source migration does not certify full-game execution.
+The [catalog source-of-truth guide](doc/research/provenance/card-catalogs/CARD_CATALOG_SOURCE_OF_TRUTH.md) describes the four official input files, validation boundaries, and reproducible manifests. Active code, tests, and documentation are named for their purpose rather than transient task IDs; milestone IDs belong in `TASKS.md` and historical records.
+
+It validates and fingerprints the four canonical files. Revised card-effect implementations are still pending, so this data-source migration does not certify full-game execution.
 
 Card **names** are preferred human-facing identifiers. IDs are trace keys and can change as catalogs are reorganized. Preserve fingerprints/checksums when comparing historical results.
 
