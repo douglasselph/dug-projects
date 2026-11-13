@@ -47,6 +47,19 @@ See [`doc/LEAF_RESEARCH_GOALS_AND_EXPERIMENT_DESIGN.md`](doc/LEAF_RESEARCH_GOALS
 
 ---
 
+## Current v38 research sensitivity pilot
+
+The four-state forced Root Four More experiment has verified **local mechanical
+sensitivity**. The next full-game research stage is
+`bin/verify_v38_competitive_sensitivity.py --plan` (followed by `--run` on Ubuntu).
+It conducts current-v38 paired frozen effect comparisons, adapted Buy-policy
+search, and fixed-specialist countersearch, with separate evidence and no
+premature balance verdict. See
+[`V38_COMPETITIVE_SENSITIVITY.md`](doc/research/experiments/card-balance/V38_COMPETITIVE_SENSITIVITY.md).
+The 36-Plant catalog coordinator now defaults to the current v38 template
+and rejects historical Battle rules; **do not launch all 36 before A2 evidence
+has been reviewed**.
+
 ## Card balance: keep effect utility and purchase utility separate
 
 Every Plant-card investigation should distinguish at least these two questions:

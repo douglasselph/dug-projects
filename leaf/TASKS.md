@@ -543,7 +543,7 @@ After the vertical slice passes:
 
 **Status:** PARTIAL / OPEN.
 
-**A2 November 13 v38 four-condition pilot (`leaf-v38-effect-sensitivity-20261113-142159.tgz`): PARTIAL / INCONCLUSIVE, not a balance result.** The current manifest-matched launcher completed the suppressed, Raise +20 and +20 VP conditions. The official Root Four More target recorded 61 activations/190 realized Raise pips; suppressed recorded **zero activations and zero output**; Raise +20 recorded 73 activations/308 pips; Gain 20 VP recorded 79 activations/1580 immediate VP (exactly 20 each). All conditions had 8 paired targeted games. The old gate mislabeled the suppressed condition as "did not produce zero output" simply because there were no activations. The gate now distinguishes **zero output with no opportunity exercised** (`INCONCLUSIVE_SUPPRESSION_NEVER_ACTIVATED`) from an executed zero-output suppression. The two positive controls were mechanically exercised; their competitive win effects remain unproven at this sample size (Raise +20: 0 observed win-share change; +20 VP: +0.25 with broad interval). No A3 launch yet. Run `python3 bin/verify_v38_effect_sensitivity.py --reassess-archive <uploaded-pilot.tgz>` to reclassify that exact archive without Gradle or Java; an exit code of 2 means inconclusive, not a mechanics failure. The next A2 slice **has been authored but not yet run on Ubuntu**: `bin/verify_v38_forced_root_four_more.py --run` performs 12 forced Root Four More activations in four matched local v38 Battle states under official, suppressed, and Raise +20 effects. It uses the actual handler, per-seat override, effect-output telemetry, and StrikeResolver; validates actual suppression resolution, caps, local win flips, ties, VP and Wounds. The launcher compiles once and exports one results archive to `~/Downloads`. See `doc/research/experiments/card-balance/V38_FORCED_MATCHED_ROOT_FOUR_MORE.md`. **This is local mechanical sensitivity, not complete-game competitive sensitivity.** Next: run the new test on Ubuntu, inspect the uploaded evidence, then run adequately powered held-out full-game comparisons and countersearch before A3.
+**A2 November 13 v38 four-condition pilot (`leaf-v38-effect-sensitivity-20261113-142159.tgz`): PARTIAL / INCONCLUSIVE, not a balance result.** The current manifest-matched launcher completed the suppressed, Raise +20 and +20 VP conditions. The official Root Four More target recorded 61 activations/190 realized Raise pips; suppressed recorded **zero activations and zero output**; Raise +20 recorded 73 activations/308 pips; Gain 20 VP recorded 79 activations/1580 immediate VP (exactly 20 each). All conditions had 8 paired targeted games. The old gate mislabeled the suppressed condition as "did not produce zero output" simply because there were no activations. The gate now distinguishes **zero output with no opportunity exercised** (`INCONCLUSIVE_SUPPRESSION_NEVER_ACTIVATED`) from an executed zero-output suppression. The two positive controls were mechanically exercised; their competitive win effects remain unproven at this sample size (Raise +20: 0 observed win-share change; +20 VP: +0.25 with broad interval). No A3 launch yet. Run `python3 bin/verify_v38_effect_sensitivity.py --reassess-archive <uploaded-pilot.tgz>` to reclassify that exact archive without Gradle or Java; an exit code of 2 means inconclusive, not a mechanics failure. The next A2 slice **has been authored but not yet run on Ubuntu**: `bin/verify_v38_forced_root_four_more.py --run` performs 12 forced Root Four More activations in four matched local v38 Battle states under official, suppressed, and Raise +20 effects. It uses the actual handler, per-seat override, effect-output telemetry, and StrikeResolver; validates actual suppression resolution, caps, local win flips, ties, VP and Wounds. The launcher compiles once and exports one results archive to `~/Downloads`. See `doc/research/experiments/card-balance/V38_FORCED_MATCHED_ROOT_FOUR_MORE.md`. **This is local mechanical sensitivity, not complete-game competitive sensitivity.** The November 13 uploaded forced-state calibration subsequently **PASSED**: four deterministic Battle states × official/suppressed/Raise+20 conditions = 12 executed effects, with correct caps, Strike outcomes, VP and Wounds. This acceptance covers forced **mechanical** sensitivity only. Competitive sensitivity and A3 are not yet approved.
 
 **November 13 current-v38 sensitivity increment (first Ubuntu attempt incomplete; historical-result selector corrected):**
 `bin/verify_v38_effect_sensitivity.py` reuses the existing Root Four More question,
@@ -573,13 +573,28 @@ Required before strong all-card conclusions:
 
 Do not solve this by hardcoding special intelligence for every experimental card. Prefer reusable consequence/effect-aware evaluation or targeted search infrastructure.
 
+**New A2 competitive-sensitivity pilot (November 13 source, NOT YET run on Ubuntu):**
+`bin/verify_v38_competitive_sensitivity.py` coordinates current-rule official,
+seat-isolated suppression, Raise +20 and VP20 evaluations with 128-game default
+held-out matchups, fresh independent adapted Buy searches, and specific fixed-specialist
+countersearch. The previously unhandled fixed-opponent training path now applies the
+experimental effect to the **fixed specialist**, not the challenger. Reports separate
+frozen, adapted and countersearch estimands, effect resolutions, realized pips, VP,
+win-share, paired intervals, actual matched seats and controls. It preserves
+compile-once and direct-Java isolation/checkpointing. Python plan and synthetic
+attribution tests pass; the Kotlin simulation run **has not been performed**.
+See `doc/research/experiments/card-balance/V38_COMPETITIVE_SENSITIVITY.md`.
+A2 remains OPEN until fresh Ubuntu experimental evidence and stronger replication.
+
 ### A3 - Run the 36-Plant effect sanity audit
 
 **Status:** BLOCKED on A1/A2 being credible enough; not yet a completed all-card study.
-**Before A3 execution:** `bin/plant_catalog_screen.py` still defaults to the historical
-`root-four-more.json` question template (`LEGACY_WHOLE_BATTLE`). Select and validate
-an explicit current-v38 `THREE_ENGAGEMENTS` template, suitable learning budgets,
-and current official fingerprints before launching any all-36 catalog run.
+**Before A3 execution:** The catalog coordinator now defaults to the current
+`root-four-more-v38.json` (`THREE_ENGAGEMENTS`, 3/2/2) and rejects a legacy
+Battle template rather than silently running historical rules. This is a
+ruleset safeguard, **not** certification of sufficient learning, effect coverage
+or countersearch. Validate budgets, fingerprints, and A2 acceptance before any
+all-36 catalog run.
 The manifest-selection fix is research plumbing, not authorization to run
 that historical default as a current-rules balance study.
 

@@ -55,6 +55,19 @@ object R3APlantScreenMain {
     private const val SCORES = "generation\tcandidate\twin_share\tpurchaser_game_rate\tbattle_activations_per_game\ttraining_fitness"
     private const val EVAL = "matchup\tsample\trole\tseat\twin_share\tfinal_vp\tstrike_vp\tplant_vp\ttarget_purchases\ttarget_cultivation_resolutions\ttarget_battle_resolutions\ttarget_other_resolutions\ttarget_grafted\tnamed_plant_purchases\tfinal_named_plants\tfinal_dice\tstored_mulch_dice\toutput_immediate_vp\toutput_die_raise_pips\toutput_drawn_dice\toutput_drawn_pips\toutput_resolutions"
 
+    /**
+     * In a fixed-specialist countersearch, the learner occupies targetSeat but
+     * the experimental effect belongs to the fixed opponent. Giving the
+     * challenger the variant would reverse the question being studied.
+     */
+    fun experimentalTrainingSeat(
+        objective: String, fixedOpponent: Boolean, targetSeat: Int
+    ): Int {
+        require(objective in setOf("targeted", "unrestricted"))
+        require(targetSeat in 0..1)
+        return if (objective == "unrestricted" && fixedOpponent) 1 - targetSeat else targetSeat
+    }
+
     data class Options(
         val phase: String, val objective: String, val targetId: String,
         val generations: Int, val population: Int, val elites: Int, val games: Int,
@@ -214,7 +227,8 @@ object R3APlantScreenMain {
                             seed = o.seed + sample, strategySeed = o.strategySeed + sample,
                             plantValues = values,
                             researchPlantEffectsBySeat = if (o.effectAudience == "targeted" && calibratedEffect != null)
-                                mapOf(targetSeat to mapOf(o.targetId to calibratedEffect)) else emptyMap()
+                                mapOf(experimentalTrainingSeat(o.objective, fixedOpponent != null, targetSeat)
+                                    to mapOf(o.targetId to calibratedEffect)) else emptyMap()
                         ))
                         val result = runner.run(game)
                         val player = game.players[targetSeat]
