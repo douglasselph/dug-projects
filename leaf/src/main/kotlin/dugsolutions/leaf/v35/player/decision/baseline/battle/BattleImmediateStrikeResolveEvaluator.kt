@@ -4,7 +4,7 @@ import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 
-/** Policy facts for resolving one Strike immediately with Wisp's Resolve. */
+/** Policy facts for resolving one Strike immediately with Wisp's Last Word. */
 data class BattleImmediateStrikeResolveEvaluation(
     val row: StrikeRow,
     val leadOverEveryOpponent: Boolean,
@@ -19,7 +19,7 @@ data class BattleImmediateStrikeResolveEvaluation(
 }
 
 /**
- * Evaluates the dedicated Wisp's Resolve lock-in policy using authoritative Done
+ * Evaluates the dedicated Wisp's Last Word lock-in policy using authoritative Done
  * state and normalized public Support capacity. Opponent Wisp identities remain
  * hidden; capacity counts only the public number of held Wisps.
  */

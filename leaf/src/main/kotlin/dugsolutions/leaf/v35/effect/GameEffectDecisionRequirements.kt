@@ -70,8 +70,6 @@ object GameEffectDecisionRequirements {
             GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE,
             GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S,
             GameEffect.USE_DIE_FROM_DISCARD_NOW,
-            GameEffect.CHOOSE_PLAYER_WITH_WISPS_TRASH_ONE,
-            GameEffect.EACH_PLAYER_WITH_WISPS_TRASH_ONE,
             GameEffect.GAIN_UP_TO_D12_TO_DISCARD,
             GameEffect.GAIN_UP_TO_D8_AND_USE_NOW -> null // Retired or recognized-but-pending; never fabricate a legal decision
             GameEffect.RESEARCH_NO_EFFECT -> same()
@@ -239,8 +237,12 @@ object GameEffectDecisionRequirements {
                     battle = setOf(EffectDecisionMechanism.EFFECT_ROOT_WELL_BATTLE)
                 )
 
-            GameEffect.LIMIT_WISPS_AND_TRASH_EXCESS ->
+            GameEffect.LIMIT_WISPS_AND_TRASH_EXCESS,
+            GameEffect.EACH_PLAYER_WITH_WISPS_TRASH_ONE ->
                 same(EffectDecisionMechanism.EFFECT_WISPS_TO_KEEP)
+
+            GameEffect.CHOOSE_PLAYER_WITH_WISPS_TRASH_ONE ->
+                same(EffectDecisionMechanism.EFFECT_PLAYER, EffectDecisionMechanism.EFFECT_WISPS_TO_KEEP)
 
             GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE ->
                 same(EffectDecisionMechanism.EFFECT_O_EDELWEISS)

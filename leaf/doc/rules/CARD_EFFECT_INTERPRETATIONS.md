@@ -55,6 +55,14 @@ Relevant rulebook pages: **pp. 8–11** (Roll Rewards, helpers and upgrades), **
 
 ### WISP — Targeting and the card being played
 
+**Implementation update (Nov 13):** NC-18 and NC-19 now implement WISP-1 through
+WISP-3 as *provisional* semantics, with shared snapshot-based victim selection,
+exclusion of the source Wisp, legality and failure-atomic decision validation.
+The code is **not** evidence of designer approval: WISP-1, WISP-2, and WISP-3
+remain PROPOSED, and these cards must not receive a balance verdict before
+approval and passing mechanical regression tests. The old +1-VP Wisp scorer
+assumptions have also been replaced.
+
 **Cards:** Wisp of Honor (`Wisp_Award_VP`), Berry Patient (`Wisp_Award_VP2`).
 
 - **WISP-1 — PROPOSED:** Wisp of Honor's "Choose 1 player with Wisps" **includes the actor**: the card says *player*, not *opponent*. The chosen player, not the actor, chooses which of their eligible Wisps to Trash. A player with no other eligible Wisp cannot be selected.

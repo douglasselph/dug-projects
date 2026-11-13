@@ -1,6 +1,6 @@
 # Leaf & Let Die - Active Research and Engineering Tasks
 
-**Status date:** November 13, 2026 — FREE Support and revised Raise effects present; NC-13/NC-15 mechanics implemented in this increment; Ubuntu Kotlin regression results still pending.
+**Status date:** November 13, 2026 — FREE Support, revised Raise, NC-13/NC-15 Plant mechanics present. This increment implements revised Wisp of Honor/Berry Patient mechanics (NC-18/19), and NC-20 current-identity cleanup. WISP-1–3 interpretations remain PROPOSED; Ubuntu Kotlin regressions have not been run.
 
 This is the **active top-level backlog**. It is intentionally shorter than the many historical phase/checkpoint documents under `doc/`.
 
@@ -8,7 +8,7 @@ A historical task ID appearing in an older document does **not** mean that task 
 
 ## NEXT ACTIVE PROGRAM — November 5 authoritative CSV integration (NC-01–NC-27)
 
-**Status: NC-01–NC-03 recognized/verified. FREE-1–4 of NC-04 authorized and their NC-06/11/14 core effects installed; FREE-action scheduler implementation present but full engine validation (NC-23/25/26) remains open. November 13 increments implement NC-07, NC-09, NC-10 and NC-12 Raise behavior, plus NC-13 Sunlight and NC-15 die flips with decision contracts and focused tests. All need Ubuntu Kotlin test execution before full-game evidence. NC-05 and NC-08 require designer rulings, and the other NC mechanics remain open.** This section was originally prepared by comparing the newly attached
+**Status: NC-01–NC-03 recognized/verified. FREE-1–4 of NC-04 authorized and their NC-06/11/14 core effects installed; FREE-action scheduler implementation present but full engine validation (NC-23/25/26) remains open. November 13 increments implement NC-07, NC-09, NC-10 and NC-12 Raise behavior, plus NC-13 Sunlight and NC-15 die flips with decision contracts and focused tests. November 13 Wisp increment adds NC-18/19 mechanics and refreshes NC-20 current identity references; these are conditional on approval of the WISP-1–3 interpretations. All need Ubuntu Kotlin test execution before full-game evidence. NC-05 and NC-08 require designer rulings, and other remaining NC mechanics are open.** This section was originally prepared by comparing the newly attached
 `leaf(20261105-234756).tgz` with `leaf(20261105-234502).tgz`, and checking the then-current Kotlin
 converter, registry, action scheduler, effect handlers, policy references, and selected tests.
 The user has designated the newly supplied files under `data/` as **the new card source of truth**.
@@ -44,7 +44,7 @@ these revised CSVs is **not** claimed to pass until those tasks are complete.
 resolver for Wisp's Last Word). All **72 official effect cells** across the 60 CSV
 card definitions were recognized in an independently compiled Kotlin converter
 smoke check; no `UNKNOWN` was encountered. Originally 16 newly recognized behaviors
-required implementation; as of this patch, **8 remain in `CardEffectReadiness.pending`**.
+required implementation; as of this patch, **6 remain in `CardEffectReadiness.pending`**.
 `CardEffectReadiness` explicitly rejects those effects and prevents
 full-game research from proceeding with incomplete selected decks. The older
 effect aliases remain for historical inputs; they are not current-rule substitutes.
@@ -114,7 +114,10 @@ without an explicit design decision.
   `BattleFreeSupportState`, the three card handlers and paid/free Engagement accounting. Related
   deterministic test fixtures were repaired across later patches, but no complete passing
   Ubuntu `test integrationTest simulationTest` report was supplied. Do not equate fixture
-  readiness with card-effect balance certification. All other NC-04 decisions remain PROPOSED.
+  readiness with card-effect balance certification. NC-18/19 now implement WISP-1–3 as clearly
+  documented, **provisional** rules interpretations. They still require designer approval
+  before those mechanics can be considered accepted for game-design research. Other
+  NC-04 decisions remain PROPOSED.
 
 #### P1 — Plant mechanics: revised effect execution (13 changed rows)
 
@@ -187,20 +190,30 @@ without an explicit design decision.
 
 #### P2 — Wisp and Round mechanics (not secondary for correctness)
 
-- [ ] **NC-18 — Wisp of Honor (`Wisp_Award_VP`).** Replace old **play for +1 VP** with
+- [x] **NC-18 — Wisp of Honor (`Wisp_Award_VP`).** Replace old **play for +1 VP** with
   **choose one player who has Wisps; that player Trashes one**. This includes the actor if
   allowed by the rule decision. Implement target choice, the target's Wisp choice, timing and
   supply/empty-hand behavior. Preserve its printed **2 end-game VP** if unplayed.
-- [ ] **NC-19 — Berry Patient (`Wisp_Award_VP2`).** Replace old **play for +1 VP** with
+  **Nov 13: implemented targeted player choice and victim-owned selection,
+  excluding the played Wisp from legal targets. WISP-1/2 remain PROPOSED,
+  not designer-approved, and Ubuntu tests remain outstanding.**
+- [x] **NC-19 — Berry Patient (`Wisp_Award_VP2`).** Replace old **play for +1 VP** with
   **each player who has Wisps Trashes one**. Include self as the wording specifies, resolve
   simultaneous/ordered selection deterministically, and preserve printed **3 end-game VP**.
-- [ ] **NC-20 — Wisp's Last Word (new ID `Wisps_Last_Word`).** Replace retired
+  **Nov 13: implemented as snapshot-based victim choices with atomic validation,
+  source-card exclusion and ordinary played-card cleanup unchanged; WISP-2/3
+  interpretations remain PROPOSED until approved. Ubuntu tests pending.**
+- [x] **NC-20 — Wisp's Last Word (new ID `Wisps_Last_Word`).** Replace retired
   `Wisps_Resolve` identity and old `"Wisp's Resolve"` title with **"Wisp's Last Word"**:
   **immediately finish any unresolved Strike: Resolve → Doom → Cleanup**. Reuse the verified
   v38 per-row `StrikeFinishCoordinator` where behavior matches; update *all* hard-coded
   references in Wisp evaluators, tests, fixture names, scenario specs, frozen-weight
   compatibility and reports. Confirm it can target the current or later unresolved row and
   cannot touch an already closed row. Keep the legacy alias only for historical replay if needed.
+  **Nov 13: current CSV identity was already mapped to the proven early-Strike
+  coordinator. Active comments and synthetic scenarios now use Last Word; the
+  `Wisps_Resolve` scorer alias remains intentionally for historical compatibility.
+  The actual effect semantics are unchanged; Ubuntu regression remains due.**
 - [ ] **NC-21 — Round Surge, `Battle_Bloom_Surge`.** In new `Round_Cards.csv`, Surge is
   **"Gain up to a D12. Place in Discard."**, not fixed D12. Add legal die-size selection
   from available D4/D6/D8/D10/D12 as defined, handle zero available supply and record actual
@@ -260,7 +273,10 @@ rewrite or multi-hour balance run now.
 **Current scope (Nov 13):** canonical catalog routing and strict conversion are implemented.
 The FREE-action increment is present in this archive. The accompanying new Raise patch implements
 NC-07/09/10/12, including decision requirements, Human Baseline scoring, Battle tactical
-projections, and focused tests against the actual CSVs. It does **not** change official CSV files,
+projections, and focused tests against the actual CSVs. The present Wisp increment
+adds NC-18/19 choices, baseline score updates, and NC-20 name cleanup, reducing
+mechanically pending identities to six. WISP-1–3 are implemented as provisional
+interpretations and must be approved before validity claims. It does **not** change official CSV files,
 not yet approved interpretations, the v38 Battle schedule, or protected policy weights.
 The current archive has no `.git` metadata and Gradle 8.13 is not available in this execution
 environment, so the new Kotlin tests are **authored but not run**. Completing all NC-05–NC-24

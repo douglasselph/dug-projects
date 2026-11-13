@@ -16,18 +16,17 @@ import kotlin.test.assertTrue
 class CardEffectReadinessTest {
 
     @Test
-    fun unimplementedOfficialWispCannotEnterFullGameUnnoticed() {
-        val game = GameEngineTestFixture.game(populateWispDeck = true)
-        val unusedExecutor = RoundExecutor { _, _ ->
-            error("Round execution must not start when catalog mechanics are missing")
-        }
-        val runner = GameRunner(RoundCoordinator(unusedExecutor, unusedExecutor))
-        val error = assertFailsWith<IllegalStateException> {
-            runner.run(game)
-        }
-        assertTrue(error.message.orEmpty().contains("Wisp_Award_VP"))
-        assertTrue(error.message.orEmpty().contains("CHOOSE_PLAYER_WITH_WISPS_TRASH_ONE"))
-        assertEquals(GameStatus.READY, game.status)
+    fun revisedOfficialWispsAreExecutableAndNoLongerOnThePendingList() {
+        val game = GameEngineTestFixture.game(
+            cultivationRounds = 1,
+            battleRounds = 0,
+            populateWispDeck = true
+        )
+        assertTrue(game.grove.wispDeck.cards.cards.any { it.name == "Wisp_Award_VP" })
+        assertTrue(game.grove.wispDeck.cards.cards.any { it.name == "Wisp_Award_VP2" })
+        assertFalse(GameEffect.CHOOSE_PLAYER_WITH_WISPS_TRASH_ONE in CardEffectReadiness.pending)
+        assertFalse(GameEffect.EACH_PLAYER_WITH_WISPS_TRASH_ONE in CardEffectReadiness.pending)
+        CardEffectReadiness.requireExecutableGame(game)
     }
 
     @Test

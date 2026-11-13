@@ -17,7 +17,7 @@ import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.game.operation.WoundResolver
 
 /**
- * Wisp's Resolve finishes one unresolved Strike immediately. In v38 this means
+ * Wisp's Last Word finishes one unresolved Strike immediately. In v38 this means
  * Resolve → Doom → row-only Cleanup (no early Refresh); the normal scheduler
  * skips that row later. The old whole-Battle ruleset retains its historical
  * resolve-and-clear behavior for explicit experimental replay.

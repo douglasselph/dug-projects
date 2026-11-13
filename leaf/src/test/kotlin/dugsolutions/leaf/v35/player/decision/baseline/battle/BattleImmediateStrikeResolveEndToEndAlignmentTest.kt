@@ -72,8 +72,8 @@ class BattleImmediateStrikeResolveEndToEndAlignmentTest {
 
     private fun resolveWisp() = WispCard(
         quantity = 4,
-        name = "Wisps_Resolve",
-        title = "Wisp's Resolve",
+        name = "Wisps_Last_Word",
+        title = "Wisp's Last Word",
         count = 4,
         effect = GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW,
         lineIcons = null,
@@ -94,8 +94,8 @@ class BattleImmediateStrikeResolveEndToEndAlignmentTest {
             wisps = listOf(
                 WispView(
                     index = 0,
-                    name = "Wisps_Resolve",
-                    title = "Wisp's Resolve",
+                    name = "Wisps_Last_Word",
+                    title = "Wisp's Last Word",
                     effect = GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW,
                     playImmediately = false,
                     battleOnly = false,

@@ -47,7 +47,7 @@ object EngagementOrderSelector {
         return selectWithHighest(battle, physicalSeatsClockwise, row, highest)
     }
 
-    /** Reporting-only placeholder for a row finished early by Wisp's Resolve. No turns occur. */
+    /** Reporting-only placeholder for a row finished early by Wisp's Last Word. No turns occur. */
     fun selectSettled(battle: BattleState, physicalSeatsClockwise: List<PlayerId>,
                       row: StrikeRow): EngagementOrder {
         require(battle.grid.isRowClosed(row)) { "Strike $row is not settled" }

@@ -512,7 +512,7 @@ object CardScoringHelpers {
      * Wisp is committed.
      */
     /**
-     * B15F2-3 top-level Wisp's Resolve alignment. The downstream B13 row
+     * B15F2-3 top-level Wisp's Last Word alignment. The downstream B13 row
      * strategy only treats rows passing the established immediate-resolution
      * lock-in policy as worthwhile. Top-level Wisp willingness must therefore
      * require that same policy-qualified realization instead of treating any
@@ -586,6 +586,27 @@ object CardScoringHelpers {
         base: Int
     ): PriorityScore {
         var score = playScore(context, CardPhase.from(context.phase), card.effect, card.name, base)
+        // These revised Wisps trash held cards; they no longer award immediate VP.
+        // Evaluate target inventory and own losses instead of retaining their old
+        // fixed +1 VP heuristic. This is a baseline heuristic, not balance evidence.
+        when (card.effect) {
+            GameEffect.CHOOSE_PLAYER_WITH_WISPS_TRASH_ONE -> {
+                val opponentsWithWisps = context.opponents.count { it.wispCount > 0 }
+                score = score.adjusted(
+                    if (opponentsWithWisps > 0) 16 else -20,
+                    if (opponentsWithWisps > 0) "Deny opponent one held Wisp" else "Only self can be targeted"
+                )
+            }
+            GameEffect.EACH_PLAYER_WITH_WISPS_TRASH_ONE -> {
+                val opponentsWithWisps = context.opponents.count { it.wispCount > 0 }
+                val selfOtherWisps = (context.self.wispCount - 1).coerceAtLeast(0)
+                score = score.adjusted(
+                    opponentsWithWisps * 13 - if (selfOtherWisps > 0) 18 else 0,
+                    "Other players lose Wisps; actor may lose another Wisp"
+                )
+            }
+            else -> Unit
+        }
         if (card.endGameVp > 0) score = score.adjusted(-12 * card.endGameVp, "Preserve unplayed Wisp VP")
         val pressure = max(0, context.self.wispCount - 3) * 20
         if (pressure > 0) score = score.adjusted(pressure, "Wisp hand pressure above three")

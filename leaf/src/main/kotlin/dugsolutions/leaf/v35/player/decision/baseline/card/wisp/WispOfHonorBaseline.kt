@@ -5,7 +5,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.card.ConfiguredCardScorer
 
 object WispOfHonorBaseline : ConfiguredCardScorer(
     cardNames = setOf("Wisp_Award_VP"),
-    effect = GameEffect.GAIN_ONE_VP,
-    cultivationPlayBase = 45,
-    battlePlayBase = 45
+    effect = GameEffect.CHOOSE_PLAYER_WITH_WISPS_TRASH_ONE,
+    cultivationPlayBase = 22,
+    battlePlayBase = 22
 )

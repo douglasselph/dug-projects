@@ -19,7 +19,7 @@ data class FinishedStrike(
 
 /**
  * The single v38 Resolve → Doom → Cleanup path for ordinary Engagements and
- * Wisp's Resolve. Only the Strike row is reclaimed; the final Battle Refresh
+ * Wisp's Last Word. Only the Strike row is reclaimed; the final Battle Refresh
  * is deliberately left to the caller after all three rows are completed.
  */
 class StrikeFinishCoordinator {
