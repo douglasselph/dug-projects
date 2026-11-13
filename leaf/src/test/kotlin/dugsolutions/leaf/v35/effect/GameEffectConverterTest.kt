@@ -167,7 +167,7 @@ class GameEffectConverterTest {
                 assertTrue(executor.supports(effect), "Known compatible handler missing for $effect")
             }
         }
-        assertEquals(16, CardEffectReadiness.pending.size)
+        assertEquals(13, CardEffectReadiness.pending.size)
         // Changed quantities or targeting are not approximate legacy aliases.
         assertTrue(converter("Gain up to a D10. Use it now.") == GameEffect.UNKNOWN)
     }

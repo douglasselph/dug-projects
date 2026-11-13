@@ -112,6 +112,7 @@ class BattleCleanupCoordinator(
                 /* Stored Mulch and temporary Critter values both roll over/reset here. */
                 player.tokens.normalize()
                 player.critterValues.clearRound()
+                player.freeBattleSupports.clearBattle()
             }
 
             BattlePlayerCleanupResult(
@@ -199,6 +200,7 @@ class BattleCleanupCoordinator(
                 refreshed = refreshResolver.refreshIfReady(player)
                 player.tokens.normalize()
                 player.critterValues.clearRound()
+                player.freeBattleSupports.clearBattle()
             }
             BattlePlayerCleanupResult(player.id, 0, 0, refreshed)
         })

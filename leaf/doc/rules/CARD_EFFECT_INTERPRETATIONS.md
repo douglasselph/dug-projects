@@ -1,7 +1,7 @@
 # Card Effect Interpretation Register
 
 **Prepared:** November 6, 2026  
-**Status:** Implementation recommendations; **design choices marked PROPOSED require designer approval before being treated as adopted game rules**.  
+**Status:** FREE-1 through FREE-4 accepted for implementation on November 12, 2026; other design choices marked PROPOSED still require approval before being treated as adopted game rules.  
 **Scope:** Revised official Plant, Wisp, and Round catalogs in `data/` and the adopted v38 Three Engagements Battle rules. This document is a durable rules-interpretation reference, not a historical task log.
 
 ## Authority and change control
@@ -10,7 +10,7 @@ The four official catalogs (`Cultivation_Cards - Root.csv`, `Cultivation_Cards -
 
 Relevant rulebook pages: **pp. 8–11** (Roll Rewards, helpers and upgrades), **pp. 15–17** (Battle Hand, Strike capacity, once-per-Engagement turn, actions, cleanup), **pp. 19–21** (older individual-card/Wisp examples), and **pp. 22–23** (glossary). Relevant current code includes `ThreeEngagementBattle`, `UpgradeResolver`, `SupportActionExecutor`, `DrawEffectHandler` and `WispReckoningEffect`; existing implementation is *evidence of behavior*, not authority for new semantics.
 
-**This register does not authorize implementation of a proposed ruling as canonical.** Resolve any PROPOSED item with the designer, then mark it ACCEPTED (with the date); update affected tests and any card wording if needed. Implement existing settled rules without waiting for unrelated choices.
+**Only FREE-1 through FREE-4 have received designer implementation authorization on November 12, 2026. All remaining PROPOSED rulings still require approval.** Resolve any PROPOSED item with the designer, then mark it ACCEPTED (with the date); update affected tests and any card wording if needed. Implement existing settled rules without waiting for unrelated choices.
 
 ## Established procedural rules (SETTLED)
 
@@ -27,12 +27,14 @@ Relevant rulebook pages: **pp. 8–11** (Roll Rewards, helpers and upgrades), **
 
 ### FREE — Bee, Worm, and Butterfly Battle Support discounts
 
+**Four free-use forms:** Worm Strike placement; Worm Plant Flip; Bee Strike placement; Butterfly reroll. Three cards grant them. The latest CSV text is the authority; the visual `<battle/>` indicator on these Plants means the discount applies only during Battle.
+
 **Cards:** Root Appreciation (`Root_07_02`), Bee-loved Bloom (`zFlower_14_01`), Alluring Nectar (`zFlower_11_01`).
 
-- **FREE-1 — PROPOSED:** Once one of these Plant effects *resolves*, that player gains the named **zero-Support-cost permission for the remainder of the current Battle Round**, including later Strikes. It begins only after resolution; it is not retroactive. The card subsequently turning face down or being Wounded/Snipped does **not** retroactively cancel this already-resolved round effect. Grafting but never activating the card confers no such permission. The permission expires at Battle end. In Cultivation, these Battle-only clauses have no effect.
-- **FREE-2 — PROPOSED:** A free Bee/Worm/Butterfly use costs **zero of the two paid Support slots**. It is legal after two paid Supports have been used, but only during that player's current single Engagement turn and only while the Strike remains open. It does not grant another Main Action, a second turn, or the ability to act after passing. Sunlight continues to cost **one paid Support slot** to grant its extra Main.
-- **FREE-3 — PROPOSED:** 'Playing a Worm' covers **both normal Worm uses** during Battle: placing it for Strike strength and spending it to Flip a Plant. 'Using a Bee' applies to its normal Battle placement. 'Using a Butterfly' applies to a ready Butterfly reroll. Each use still consumes a Worm/Bee or flips the Butterfly face down normally; a Butterfly already face down cannot be reused without an actual Refresh.
-- **FREE-4 — PROPOSED:** Repeated activation or multiple copies **do not make an already-free action more free**. Root Appreciation's **+1 Worm value per activation this round** and Bee-loved Bloom's **+2 Bee value per activation this round** *do* stack as their separate printed effects specify. A zero-cost permission is a boolean for that player and resource type, not an accumulation of negative action costs.
+- **FREE-1 — ACCEPTED 2026-11-12:** Once one of these Plant effects *resolves*, that player gains the named **zero-Support-cost permission for the remainder of the current Battle Round**, including later Strikes. It begins only after resolution; it is not retroactive. The card subsequently turning face down or being Wounded/Snipped does **not** retroactively cancel this already-resolved round effect. Grafting but never activating the card confers no such permission. The permission expires at Battle end. In Cultivation, these Battle-only clauses have no effect.
+- **FREE-2 — ACCEPTED 2026-11-12:** A free Bee/Worm/Butterfly use costs **zero of the two paid Support slots**. It is legal after two paid Supports have been used, but only during that player's current single Engagement turn and only while the Strike remains open. It does not grant another Main Action, a second turn, or the ability to act after passing. Sunlight continues to cost **one paid Support slot** to grant its extra Main.
+- **FREE-3 — ACCEPTED 2026-11-12:** 'Playing a Worm' covers **both normal Worm uses** during Battle: placing it for Strike strength and spending it to Flip a Plant. 'Using a Bee' applies to its normal Battle placement. 'Using a Butterfly' applies to a ready Butterfly reroll. Each use still consumes a Worm/Bee or flips the Butterfly face down normally; a Butterfly already face down cannot be reused without an actual Refresh.
+- **FREE-4 — ACCEPTED 2026-11-12:** Repeated activation or multiple copies **do not make an already-free action more free**. Root Appreciation's **+1 Worm value per activation this round** and Bee-loved Bloom's **+2 Bee value per activation this round** *do* stack as their separate printed effects specify. A zero-cost permission is a boolean for that player and resource type, not an accumulation of negative action costs.
 - **FREE-5 — IMPLEMENTATION GUARD:** Replace the current hard `actionCount <= 3` with explicit accounting for normal Main, paid Support and zero-cost actions. Still require finite component consumption/Butterfly state transitions and stop after Pass, row resolution, or no useful legal action. Trace **paid** versus **free** actions separately. A potential chain that gains a new resource is re-evaluated using current state; no arbitrary unlimited-repeat loop is permissible.
 
 ### UPGRADE — Conditional Root Awakening
@@ -71,7 +73,7 @@ Relevant rulebook pages: **pp. 8–11** (Roll Rewards, helpers and upgrades), **
 
 ## Proposed acceptance / implementation sequence
 
-1. Obtain designer confirmation or amendments for **FREE-1–4, UPGRADE-1–2, RAISE-1–2, WISP-1–3, NOW-1–4**. Those are recommendations, not decisions implied by the older rules text. Once accepted, change labels to `ACCEPTED YYYY-MM-DD` rather than removing their provenance.
+1. FREE-1–4 have been authorized; obtain designer confirmation or amendments for **UPGRADE-1–2, RAISE-1–2, WISP-1–3, NOW-1–4**. Those are recommendations, not decisions implied by the older rules text. Once accepted, change labels to `ACCEPTED YYYY-MM-DD` rather than removing their provenance.
 2. Implement core scheduling and action legality together with the three free-action Plant effects; do **not** waive physical token/ready-state costs.
 3. Implement upgrade/raise/targeting/immediate-use mechanics using the approved contracts. Maintain the pending-effect fail-closed registry until handlers, decision surfaces and tests actually pass.
 4. Add deterministic Kotlin fixture tests from `CARD_EFFECT_SCENARIOS.md`, then run full game and research regressions. These fixtures are **test specifications, not tests already run**.

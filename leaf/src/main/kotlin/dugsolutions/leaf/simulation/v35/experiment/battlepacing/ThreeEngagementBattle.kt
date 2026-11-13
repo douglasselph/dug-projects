@@ -11,12 +11,15 @@ import dugsolutions.leaf.v35.game.round.battle.BattleCleanupCoordinator
 import dugsolutions.leaf.v35.game.round.battle.BattleMainActionStage
 import dugsolutions.leaf.v35.game.round.battle.BattleDecisionPlantSnapshot
 import dugsolutions.leaf.v35.game.round.battle.BattleDecisionResourceSnapshot
+import dugsolutions.leaf.v35.game.round.battle.BattleSupportActionCost
 import dugsolutions.leaf.v35.game.round.battle.BattleRound
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.battle.BattleMainAction
 import dugsolutions.leaf.v35.player.decision.battle.BattleSupportAction
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.round.domain.RoundCard
+import dugsolutions.leaf.v35.player.FreeBattleSupport
+import dugsolutions.leaf.v35.tokens.Critter
 
 /** Explicit experimental policy interface; canonical Human/Battle policies are NOT silently reused. */
 sealed interface EngagementChoice {
@@ -33,7 +36,8 @@ data class EngagementDecision(
     val legalMains: List<BattleMainAction>,
     val legalSupports: List<BattleSupportAction>,
     val context: DecisionContext,
-    val supportSlotsRemaining: Int = 2
+    val supportSlotsRemaining: Int = 2,
+    val freeSupportsAvailable: List<BattleSupportAction> = emptyList()
 )
 
 fun interface EngagementPolicy {
@@ -81,7 +85,9 @@ data class EngagementActionRecord(
     val playerId: PlayerId,
     val choice: EngagementChoice,
     val normalMainsRemainingAfter: Int,
-    val supportsUsedInThisTurn: Int
+    /** Paid Support slots consumed; free actions are reported separately. */
+    val supportsUsedInThisTurn: Int,
+    val freeSupportsUsedInThisTurn: Int = 0
 )
 
 data class EngagementDecisionStep(
@@ -236,16 +242,19 @@ class ThreeEngagementBattle(
                 val steps = mutableListOf<EngagementDecisionStep>()
                 val player = battle.player(id)
                 var normalThisTurn = false
-                var supportsThisTurn = 0
+                var supportsThisTurn = 0 // paid Supports only
+                var freeSupportsThisTurn = 0
                 var actionCount = 0
                 while (!battle.grid.isRowClosed(row)) {
                     val remaining = 2 - normalUsed.getValue(id)
                     val mains = if (remaining > 0 && !normalThisTurn) {
                         actions.researchLegalMains(game, player, card, battle)
                     } else emptyList()
-                    val supports = if (supportsThisTurn < 2) {
-                        actions.researchLegalSupports(game, player, card, battle)
-                    } else emptyList()
+                    val allLegalSupports = actions.researchLegalSupports(game, player, card, battle)
+                    val supports = allLegalSupports.filter { support ->
+                        supportsThisTurn < 2 || BattleSupportActionCost.paidSlots(player, support) == 0
+                    }
+                    val freeSupports = supports.filter { BattleSupportActionCost.paidSlots(player, it) == 0 }
                     if (actionCount == 0) { initialMains = mains.size; initialSupports = supports.size }
                     maxMains = maxOf(maxMains, mains.size)
                     maxSupports = maxOf(maxSupports, supports.size)
@@ -257,7 +266,8 @@ class ThreeEngagementBattle(
                     val next = policy.choose(
                         EngagementDecision(row, id, actionCount, remaining, mains, supports,
                             battleRound.researchDecisionContext(game, player, battle),
-                            supportSlotsRemaining = 2 - supportsThisTurn)
+                            supportSlotsRemaining = 2 - supportsThisTurn,
+                            freeSupportsAvailable = freeSupports)
                     )
                     when (next) {
                         EngagementChoice.Pass -> {
@@ -280,8 +290,32 @@ class ThreeEngagementBattle(
                         }
                         is EngagementChoice.Support -> {
                             require(next.action in supports) { "Illegal or extra Support in $row: $next" }
+                            val cost = BattleSupportActionCost.paidSlots(player, next.action)
+                            require(supportsThisTurn + cost <= 2) {
+                                "Engagement exceeded two paid Support slots"
+                            }
+                            // A free action must consume a real physical resource/ready state.
+                            // This both enforces the card rule and prevents a no-cost cycle.
+                            val freeKind = if (cost == 0) BattleSupportActionCost.freeKind(next.action) else null
+                            val beforeResource = when (freeKind) {
+                                FreeBattleSupport.BEE -> player.critters.count(Critter.BEE)
+                                FreeBattleSupport.WORM -> player.critters.count(Critter.WORM)
+                                FreeBattleSupport.BUTTERFLY -> player.butterflies.all.count { player.butterflies.isFaceUp(it) }
+                                null -> 0
+                            }
                             actions.researchTakeSupport(game, player, card, battle, next.action)
-                            supportsThisTurn++
+                            if (cost == 0) {
+                                val afterResource = when (freeKind) {
+                                    FreeBattleSupport.BEE -> player.critters.count(Critter.BEE)
+                                    FreeBattleSupport.WORM -> player.critters.count(Critter.WORM)
+                                    FreeBattleSupport.BUTTERFLY -> player.butterflies.all.count { player.butterflies.isFaceUp(it) }
+                                    null -> error("A non-consumptive Support action cannot be free: $next")
+                                }
+                                check(afterResource < beforeResource) {
+                                    "Free Battle Support did not consume a real resource: $next"
+                                }
+                                freeSupportsThisTurn++
+                            } else supportsThisTurn++
                         }
                     }
                     verifyFinished()
@@ -293,9 +327,10 @@ class ThreeEngagementBattle(
                         beforeChronicleSequence = stepBeforeSequence, afterChronicleSequence = chronicleSequence()
                     )
                     actionCount++
-                    records += EngagementActionRecord(row, id, next, 2 - normalUsed.getValue(id), supportsThisTurn)
-                    trace += "ENGAGEMENT_ACTION,row=$row,player=${id.value},choice=$next,normalUsed=${normalUsed.getValue(id)},supportsThisRow=$supportsThisTurn"
-                    check(actionCount <= 3) { "Engagement exceeded its one-normal/two-Support allowance" }
+                    records += EngagementActionRecord(row, id, next, 2 - normalUsed.getValue(id),
+                        supportsThisTurn, freeSupportsThisTurn)
+                    trace += "ENGAGEMENT_ACTION,row=$row,player=${id.value},choice=$next,normalUsed=${normalUsed.getValue(id)},paidSupportsThisRow=$supportsThisTurn,freeSupportsThisRow=$freeSupportsThisTurn"
+                    check(supportsThisTurn <= 2) { "Engagement exceeded two paid Supports" }
                 }
                 if (policy is EngagementMainPlanSource) {
                     val plan = policy.mainPlan(id, row)

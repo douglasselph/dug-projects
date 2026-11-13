@@ -9,6 +9,7 @@ import dugsolutions.leaf.v35.game.BattleStructure
 import dugsolutions.leaf.v35.game.GameRoundSetup
 import dugsolutions.leaf.v35.game.GameRunner
 import dugsolutions.leaf.v35.game.PlayerDecisionFactory
+import dugsolutions.leaf.v35.game.di.ExecutableGameFixture
 import dugsolutions.leaf.v35.game.di.GameFactory
 import dugsolutions.leaf.v35.plant.PlantCardManager
 import dugsolutions.leaf.v35.plant.PlantCardRegistry
@@ -106,7 +107,12 @@ class R0CorrectnessAuditTest {
             }
             koin.get<WispCardManager>().loadCards(wispRegistry)
 
-            val grove = FirstGameDefault.PLANT_NAMES.map { assertNotNull(plantRegistry.getCard(it)) }
+            // Noninterference requires two identical executable games, not
+            // the entire still-pending revised official effect catalog.
+            val grove = ExecutableGameFixture.plants(plantRegistry)
+            val roundSetup = GameRoundSetup.Ordered(cultivationRounds = 2, battleRounds = 1)
+            val exactRounds = ExecutableGameFixture.rounds(roundRegistry, roundSetup)
+            val exactWisps = ExecutableGameFixture.wisps(wispRegistry)
             val factory = koin.get<GameFactory>()
             val runner = koin.get<GameRunner>()
             val observations = mutableListOf<BuyDecisionEvent>()
@@ -128,7 +134,7 @@ class R0CorrectnessAuditTest {
             val normal = GameConfig(
                 selectedPlantCards = grove,
                 playerDecisionFactories = List(2) { PlayerDecisionFactory.humanBaseline() },
-                roundSetup = GameRoundSetup.Ordered(cultivationRounds = 2, battleRounds = 1),
+                roundSetup = roundSetup,
                 battleStructure = BattleStructure.LEGACY_WHOLE_BATTLE,
                 seed = 300721L,
                 strategySeed = 400721L
@@ -136,13 +142,13 @@ class R0CorrectnessAuditTest {
             val observed = GameConfig(
                 selectedPlantCards = grove,
                 playerDecisionFactories = listOf(observedFactory, PlayerDecisionFactory.humanBaseline()),
-                roundSetup = GameRoundSetup.Ordered(cultivationRounds = 2, battleRounds = 1),
+                roundSetup = roundSetup,
                 battleStructure = BattleStructure.LEGACY_WHOLE_BATTLE,
                 seed = 300721L,
                 strategySeed = 400721L
             )
-            val originalGame = factory(normal)
-            val observedGame = factory(observed)
+            val originalGame = factory(normal, exactRoundCards = exactRounds, exactWispCards = exactWisps)
+            val observedGame = factory(observed, exactRoundCards = exactRounds, exactWispCards = exactWisps)
             val trackers = observedGame.players.map(PlayerDevelopmentTracker::attach)
             val originalResult = runner.run(originalGame)
             val observedResult = runner.run(observedGame)

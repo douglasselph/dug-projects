@@ -2,13 +2,13 @@ package dugsolutions.leaf.v35.game.round
 
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.common.CardDataFiles
-import dugsolutions.leaf.v35.common.FirstGameDefault
 import dugsolutions.leaf.v35.di.appModules
 import dugsolutions.leaf.v35.game.BattleStructure
 import dugsolutions.leaf.v35.game.GameConfig
 import dugsolutions.leaf.v35.game.GameRoundSetup
 import dugsolutions.leaf.v35.game.GameRunner
 import dugsolutions.leaf.v35.game.PlayerDecisionFactory
+import dugsolutions.leaf.v35.game.di.ExecutableGameFixture
 import dugsolutions.leaf.v35.game.di.GameFactory
 import dugsolutions.leaf.v35.plant.PlantCardManager
 import dugsolutions.leaf.v35.plant.PlantCardRegistry
@@ -56,24 +56,29 @@ class V38MainOnlyRuntimeTest {
             }
             koin.get<RoundCardManager>().loadCards(rounds)
 
-            val selection = FirstGameDefault.PLANT_NAMES.map { requireNotNull(plants.getCard(it)) }
+            val selection = ExecutableGameFixture.plants(plants)
+            val roundSetup = GameRoundSetup.Ordered(cultivationRounds = 1, battleRounds = 1)
             val decisions = List(2) { PlayerDecisionFactory.mechanicalControl() }
             val config = if (structure == null) GameConfig(
                 selectedPlantCards = selection,
                 playerDecisionFactories = decisions,
-                roundSetup = GameRoundSetup.Ordered(cultivationRounds = 1, battleRounds = 1),
+                roundSetup = roundSetup,
                 seed = 20261105L,
                 strategySeed = 20261106L
             ) else GameConfig(
                 selectedPlantCards = selection,
                 playerDecisionFactories = decisions,
-                roundSetup = GameRoundSetup.Ordered(cultivationRounds = 1, battleRounds = 1),
+                roundSetup = roundSetup,
                 battleStructure = structure,
                 seed = 20261105L,
                 strategySeed = 20261106L
             )
             assertEquals(structure ?: BattleStructure.THREE_ENGAGEMENTS, config.battleStructure)
-            val game = koin.get<GameFactory>()(config)
+            val game = koin.get<GameFactory>()(
+                config,
+                exactRoundCards = ExecutableGameFixture.rounds(rounds, roundSetup),
+                exactWispCards = ExecutableGameFixture.wisps(wisps)
+            )
             val result = koin.get<GameRunner>().run(game)
 
             assertEquals(2, result.roundsCompleted)

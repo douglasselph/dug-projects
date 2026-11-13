@@ -76,7 +76,8 @@ class HumanGuidedEngagementPolicy(private val game: Game) : EngagementPolicy, En
             roundCard = card,
             legalSupports = request.legalSupports,
             normalMainsOffered = offeredMains,
-            supportSlotsRemaining = request.supportSlotsRemaining
+            supportSlotsRemaining = request.supportSlotsRemaining,
+            freeSupports = request.freeSupportsAvailable
         )
 
         // Reuse the existing Wisp play/hold choice. The tactical continuation
@@ -112,7 +113,8 @@ class HumanGuidedEngagementPolicy(private val game: Game) : EngagementPolicy, En
                 roundCard = card,
                 legalSupports = allowedAfterWisp,
                 normalMainsOffered = offeredMains,
-                supportSlotsRemaining = request.supportSlotsRemaining
+                supportSlotsRemaining = request.supportSlotsRemaining,
+                freeSupports = request.freeSupportsAvailable.filter { it in allowedAfterWisp }
             )
 
         // Supplying only worthwhile Supports to the ACTUAL v37 turn chooser

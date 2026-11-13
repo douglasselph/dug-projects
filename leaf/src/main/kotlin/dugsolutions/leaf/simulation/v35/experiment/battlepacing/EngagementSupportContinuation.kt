@@ -31,21 +31,24 @@ class EngagementSupportContinuation(
         roundCard: RoundCard,
         legalSupports: List<BattleSupportAction>,
         normalMainsOffered: List<BattleMainAction>,
-        supportSlotsRemaining: Int
+        supportSlotsRemaining: Int,
+        freeSupports: List<BattleSupportAction> = emptyList()
     ): List<BattleSupportAction> {
         require(supportSlotsRemaining in 0..2) { "Invalid Engagement Support budget: $supportSlotsRemaining" }
-        if (supportSlotsRemaining == 0 || legalSupports.isEmpty()) return emptyList()
+        val availableFree = freeSupports.filter { it in legalSupports }
+        if (legalSupports.isEmpty()) return emptyList()
+        if (supportSlotsRemaining == 0) return availableFree
 
         val choices = normalMainsOffered.map { BattleTurnAction.FinalMain(it) } +
             legalSupports.map { BattleTurnAction.Support(it) }
         val assessment = orchestrator(context, roundCard, choices)
-        if (!assessment.continuation.shouldContinue) return emptyList()
+        if (!assessment.continuation.shouldContinue) return availableFree
         if (assessment.continuation.individuallyWorthwhileSupportExists) {
             // Production B11/B12 direct/enabling gates, Wisp scorer and Sunlight
             // value already decided these. No invented positive-score threshold.
-            return assessment.worthwhileSupports
+            return (assessment.worthwhileSupports + availableFree).distinct()
         }
-        if (!assessment.continuation.hasMeaningfulCumulativePath) return emptyList()
+        if (!assessment.continuation.hasMeaningfulCumulativePath) return availableFree
 
         // v37's optimistic reachability uses *all* currently held Bees and
         // Butterflies. In B, a path requiring 3+ Supports cannot be completed in
@@ -62,16 +65,16 @@ class EngagementSupportContinuation(
                 BattleSupportCapacity(beeMoves = bees, butterflyMoves = butterflies)
             ).hasMeaningfulPath
         }
-        if (possible.isEmpty()) return emptyList()
+        if (possible.isEmpty()) return availableFree
         val includesBee = possible.any { it.first > 0 }
         val includesButterfly = possible.any { it.second > 0 }
-        return legalSupports.filter { candidate ->
+        return (legalSupports.filter { candidate ->
             when (candidate) {
                 is BattleSupportAction.PlaceCritter -> includesBee && candidate.critter == Critter.BEE
                 is BattleSupportAction.Shared -> includesButterfly && candidate.action is SupportAction.UseButterfly
                 is BattleSupportAction.UseSunlight -> false
             }
-        }
+        } + availableFree).distinct()
     }
 
     /** Exhaustive two-slot budget; never expands branches with dice rolls or RNG. */

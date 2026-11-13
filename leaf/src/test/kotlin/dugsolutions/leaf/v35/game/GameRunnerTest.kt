@@ -18,7 +18,7 @@ class GameRunnerTest {
     @Test
     fun run_transitionsReadyThroughRunningToComplete() {
         // Arrange
-        val game = GameEngineTestFixture.game(1, 1)
+        val game = readyGame(1, 1)
         val observedStatuses = mutableListOf<GameStatus>()
         val executor = RoundExecutor { receivedGame, _ ->
             observedStatuses.add(receivedGame.status)
@@ -41,7 +41,7 @@ class GameRunnerTest {
     @Test
     fun run_executesEveryConfiguredCardExactlyOnceInDeckOrder() {
         // Arrange
-        val game = GameEngineTestFixture.game(2, 2)
+        val game = readyGame(2, 2)
         val expected = game.roundDeck.cards.cards
         val cultivation = RecordingExecutor()
         val battle = RecordingExecutor()
@@ -64,7 +64,7 @@ class GameRunnerTest {
     @Test
     fun run_recordsGameCompletionOnlyAfterFinalExecutorFinishes() {
         // Arrange
-        val game = GameEngineTestFixture.game(1, 1)
+        val game = readyGame(1, 1)
         val observations = mutableListOf<Boolean>()
         val executor = RoundExecutor { receivedGame, _ ->
             observations.add(receivedGame.chronicle.entries.any { it is GameEntry.GameCompleted })
@@ -89,7 +89,7 @@ class GameRunnerTest {
     @Test
     fun run_whenGameAlreadyCompleted_rejectsSecondInvocation() {
         // Arrange
-        val game = GameEngineTestFixture.game(1, 1)
+        val game = readyGame(1, 1)
         val runner = runner()
         runner.run(game)
         val entriesBefore = game.chronicle.entries
@@ -102,7 +102,7 @@ class GameRunnerTest {
     @Test
     fun run_whenExecutorFails_leavesGameRunningWithoutCompletionMarker() {
         // Arrange
-        val game = GameEngineTestFixture.game(1, 1)
+        val game = readyGame(1, 1)
         val failure = IllegalStateException("failed round")
         val cultivation = RoundExecutor { _, _ -> throw failure }
 
@@ -122,7 +122,7 @@ class GameRunnerTest {
     @Test
     fun run_whenEarlierFailureLeftGameRunning_rejectsRestart() {
         // Arrange
-        val game = GameEngineTestFixture.game(1, 1)
+        val game = readyGame(1, 1)
         val failing = runner(cultivation = RoundExecutor { _, _ -> error("fail") })
         assertFailsWith<IllegalStateException> { failing.run(game) }
 
@@ -134,8 +134,8 @@ class GameRunnerTest {
     @Test
     fun separateGamesAndRunners_doNotShareExecutionState() {
         // Arrange
-        val first = GameEngineTestFixture.game(1, 1, seed = 10L)
-        val second = GameEngineTestFixture.game(2, 1, seed = 20L)
+        val first = readyGame(1, 1, seed = 10L)
+        val second = readyGame(2, 1, seed = 20L)
         val firstExecutor = RecordingExecutor()
         val secondExecutor = RecordingExecutor()
 
@@ -152,6 +152,23 @@ class GameRunnerTest {
         assertEquals(10, second.chronicle.entries.size)
         assertTrue(first.chronicle !== second.chronicle)
     }
+
+    /**
+     * Runner lifecycle tests use recording executors; use an executable subset
+     * of the official Round catalog so unrelated pending card effects do not
+     * prevent testing lifecycle and game-to-game state isolation.
+     */
+    private fun readyGame(
+        cultivationRounds: Int,
+        battleRounds: Int,
+        seed: Long = 123L
+    ): Game =
+        GameEngineTestFixture.game(
+            cultivationRounds = cultivationRounds,
+            battleRounds = battleRounds,
+            seed = seed,
+            executableRoundCardsOnly = true
+        )
 
     private fun runner(
         cultivation: RoundExecutor = RecordingExecutor(),

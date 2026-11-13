@@ -46,14 +46,19 @@ class ThreeEngagementBattleTest {
             val pairedRunner = PairedBattleOpeningReplay(koin.get<GameFactory>(), koin.get<RoundCoordinator>(), battle)
             for ((players, ordinal) in listOf(2 to 1, 3 to 2, 4 to 3)) {
                 val config = GameConfig(
+                    selectedPlantCards = ImplementedBattleFixture.plants(koin.get<PlantCardManager>()),
                     playerDecisionFactories = List(players) { PlayerDecisionFactory.mechanicalControl() },
                     roundSetup = GameRoundSetup.standard(),
                     seed = 202610300L + players, strategySeed = 13103L,
                     eventBasedDieRolls = true, sharedPercentileDieRolls = true
                 )
-                val deck = BattlePacingWispDeck.withoutResolve(koin.get<WispCardManager>(), 9913L)
+                val deck = ImplementedBattleFixture.wisps(koin.get<WispCardManager>(), includeResolve = false)
                 assertTrue(deck.none { it.effect == GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW })
-                val paired = pairedRunner.create(config, ordinal, exactWispCards = deck)
+                val paired = pairedRunner.create(
+                    config, ordinal,
+                    exactWispCards = deck,
+                    exactRoundCards = ImplementedBattleFixture.rounds(koin.get<RoundCardManager>())
+                )
                 val aGame = paired.controlGame
                 val aState = paired.controlBattle
                 val card = aGame.config.roundValues.cardFor(requireNotNull(aGame.currentRound))
@@ -76,7 +81,7 @@ class ThreeEngagementBattleTest {
                     result.order.clockwiseActors.forEach { id ->
                         val actions = result.actions.filter { it.playerId == id }
                         assertTrue(actions.count { it.choice is EngagementChoice.Main } <= 1)
-                        assertTrue(actions.count { it.choice is EngagementChoice.Support } <= 2)
+                        assertTrue((actions.lastOrNull()?.supportsUsedInThisTurn ?: 0) <= 2)
                     }
                 }
                 assertTrue(b.trace.any { it.startsWith("ENGAGEMENT_RESOLVE,row=TOP") })
@@ -251,10 +256,14 @@ class ThreeEngagementBattleTest {
             val round = koin.get<BattleRound>()
             val pair = PairedBattleOpeningReplay(koin.get<GameFactory>(), koin.get<RoundCoordinator>(), round)
                 .create(GameConfig(
+                    selectedPlantCards = ImplementedBattleFixture.plants(koin.get<PlantCardManager>()),
                     playerDecisionFactories = List(2) { chooseFutureRow },
                     seed = 20261108L, strategySeed = 20261109L,
                     roundSetup = GameRoundSetup.standard()
-                ))
+                ),
+                    exactWispCards = ImplementedBattleFixture.wisps(koin.get<WispCardManager>()),
+                    exactRoundCards = ImplementedBattleFixture.rounds(koin.get<RoundCardManager>())
+                )
             val game = pair.candidateGame
             val battle = pair.candidateBattle
             val starter = EngagementOrderSelector.select(battle, game.players.map { it.id }, StrikeRow.TOP).starter
@@ -316,10 +325,14 @@ class ThreeEngagementBattleTest {
             val round = koin.get<BattleRound>()
             val pair = PairedBattleOpeningReplay(koin.get<GameFactory>(), koin.get<RoundCoordinator>(), round)
                 .create(GameConfig(
+                    selectedPlantCards = ImplementedBattleFixture.plants(koin.get<PlantCardManager>()),
                     playerDecisionFactories = List(2) { PlayerDecisionFactory.mechanicalControl() },
                     seed = 20261110L, strategySeed = 20261111L,
                     roundSetup = GameRoundSetup.standard()
-                ))
+                ),
+                    exactWispCards = ImplementedBattleFixture.wisps(koin.get<WispCardManager>()),
+                    exactRoundCards = ImplementedBattleFixture.rounds(koin.get<RoundCardManager>())
+                )
             val game = pair.candidateGame
             val battle = pair.candidateBattle
             val starter = EngagementOrderSelector.select(battle, game.players.map { it.id }, StrikeRow.TOP).starter
@@ -362,6 +375,153 @@ class ThreeEngagementBattleTest {
             assertEquals(beforeSunlight, player.tokens.sunlightCount)
             assertEquals(beforeEvents + 1, game.chronicle.entries
                 .filterIsInstance<dugsolutions.leaf.v35.chronicle.domain.GameEntry.SunlightMainAction>().size)
+        } finally { app.close() }
+    }
+
+    @Test
+    fun `free Worm placement remains legal after two paid Supports in one Engagement`() {
+        val app = koinApplication { modules(appModules) }
+        try {
+            val koin = app.koin
+            val root = CardDataFiles.dataDirectory()
+            koin.get<PlantCardRegistry>().apply {
+                clear()
+                loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROOT_CARD_LIST, root),
+                    CardDataFiles.dataPath(CardDataFiles.VF_CARD_LIST, root))
+            }.also { koin.get<PlantCardManager>().loadCards(it) }
+            koin.get<WispCardRegistry>().apply {
+                clear()
+                loadFromCsv(CardDataFiles.dataPath(CardDataFiles.WISP_LIST, root))
+            }.also { koin.get<WispCardManager>().loadCards(it) }
+            koin.get<RoundCardRegistry>().apply {
+                clear()
+                loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST, root))
+            }.also { koin.get<RoundCardManager>().loadCards(it) }
+            val round = koin.get<BattleRound>()
+            val pair = PairedBattleOpeningReplay(koin.get<GameFactory>(), koin.get<RoundCoordinator>(), round)
+                .create(GameConfig(
+                    selectedPlantCards = ImplementedBattleFixture.plants(koin.get<PlantCardManager>()),
+                    playerDecisionFactories = List(2) { PlayerDecisionFactory.mechanicalControl() },
+                    seed = 20261112L, strategySeed = 20261113L,
+                    roundSetup = GameRoundSetup.standard()
+                ),
+                    exactWispCards = ImplementedBattleFixture.wisps(koin.get<WispCardManager>()),
+                    exactRoundCards = ImplementedBattleFixture.rounds(koin.get<RoundCardManager>())
+                )
+            val game = pair.candidateGame
+            val battle = pair.candidateBattle
+            val starter = EngagementOrderSelector.select(battle, game.players.map { it.id }, StrikeRow.TOP).starter
+            val player = battle.player(starter)
+            player.critters.set(dugsolutions.leaf.v35.tokens.Critter.BEE, 2)
+            player.critters.set(dugsolutions.leaf.v35.tokens.Critter.WORM, 2)
+            player.freeBattleSupports.grant(dugsolutions.leaf.v35.player.FreeBattleSupport.WORM)
+            val policy = EngagementPolicy { decision ->
+                if (decision.row != StrikeRow.TOP || decision.playerId != starter) {
+                    EngagementChoice.Pass
+                } else {
+                    val bee = decision.legalSupports.filterIsInstance<
+                        dugsolutions.leaf.v35.player.decision.battle.BattleSupportAction.PlaceCritter>()
+                        .firstOrNull { it.critter == dugsolutions.leaf.v35.tokens.Critter.BEE && it.row == StrikeRow.TOP }
+                    val worm = decision.legalSupports.filterIsInstance<
+                        dugsolutions.leaf.v35.player.decision.battle.BattleSupportAction.PlaceCritter>()
+                        .firstOrNull { it.critter == dugsolutions.leaf.v35.tokens.Critter.WORM && it.row == StrikeRow.TOP }
+                    when {
+                        bee != null -> EngagementChoice.Support(bee)
+                        worm != null -> {
+                            assertEquals(0, decision.supportSlotsRemaining)
+                            assertTrue(worm in decision.freeSupportsAvailable)
+                            EngagementChoice.Support(worm)
+                        }
+                        else -> EngagementChoice.Pass
+                    }
+                }
+            }
+            val result = ThreeEngagementBattle(round).execute(game, battle, policy)
+            val acts = result.engagements.first().actions.filter { it.playerId == starter }
+            assertEquals(4, acts.count { it.choice is EngagementChoice.Support })
+            assertEquals(2, acts.last().supportsUsedInThisTurn) // paid
+            assertEquals(2, acts.last().freeSupportsUsedInThisTurn)
+            assertTrue(result.trace.any { "freeSupportsThisRow=2" in it })
+            assertTrue(game.players.all { !it.freeBattleSupports.contains(
+                dugsolutions.leaf.v35.player.FreeBattleSupport.WORM) })
+        } finally { app.close() }
+    }
+
+    @Test
+    fun `free Bees and ready Butterfly remain usable after two paid Worm placements`() {
+        val app = koinApplication { modules(appModules) }
+        try {
+            val koin = app.koin
+            val root = CardDataFiles.dataDirectory()
+            koin.get<PlantCardRegistry>().apply {
+                clear()
+                loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROOT_CARD_LIST, root),
+                    CardDataFiles.dataPath(CardDataFiles.VF_CARD_LIST, root))
+            }.also { koin.get<PlantCardManager>().loadCards(it) }
+            koin.get<WispCardRegistry>().apply {
+                clear()
+                loadFromCsv(CardDataFiles.dataPath(CardDataFiles.WISP_LIST, root))
+            }.also { koin.get<WispCardManager>().loadCards(it) }
+            koin.get<RoundCardRegistry>().apply {
+                clear()
+                loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST, root))
+            }.also { koin.get<RoundCardManager>().loadCards(it) }
+            val round = koin.get<BattleRound>()
+            val pair = PairedBattleOpeningReplay(koin.get<GameFactory>(), koin.get<RoundCoordinator>(), round)
+                .create(GameConfig(
+                    selectedPlantCards = ImplementedBattleFixture.plants(koin.get<PlantCardManager>()),
+                    playerDecisionFactories = List(2) { PlayerDecisionFactory.mechanicalControl() },
+                    seed = 20261114L, strategySeed = 20261115L,
+                    roundSetup = GameRoundSetup.standard()
+                ),
+                    exactWispCards = ImplementedBattleFixture.wisps(koin.get<WispCardManager>()),
+                    exactRoundCards = ImplementedBattleFixture.rounds(koin.get<RoundCardManager>())
+                )
+            val battle = pair.candidateBattle
+            val game = pair.candidateGame
+            val starter = EngagementOrderSelector.select(battle, game.players.map { it.id }, StrikeRow.TOP).starter
+            val player = battle.player(starter)
+            player.critters.set(dugsolutions.leaf.v35.tokens.Critter.WORM, 2)
+            player.critters.set(dugsolutions.leaf.v35.tokens.Critter.BEE, 2)
+            player.butterflies.add(dugsolutions.leaf.v35.tokens.Butterfly.GREEN)
+            player.freeBattleSupports.grant(dugsolutions.leaf.v35.player.FreeBattleSupport.BEE)
+            player.freeBattleSupports.grant(dugsolutions.leaf.v35.player.FreeBattleSupport.BUTTERFLY)
+            val policy = EngagementPolicy { decision ->
+                if (decision.row != StrikeRow.TOP || decision.playerId != starter) {
+                    EngagementChoice.Pass
+                } else {
+                    val critters = decision.legalSupports.filterIsInstance<
+                        dugsolutions.leaf.v35.player.decision.battle.BattleSupportAction.PlaceCritter>()
+                        .filter { it.row == StrikeRow.TOP }
+                    val paidWorm = critters.firstOrNull { it.critter == dugsolutions.leaf.v35.tokens.Critter.WORM }
+                    val freeBee = critters.firstOrNull { it.critter == dugsolutions.leaf.v35.tokens.Critter.BEE }
+                    val freeButterfly = decision.legalSupports.firstOrNull { option ->
+                        val shared = option as? dugsolutions.leaf.v35.player.decision.battle.BattleSupportAction.Shared
+                        shared?.action is dugsolutions.leaf.v35.player.decision.support.SupportAction.UseButterfly
+                    }
+                    when {
+                        paidWorm != null -> EngagementChoice.Support(paidWorm)
+                        freeBee != null -> {
+                            assertEquals(0, decision.supportSlotsRemaining)
+                            EngagementChoice.Support(freeBee)
+                        }
+                        freeButterfly != null -> {
+                            assertEquals(0, decision.supportSlotsRemaining)
+                            EngagementChoice.Support(freeButterfly)
+                        }
+                        else -> EngagementChoice.Pass
+                    }
+                }
+            }
+            val result = ThreeEngagementBattle(round).execute(game, battle, policy)
+            val acts = result.engagements.first().actions.filter { it.playerId == starter }
+            assertEquals(5, acts.count { it.choice is EngagementChoice.Support })
+            assertEquals(2, acts.last().supportsUsedInThisTurn)
+            assertEquals(3, acts.last().freeSupportsUsedInThisTurn)
+            assertTrue(game.players.all {
+                !it.freeBattleSupports.contains(dugsolutions.leaf.v35.player.FreeBattleSupport.BEE) &&
+                    !it.freeBattleSupports.contains(dugsolutions.leaf.v35.player.FreeBattleSupport.BUTTERFLY)
+            })
         } finally { app.close() }
     }
 

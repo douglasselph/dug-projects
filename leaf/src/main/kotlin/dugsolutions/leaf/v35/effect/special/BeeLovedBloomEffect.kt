@@ -11,16 +11,16 @@ import dugsolutions.leaf.v35.effect.handler.EffectHandler
 import dugsolutions.leaf.v35.effect.handler.decisionContext
 import dugsolutions.leaf.v35.player.decision.effect.ChooseBeeSourceRequest
 import dugsolutions.leaf.v35.player.decision.effect.EffectBeeSourceChoice
+import dugsolutions.leaf.v35.player.FreeBattleSupport
+import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.tokens.Critter
 
 /**
  * Bee-loved Bloom:
  *
- * Gain or Steal one Bee, then each Bee controlled by the actor is worth
- * exactly 4 for the remainder of the round.
- *
- * Unlike Root Appreciation's additive +2 Worm boost, Bee-loved Bloom is an
- * exact round value. Repeated resolutions remain 4 rather than stacking.
+ * Legacy wording sets each Bee's value to 4 for the round; current wording
+ * adds +2 per activation and stacks. During Battle the revised effect also
+ * makes Bee placement free of the paid Support allowance for this Battle.
  *
  * The source decision is explicit: Grove, or the exact opponent from whom the
  * Bee will be stolen.
@@ -31,7 +31,8 @@ class BeeLovedBloomEffect : EffectHandler {
         request: GameEffectRequest
     ): Boolean =
         request.effect == GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND ||
-            request.effect == GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND
+            request.effect == GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND ||
+            request.effect == GameEffect.GAIN_OR_STEAL_BEE_BOOST_AND_FREE_BATTLE_SUPPORT
 
     override fun execute(
         request: GameEffectRequest,
@@ -72,13 +73,18 @@ class BeeLovedBloomEffect : EffectHandler {
                     value = 4
                 )
 
-            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND ->
+            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND,
+            GameEffect.GAIN_OR_STEAL_BEE_BOOST_AND_FREE_BATTLE_SUPPORT ->
                 request.actor.critterValues.boostForRound(
                     critter = Critter.BEE,
                     amount = 2
                 )
 
             else -> error("Unexpected Bee-loved Bloom effect: ${request.effect}")
+        }
+        if (request.effect == GameEffect.GAIN_OR_STEAL_BEE_BOOST_AND_FREE_BATTLE_SUPPORT &&
+            request.phase == GameEffectPhase.BATTLE) {
+            request.actor.freeBattleSupports.grant(FreeBattleSupport.BEE)
         }
     }
 

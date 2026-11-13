@@ -2,6 +2,7 @@ package dugsolutions.leaf.v35.game
 
 import dugsolutions.leaf.v35.chronicle.GameChronicle
 import dugsolutions.leaf.v35.common.CardDataFiles
+import dugsolutions.leaf.v35.effect.CardEffectReadiness
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectConverter
 import dugsolutions.leaf.v35.grove.Grove
@@ -30,7 +31,9 @@ internal object GameEngineTestFixture {
         populateWispDeck: Boolean = false,
         plantValues: PlantValueResolver = PlantValueResolver.CANONICAL,
         roundValues: RoundValueResolver = RoundValueResolver.CANONICAL,
-        battleStructure: BattleStructure = BattleStructure.LEGACY_WHOLE_BATTLE
+        battleStructure: BattleStructure = BattleStructure.LEGACY_WHOLE_BATTLE,
+        /** Use only mechanically ready Round definitions for tests with recording executors. */
+        executableRoundCardsOnly: Boolean = false
     ): Game {
         val gamePlayers = players ?: listOf(player(1), player(2))
         val randomizer = Randomizer.create(seed)
@@ -44,8 +47,19 @@ internal object GameEngineTestFixture {
             plantValues = plantValues,
             roundValues = roundValues
         )
+        val roundCardManager = roundManager().apply {
+            if (executableRoundCardsOnly) {
+                // GameRunner tests use recording executors and test lifecycle semantics,
+                // not unfinished card mechanics. Preserve real CSV definitions and
+                // quantities while excluding effects not yet executable.
+                loadCards(getAllCards().cards.filter { card ->
+                    card.firstEffect.effect !in CardEffectReadiness.pending &&
+                        card.secondEffect.effect !in CardEffectReadiness.pending
+                })
+            }
+        }
         val roundDeck = RoundDeck(
-            roundCardManager = roundManager(),
+            roundCardManager = roundCardManager,
             randomizer = randomizer
         ).apply {
             setup(

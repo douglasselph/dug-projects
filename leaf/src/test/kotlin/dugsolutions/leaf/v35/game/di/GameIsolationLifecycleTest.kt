@@ -1,7 +1,6 @@
 package dugsolutions.leaf.v35.game.di
 
 import dugsolutions.leaf.v35.common.CardDataFiles
-import dugsolutions.leaf.v35.common.FirstGameDefault
 import dugsolutions.leaf.v35.di.appModules
 import dugsolutions.leaf.v35.game.GameConfig
 import dugsolutions.leaf.v35.game.BattleStructure
@@ -40,18 +39,22 @@ class GameIsolationLifecycleTest {
             koin.get<WispCardManager>().loadCards(wispRegistry)
             koin.get<RoundCardManager>().loadCards(roundRegistry)
 
-            val plants = FirstGameDefault.PLANT_NAMES.map { requireNotNull(plantRegistry.getCard(it)) }
+            // This test verifies independent per-game state, not unfinished card effects.
+            val plants = ExecutableGameFixture.plants(plantRegistry)
+            val roundSetup = GameRoundSetup.Ordered(cultivationRounds = 1, battleRounds = 1)
+            val rounds = ExecutableGameFixture.rounds(roundRegistry, roundSetup)
+            val wisps = ExecutableGameFixture.wisps(wispRegistry)
             val config = GameConfig(
                 selectedPlantCards = plants,
                 playerDecisionFactories = List(2) { PlayerDecisionFactory.humanBaseline() },
                 battleStructure = BattleStructure.LEGACY_WHOLE_BATTLE,
-                roundSetup = GameRoundSetup.Ordered(cultivationRounds = 1, battleRounds = 1),
+                roundSetup = roundSetup,
                 seed = 12345L
             )
             val factory = koin.get<GameFactory>()
             val runner = koin.get<GameRunner>()
-            val first = factory(config)
-            val second = factory(config)
+            val first = factory(config, exactRoundCards = rounds, exactWispCards = wisps)
+            val second = factory(config, exactRoundCards = rounds, exactWispCards = wisps)
             assertNotSame(first.grove, second.grove)
             assertNotSame(first.grove.sharedTokenEconomy, second.grove.sharedTokenEconomy)
             assertNotSame(first.chronicle, second.chronicle)
@@ -73,9 +76,9 @@ class GameIsolationLifecycleTest {
                     selectedPlantCards = plants,
                     playerDecisionFactories = List(2) { PlayerDecisionFactory.humanBaseline() },
                     battleStructure = BattleStructure.LEGACY_WHOLE_BATTLE,
-                    roundSetup = GameRoundSetup.Ordered(cultivationRounds = 1, battleRounds = 1),
+                    roundSetup = roundSetup,
                     seed = 60000L + index
-                ))
+                ), exactRoundCards = rounds, exactWispCards = wisps)
                 runner.run(independent)
                 assertTrue(independent.isComplete)
             }

@@ -67,14 +67,11 @@ object GameEffectDecisionRequirements {
             GameEffect.UNKNOWN,
             GameEffect.RAISE_DIE_PLUS_3,
             GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW,
-            GameEffect.GAIN_WORM_BOOST_AND_FREE_BATTLE_SUPPORT,
             GameEffect.RAISE_ONE_DIE_PLUS_1_PER_GRAFTED_FLOWER,
             GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE,
             GameEffect.RAISE_ALL_D8S_PLUS_2,
-            GameEffect.GAIN_OR_STEAL_BUTTERFLY_REFRESH_AND_FREE_BATTLE_SUPPORT,
             GameEffect.RAISE_ALL_DICE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
             GameEffect.GAIN_TWO_SUNLIGHT_TOKENS,
-            GameEffect.GAIN_OR_STEAL_BEE_BOOST_AND_FREE_BATTLE_SUPPORT,
             GameEffect.FLIP_OWN_DIE_AND_OPPONENT_DIE_IN_BATTLE,
             GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S,
             GameEffect.USE_DIE_FROM_DISCARD_NOW,
@@ -183,6 +180,7 @@ object GameEffectDecisionRequirements {
             GameEffect.GAIN_SUNLIGHT_TOKEN,
             GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND,
             GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND,
+            GameEffect.GAIN_WORM_BOOST_AND_FREE_BATTLE_SUPPORT,
             GameEffect.RAISE_ALL_DICE_PLUS_2,
             GameEffect.RAISE_ALL_D8S_PLUS_1,
             GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS ->
@@ -220,10 +218,12 @@ object GameEffectDecisionRequirements {
                 same(EffectDecisionMechanism.EFFECT_DIE)
 
             GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND,
-            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND ->
+            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND,
+            GameEffect.GAIN_OR_STEAL_BEE_BOOST_AND_FREE_BATTLE_SUPPORT ->
                 same(EffectDecisionMechanism.EFFECT_BEE_SOURCE)
 
-            GameEffect.GAIN_OR_STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES ->
+            GameEffect.GAIN_OR_STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES,
+            GameEffect.GAIN_OR_STEAL_BUTTERFLY_REFRESH_AND_FREE_BATTLE_SUPPORT ->
                 same(EffectDecisionMechanism.EFFECT_BUTTERFLY_TARGET)
 
             GameEffect.GAIN_WATER_AND_SPEND_1_TO_REROLL_TWO_OWN_OR_ONE_OPPONENT_BATTLE_DIE ->

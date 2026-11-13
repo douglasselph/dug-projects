@@ -47,6 +47,7 @@ class PairedBattleOpeningReplayTest {
             )
             for ((players, ordinal) in listOf(2 to 1, 3 to 2, 4 to 3)) {
                 val config = GameConfig(
+                    selectedPlantCards = ImplementedBattleFixture.plants(koin.get<PlantCardManager>()),
                     playerDecisionFactories = List(players) { PlayerDecisionFactory.mechanicalControl() },
                     roundSetup = GameRoundSetup.standard(),
                     seed = 172901L + players,
@@ -54,7 +55,11 @@ class PairedBattleOpeningReplayTest {
                     eventBasedDieRolls = true,
                     sharedPercentileDieRolls = true
                 )
-                val paired = runner.create(config, ordinal)
+                val paired = runner.create(
+                    config, ordinal,
+                    exactWispCards = ImplementedBattleFixture.wisps(koin.get<WispCardManager>()),
+                    exactRoundCards = ImplementedBattleFixture.rounds(koin.get<RoundCardManager>())
+                )
                 assertEquals(paired.fingerprint, BattleOpeningFingerprint.capture(paired.candidateGame, paired.candidateBattle))
                 assertEquals(paired.fingerprint, BattleOpeningFingerprint.capture(paired.controlGame, paired.controlBattle))
                 assertNotEquals(paired.controlGame, paired.candidateGame)

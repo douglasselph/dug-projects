@@ -15,6 +15,7 @@ import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.game.operation.RefreshResolver
 import dugsolutions.leaf.v35.game.operation.SunlightTokenResolver
+import dugsolutions.leaf.v35.player.FreeBattleSupport
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDieSizeRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectPlayerRequest
@@ -67,7 +68,8 @@ class ResourceEffectHandler : EffectHandler {
                 request.game.grove.critters.count(Critter.WORM) > 0
 
             GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND,
-            GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND ->
+            GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND,
+            GameEffect.GAIN_WORM_BOOST_AND_FREE_BATTLE_SUPPORT ->
                 true
 
             GameEffect.GAIN_ONE_WISP ->
@@ -147,6 +149,13 @@ class ResourceEffectHandler : EffectHandler {
 
             GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND ->
                 gainWormAndBoostWorms(request, amount = 1)
+
+            GameEffect.GAIN_WORM_BOOST_AND_FREE_BATTLE_SUPPORT -> {
+                gainWormAndBoostWorms(request, amount = 1)
+                if (request.phase == dugsolutions.leaf.v35.effect.GameEffectPhase.BATTLE) {
+                    request.actor.freeBattleSupports.grant(FreeBattleSupport.WORM)
+                }
+            }
 
             GameEffect.GAIN_ONE_WISP ->
                 gainOneWisp(request, executor)
@@ -317,8 +326,8 @@ class ResourceEffectHandler : EffectHandler {
     ) {
         /*
          * The physical Critter remains WORM. Root Appreciation says each Worm
-         * gains the configured temporary round bonus. Canonical Root Appreciation
-         * uses +2; the research variant uses +1. Repeated resolutions stack.
+         * gains the configured temporary round bonus. Current Root Appreciation
+         * uses +1; historical variants may use +2. Repeated resolutions stack.
          *
          * Because the boost is Player round state rather than a Critter
          * variant, Worms gained later in the same round use the boosted value

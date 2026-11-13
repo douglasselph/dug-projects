@@ -1,7 +1,6 @@
 package dugsolutions.leaf.v35.game.di
 
 import dugsolutions.leaf.v35.common.CardDataFiles
-import dugsolutions.leaf.v35.common.FirstGameDefault
 import dugsolutions.leaf.v35.di.appModules
 import dugsolutions.leaf.v35.game.GameConfig
 import dugsolutions.leaf.v35.game.BattleStructure
@@ -65,21 +64,19 @@ class GameModuleWiringTest {
             koin.get<WispCardManager>().loadCards(wispRegistry)
             koin.get<RoundCardManager>().loadCards(roundRegistry)
 
-            val selectedPlants = FirstGameDefault.PLANT_NAMES.map { name ->
-                requireNotNull(plantRegistry.getCard(name))
-            }
+            val selectedPlants = ExecutableGameFixture.plants(plantRegistry)
+            val roundSetup = GameRoundSetup.Ordered(cultivationRounds = 1, battleRounds = 1)
 
             val game = koin.get<GameFactory>()(
                 GameConfig(
                     selectedPlantCards = selectedPlants,
                     playerDecisionFactories = List(2) { PlayerDecisionFactory.humanBaseline() },
                     battleStructure = BattleStructure.LEGACY_WHOLE_BATTLE,
-                    roundSetup = GameRoundSetup.Ordered(
-                        cultivationRounds = 1,
-                        battleRounds = 1
-                    ),
+                    roundSetup = roundSetup,
                     seed = 12345L
-                )
+                ),
+                exactRoundCards = ExecutableGameFixture.rounds(roundRegistry, roundSetup),
+                exactWispCards = ExecutableGameFixture.wisps(wispRegistry)
             )
 
             val result = koin.get<GameRunner>().run(game)

@@ -200,6 +200,7 @@ class DefaultGameEffectExecutor(
             GameEffect.GAIN_TWO_WORMS,
             GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND,
             GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND,
+            GameEffect.GAIN_WORM_BOOST_AND_FREE_BATTLE_SUPPORT,
             GameEffect.GAIN_OR_REFRESH_GREEN_BUTTERFLY,
             GameEffect.GAIN_OR_REFRESH_PURPLE_BUTTERFLY,
             GameEffect.GAIN_OR_REFRESH_RED_BUTTERFLY,
@@ -233,7 +234,8 @@ class DefaultGameEffectExecutor(
                 petalToDie4Effect
 
             GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND,
-            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND ->
+            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND,
+            GameEffect.GAIN_OR_STEAL_BEE_BOOST_AND_FREE_BATTLE_SUPPORT ->
                 beeLovedBloomEffect
 
             GameEffect.REROLL_DIE_ON_3_DRAW_ONE_CULTIVATION_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3,
@@ -241,7 +243,8 @@ class DefaultGameEffectExecutor(
                 vineAndPunishmentResearchEffect
 
             GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES,
-            GameEffect.GAIN_OR_STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES ->
+            GameEffect.GAIN_OR_STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES,
+            GameEffect.GAIN_OR_STEAL_BUTTERFLY_REFRESH_AND_FREE_BATTLE_SUPPORT ->
                 alluringNectarEffect
 
             GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE,

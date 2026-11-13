@@ -29,6 +29,8 @@ class Player(
     val butterflies: Butterflies = Butterflies(),
     val wisps: WispHand = WispHand()
 ) {
+    val freeBattleSupports: BattleFreeSupportState = BattleFreeSupportState()
+
     var vp: Int = 0
         private set
 

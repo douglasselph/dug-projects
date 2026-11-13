@@ -1,6 +1,6 @@
 # Leaf & Let Die - Active Research and Engineering Tasks
 
-**Status date:** November 6, 2026 — updated-card interpretation audit prepared; mechanical parity pending
+**Status date:** November 12, 2026 — FREE-action implementation patch prepared; Kotlin regression still pending
 
 This is the **active top-level backlog**. It is intentionally shorter than the many historical phase/checkpoint documents under `doc/`.
 
@@ -8,7 +8,7 @@ A historical task ID appearing in an older document does **not** mean that task 
 
 ## NEXT ACTIVE PROGRAM — November 5 authoritative CSV integration (NC-01–NC-27)
 
-**Status: NC-01, NC-02 and NC-03 recognition implemented and statically verified; NC-04–NC-27 remain open.** This section was originally prepared by comparing the newly attached
+**Status: NC-01, NC-02 and NC-03 recognition implemented and statically verified. FREE-1–4 of NC-04 authorized and implementation added (unverified in full Kotlin suite). Other NC-04 rulings and the remaining NC work are open.** This section was originally prepared by comparing the newly attached
 `leaf(20261105-234756).tgz` with `leaf(20261105-234502).tgz`, and checking the then-current Kotlin
 converter, registry, action scheduler, effect handlers, policy references, and selected tests.
 The user has designated the newly supplied files under `data/` as **the new card source of truth**.
@@ -110,7 +110,7 @@ without an explicit design decision.
   placement/capacity. **Designer approval is still needed for the marked PROPOSED decisions;**
   the register must not be mistaken for newly adopted rules. After approval, record accepted
   choices in the register and use its fixture IDs for Kotlin regression tests in NC-05–NC-25.
-  No production mechanics or card CSVs were changed by this interpretation work.
+  November 12 follow-up: FREE-1–4 were authorized and a focused effect/scheduler implementation added. No official CSVs were changed. Full Kotlin regressions remain pending; other NC-04 decisions are not approved.
 
 #### P1 — Plant mechanics: revised effect execution (13 changed rows)
 

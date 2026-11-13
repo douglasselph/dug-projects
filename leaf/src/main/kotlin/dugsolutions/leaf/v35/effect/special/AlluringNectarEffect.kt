@@ -6,6 +6,8 @@ import dugsolutions.leaf.v35.chronicle.domain.stateSnapshot
 import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.stateCheck
+import dugsolutions.leaf.v35.player.FreeBattleSupport
+import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
@@ -30,7 +32,8 @@ class AlluringNectarEffect : EffectHandler {
         request: GameEffectRequest
     ): Boolean =
         request.effect == GameEffect.GAIN_OR_STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES ||
-            request.effect == GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES
+            request.effect == GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES ||
+            request.effect == GameEffect.GAIN_OR_STEAL_BUTTERFLY_REFRESH_AND_FREE_BATTLE_SUPPORT
 
     override fun execute(
         request: GameEffectRequest,
@@ -69,6 +72,11 @@ class AlluringNectarEffect : EffectHandler {
             }
         }
 
+        if (request.effect == GameEffect.GAIN_OR_STEAL_BUTTERFLY_REFRESH_AND_FREE_BATTLE_SUPPORT &&
+            request.phase == GameEffectPhase.BATTLE) {
+            request.actor.freeBattleSupports.grant(FreeBattleSupport.BUTTERFLY)
+        }
+
         request.game.chronicle.record(
             Moment.ButterflyState(
                 playerId = request.actor.id,
@@ -81,7 +89,8 @@ class AlluringNectarEffect : EffectHandler {
         request: GameEffectRequest
     ): List<EffectButterflyTargetChoice> =
         buildList {
-            if (request.effect == GameEffect.GAIN_OR_STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES) {
+            if (request.effect == GameEffect.GAIN_OR_STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES ||
+                request.effect == GameEffect.GAIN_OR_STEAL_BUTTERFLY_REFRESH_AND_FREE_BATTLE_SUPPORT) {
                 request.game.grove.butterflies.all.forEach { butterfly ->
                     add(
                         EffectButterflyTargetChoice(

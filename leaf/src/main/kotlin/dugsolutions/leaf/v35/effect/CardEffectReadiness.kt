@@ -12,14 +12,11 @@ import dugsolutions.leaf.v35.game.Game
 object CardEffectReadiness {
     val pending: Set<GameEffect> = setOf(
         GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW,
-        GameEffect.GAIN_WORM_BOOST_AND_FREE_BATTLE_SUPPORT,
         GameEffect.RAISE_ONE_DIE_PLUS_1_PER_GRAFTED_FLOWER,
         GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE,
         GameEffect.RAISE_ALL_D8S_PLUS_2,
-        GameEffect.GAIN_OR_STEAL_BUTTERFLY_REFRESH_AND_FREE_BATTLE_SUPPORT,
         GameEffect.RAISE_ALL_DICE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
         GameEffect.GAIN_TWO_SUNLIGHT_TOKENS,
-        GameEffect.GAIN_OR_STEAL_BEE_BOOST_AND_FREE_BATTLE_SUPPORT,
         GameEffect.FLIP_OWN_DIE_AND_OPPONENT_DIE_IN_BATTLE,
         GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S,
         GameEffect.USE_DIE_FROM_DISCARD_NOW,
