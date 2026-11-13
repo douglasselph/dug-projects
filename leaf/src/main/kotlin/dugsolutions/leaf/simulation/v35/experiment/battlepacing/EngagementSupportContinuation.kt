@@ -43,38 +43,48 @@ class EngagementSupportContinuation(
             legalSupports.map { BattleTurnAction.Support(it) }
         val assessment = orchestrator(context, roundCard, choices)
         if (!assessment.continuation.shouldContinue) return availableFree
-        if (assessment.continuation.individuallyWorthwhileSupportExists) {
-            // Production B11/B12 direct/enabling gates, Wisp scorer and Sunlight
-            // value already decided these. No invented positive-score threshold.
-            return (assessment.worthwhileSupports + availableFree).distinct()
+        val individual = if (assessment.continuation.individuallyWorthwhileSupportExists) {
+            // Do not lose a genuinely worthwhile single action when evaluating
+            // a *different* cumulative path under the Engagement cap.
+            assessment.worthwhileSupports
+        } else emptyList()
+        if (!assessment.continuation.hasMeaningfulCumulativePath) {
+            return (individual + availableFree).distinct()
         }
-        if (!assessment.continuation.hasMeaningfulCumulativePath) return availableFree
 
-        // v37's optimistic reachability uses *all* currently held Bees and
-        // Butterflies. In B, a path requiring 3+ Supports cannot be completed in
-        // a single Engagement. Re-evaluate the SAME production reachability
-        // logic for only combinations that fit the remaining Support budget.
+        // The production reachability estimate sees all physical Bees and
+        // Butterflies, but those moves only spend paid slots when the matching
+        // Plant has NOT granted a free Support permission. In particular, an
+        // Engagement with zero paid slots may still have a tactical Bee/Butterfly
+        // path; with one slot remaining a free Bee may combine with a paid
+        // Butterfly. Keep policy reachability consistent with the scheduler.
         val capacity = capacityAssessor(context, choices).own
+        val freeBeeMoves = if (availableFree.any { it is BattleSupportAction.PlaceCritter &&
+                it.critter == Critter.BEE }) capacity.beeMoves else 0
+        val freeButterflyMoves = if (availableFree.any { it is BattleSupportAction.Shared &&
+                it.action is SupportAction.UseButterfly }) capacity.butterflyMoves else 0
         val possible = feasibleCumulativePairs(
-            supportSlotsRemaining,
-            capacity.beeMoves,
-            capacity.butterflyMoves
+            slots = supportSlotsRemaining,
+            availableBees = capacity.beeMoves,
+            availableButterflies = capacity.butterflyMoves,
+            freeBees = freeBeeMoves,
+            freeButterflies = freeButterflyMoves
         ) { bees, butterflies ->
             reachability(
                 context,
                 BattleSupportCapacity(beeMoves = bees, butterflyMoves = butterflies)
             ).hasMeaningfulPath
         }
-        if (possible.isEmpty()) return availableFree
         val includesBee = possible.any { it.first > 0 }
         val includesButterfly = possible.any { it.second > 0 }
-        return (legalSupports.filter { candidate ->
+        val cumulative = legalSupports.filter { candidate ->
             when (candidate) {
                 is BattleSupportAction.PlaceCritter -> includesBee && candidate.critter == Critter.BEE
                 is BattleSupportAction.Shared -> includesButterfly && candidate.action is SupportAction.UseButterfly
                 is BattleSupportAction.UseSunlight -> false
             }
-        } + availableFree).distinct()
+        }
+        return (individual + cumulative + availableFree).distinct()
     }
 
     /** Exhaustive two-slot budget; never expands branches with dice rolls or RNG. */
@@ -82,12 +92,23 @@ class EngagementSupportContinuation(
         slots: Int,
         availableBees: Int,
         availableButterflies: Int,
+        freeBees: Int = 0,
+        freeButterflies: Int = 0,
         meaningful: (bees: Int, butterflies: Int) -> Boolean
     ): List<Pair<Int, Int>> {
         require(slots in 0..2 && availableBees >= 0 && availableButterflies >= 0)
-        return (0..minOf(slots, availableBees)).flatMap { bee ->
-            (0..minOf(slots - bee, availableButterflies)).mapNotNull { butterfly ->
-                if (bee + butterfly > 0 && meaningful(bee, butterfly)) bee to butterfly else null
+        require(freeBees in 0..availableBees && freeButterflies in 0..availableButterflies)
+        // Each *physical* move costs either zero or one paid slot. The free
+        // counts cannot exceed the actual legal resources supplied above.
+        // Do not count a single Butterfly multiple times merely because it has
+        // several legal reroll targets.
+        return (0..minOf(availableBees, slots + freeBees)).flatMap { bee ->
+            (0..minOf(availableButterflies, slots + freeButterflies)).mapNotNull { butterfly ->
+                val paid = (bee - freeBees).coerceAtLeast(0) +
+                    (butterfly - freeButterflies).coerceAtLeast(0)
+                if (bee + butterfly > 0 && paid <= slots && meaningful(bee, butterfly)) {
+                    bee to butterfly
+                } else null
             }
         }
     }

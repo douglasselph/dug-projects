@@ -1,6 +1,6 @@
 # Leaf & Let Die - Active Research and Engineering Tasks
 
-**Status date:** November 13, 2026 — NC-05 Root Awakening and NC-08 Saplink Trellis implemented as PROVISIONAL UPGRADE-1/2 and RAISE-1/2 interpretations on top of prior NC increments. No newly recognized official effect remains on `CardEffectReadiness.pending`. **This is not full research readiness:** NC-04 remaining designer approvals, NC-23–24 audits, and NC-25–27 Kotlin/full-game acceptance are still required.
+**Status date:** November 13, 2026 — all revised official effect identities now have implementation routes (`CardEffectReadiness.pending` is empty), but mechanics/balance are not certified. **NC-23/24 verification increment:** the v38 Engagement continuation policy now counts granted free Bee/Butterfly moves correctly when evaluating combinations after the two paid Support slots have been used. Focused cost/reachability regressions and a one-command `bin/verify_current_card_mechanics` acceptance gate have been added. The Python official catalog audit passes; Kotlin/Gradle/full-game acceptance, remaining policy audits, research scenarios and NC-04 designer approvals are **not yet verified**.
 
 This is the **active top-level backlog**. It is intentionally shorter than the many historical phase/checkpoint documents under `doc/`.
 
@@ -246,9 +246,13 @@ without an explicit design decision.
   resource/ready Butterfly normally. Update legal generation, action counting, policy
   opportunities, Wisp/Sunlight interactions and telemetry; prevent free-action infinite loops.
   Ensure legacy Battle comparison is either supported consistently or explicitly constrained.
-  **PARTIAL Nov 12:** the Three Engagements scheduler distinguishes paid/free Support slots,
-  includes finite-resource guards and telemetry; legacy Battle, policy reachability and full
-  invariants still require NC-23/25/26 review.
+  **PARTIAL Nov 13:** the Three Engagements scheduler already distinguishes paid/free Support slots,
+  includes finite-resource guards and telemetry. The engagement continuation policy now also
+  accounts for *free* Bee/Butterfly capacity in combined tactical reachability, rather than
+  treating all physical moves as paid. Focused cost/reachability tests were added (Ubuntu execution
+  pending). The legacy whole-Battle scheduler remains intentionally unbounded for historical
+  comparison; its free permissions must not be represented as the v38 two-paid-slot rule.
+  End-to-end policy/infinite-loop/telemetry coverage and full tests remain NC-23/25/26 work.
 - [ ] **NC-24 — Update legal choices, strategy/policy valuation, and reports.** Audit
   `GameEffectDecisionRequirements`, family handlers, Human Baseline Plant/Wisp/Round scorers,
   `BattleRoundEffectPriority`, multi-die target strategy, learned/frozen effect features,
@@ -256,24 +260,41 @@ without an explicit design decision.
   and title assumptions (especially old Transplant Tulip, Saplink/Rise identities,
   `Wisps_Resolve`, gain-1-VP Wisps and Swell D10). Preserve historical policies and mark
   fingerprint-incompatible weights instead of silently using them for the new catalog.
+  **PARTIAL Nov 13:** v38 cumulative Bee/Butterfly continuation now respects FREE permissions;
+  older protected/legacy paths were deliberately not rewritten. Complete the remaining
+  policy-feature/weight/report audit before treating the Human Baseline or trained policies
+  as credible judges of card-effect balance.
 - [ ] **NC-25 — Establish deterministic coverage for *every* changed effect and catalog.** Test
   current CSV → converter → correct handler → exact state changes, with no synthetic hard-coded
   definitions taking the place of the new official CSV. Cover both phases where applicable,
   Critter/Butterfly free actions, chaining, scarcity, caps, multi-target Raise, choice legality,
   immediate-use dice, last-row/locked-row cases, Wisp self-targeting, Wispquake, Doom and
   Cleanup. Verify printed VP, name/cost/tier, physical quantity and 4-per-slot invariants.
+  **PARTIAL Nov 13:** existing ThreeEngagementBattleTest covers physical free consumption,
+  two paid slots and battle cleanup; new BattleSupportActionCostTest and
+  EngagementSupportContinuationTest cases cover paid-versus-free classification and
+  cumulative reachability with 0/1 paid slots. Catalog structural audit passes, but
+  deterministic effect coverage is not yet complete or Gradle-verified.
 - [ ] **NC-26 — Run full v38 and research smoke gates on new definitions.** Execute focused
   new tests, `./gradlew test integrationTest simulationTest`, and the verified deterministic
   2/3/4-player × THREE_ENGAGEMENTS/LEGACY_WHOLE_BATTLE full-game 3/2/2 matrix. Then run
   **two structurally different revised-card questions** through the generic v38 runner,
   checking actual activation, suppressed-effect zero output, policy scope, provenance,
   resumability and report completeness. These are functional checks, **not balance verdicts**.
+  **READY TO RUN ON UBUNTU, NOT YET PASSED:** `bash bin/verify_current_card_mechanics`
+  performs one read-only catalog audit followed by a *single Gradle invocation* of the
+  three test suites (including the existing v38 2/3/4-player dual-engine matrix),
+  and exports logs, JUnit XML and the catalog manifest as one verified `.tgz` in
+  `~/Downloads`. This does **not** replace the two generic research-question smoke tests.
 - [ ] **NC-27 — Rebaseline provenance, update handoff and release in small patches.** Make the
   question runner, manifest, official CSV hash collection and `data/README.md` identify the
   new Round path and all four canonical catalogs; flag archived results/policy weights as
   historical. Keep experimental overrides opt-in, and update the known-effect catalog,
   documentation, `TASKS.md` statuses and repeatable Ubuntu commands. Provide changed-files
-  ZIPs rooted at `leaf/`, a Git commit message per increment and verified failure evidence.
+  ZIPs whose paths are relative to `leaf/`, a Git commit message per increment and verified failure evidence.
+  **PARTIAL Nov 13:** canonical catalog audit and current acceptance launcher are maintained;
+  README's obsolete `16 unimplemented` description is corrected. No old result or policy
+  weights have been re-fingerprinted. Keep historical results separate from new runs.
 
 **Stop/go:** NC-01–NC-03 establish that the new catalog is recognizable (not yet executable); NC-04–NC-24 establish
 real effect and policy parity; NC-25–NC-27 establish that the simulator and generic research

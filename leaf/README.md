@@ -89,7 +89,28 @@ Important rules for interpreting evidence:
 
 ---
 
-## Current state - November 4, 2026
+## Latest card-catalog implementation checkpoint - November 13, 2026
+
+All 16 newly identified effect types from the November 5 official CSV migration now have
+execution handlers, and `CardEffectReadiness.pending` is empty. This is **not** a completed
+mechanical or game-balance verification. Card interpretations marked PROPOSED in
+`doc/rules/CARD_EFFECT_INTERPRETATIONS.md` still require designer approval; NC-23/24
+support-policy and feature audits and NC-25/26 full Kotlin tests remain open.
+
+For a reproducible **mechanical acceptance run** on Ubuntu, from inside `leaf/`, use:
+
+```bash
+bash bin/verify_current_card_mechanics
+```
+
+This runs the authoritative four-CSV catalog audit, then `test integrationTest simulationTest`
+in a single Gradle invocation (including the existing v38 2/3/4-player two-structure
+full-game matrix). It writes an upload-ready `.tgz` with the audit, test log and JUnit XML
+to `~/Downloads`, even when tests fail. A successful run establishes **mechanical smoke
+readiness only**, not that any of the 36 Plants is balanced. The next gates are two distinct
+controlled card-question smoke tests, followed by targeted A2/A3/A4 balance research.
+
+## Historical simulator baseline - November 4, 2026
 
 ### Operational simulator
 
@@ -150,7 +171,7 @@ python3 bin/audit_authoritative_cards.py --out ~/Downloads/leaf-cards-manifest.j
 
 The [catalog source-of-truth guide](doc/research/provenance/card-catalogs/CARD_CATALOG_SOURCE_OF_TRUTH.md) describes the four official input files, validation boundaries, and reproducible manifests. Active code, tests, and documentation are named for their purpose rather than transient task IDs; milestone IDs belong in `TASKS.md` and historical records.
 
-It validates and fingerprints the four canonical files. Every authoritative effect text now has a deliberate `GameEffect` identity, but 16 revised mechanical identities remain explicitly unimplemented. `CardEffectReadiness` rejects incomplete effects before simulation instead of treating them as old behavior or harmless no-ops. **Full-game runs against the updated catalog remain blocked until the individual effect implementations and policies are ready.**
+It validates and fingerprints the four canonical files. Every authoritative effect text now has a deliberate `GameEffect` identity and an implementation route; the pending-effect list is currently empty. `CardEffectReadiness` is retained to fail closed if newly recognized but unfinished effects are added in the future. **Full-game research on these revised rules is not certified until the NC-23–27 test, policy, and provenance gates pass.**
 
 Card **names** are preferred human-facing identifiers. IDs are trace keys and can change as catalogs are reorganized. Preserve fingerprints/checksums when comparing historical results.
 

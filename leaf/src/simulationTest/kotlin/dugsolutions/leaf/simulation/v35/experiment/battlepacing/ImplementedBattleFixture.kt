@@ -24,16 +24,17 @@ import dugsolutions.leaf.v35.wisp.domain.WispCard
  */
 internal object ImplementedBattleFixture {
     fun plants(manager: PlantCardManager): List<PlantCard> = listOf(
-        // PlantCardManager.getCard() is keyed by the CSV `name` (not its display `title`).
+        // PlantCardManager.getCard() uses normalized catalog IDs, not display titles.
+        // PlantCardRegistry strips the CSV-only `z` sorting prefix from Flower IDs.
         "Root_05_02" to "Root Four More",
         "Root_07_02" to "Root Appreciation", // Free Worm Support
         "Root_09_04" to "Root Recall",
         "Vine_07_03" to "Vine and Punishment",
         "Vine_09_01" to "Low & Behold",
         "Vine_11_03" to "Rise and Vine",
-        "zFlower_11_01" to "Alluring Nectar", // Free Butterfly Support
-        "zFlower_14_01" to "Bee-loved Bloom", // Free Bee Support
-        "zFlower_17_04" to "Queen’s Blossom"
+        "Flower_11_01" to "Alluring Nectar", // Free Butterfly Support
+        "Flower_14_01" to "Bee-loved Bloom", // Free Bee Support
+        "Flower_17_04" to "Queen’s Blossom"
     ).map { (id, expectedTitle) ->
         val card = requireNotNull(manager.getCard(id)) {
             "Fixture Plant absent: $expectedTitle (CSV name $id)"
