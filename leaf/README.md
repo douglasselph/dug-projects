@@ -110,6 +110,17 @@ to `~/Downloads`, even when tests fail. A successful run establishes **mechanica
 readiness only**, not that any of the 36 Plants is balanced. The next gates are two distinct
 controlled card-question smoke tests, followed by targeted A2/A3/A4 balance research.
 
+## Forced matched-state effect calibration (A2 mechanical diagnostic)
+
+The next A2 vertical slice is `bin/verify_v38_forced_root_four_more.py --run`,
+which forces Root Four More activations in identical local v38 Battle states with
+its official effect, a suppressed/no-op effect, and Raise +20. It records real
+die-value deltas and top-Strike outcomes (VP/Wounds) rather than allowing the
+policy to avoid a useless effect. This is **not** a whole-game win-rate or balance
+audit. Read [`V38_FORCED_MATCHED_ROOT_FOUR_MORE.md`](doc/research/experiments/card-balance/V38_FORCED_MATCHED_ROOT_FOUR_MORE.md)
+for the explicit limitations and run commands. This slice is authored but
+requires Ubuntu Kotlin/Java execution before acceptance.
+
 ## Current v38 effect-sensitivity calibration (A2 diagnostic pilot)
 
 The first uploaded A2 experiment (`leaf-v38-effect-sensitivity-20261113-135015.tgz`)

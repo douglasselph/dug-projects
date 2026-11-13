@@ -8,6 +8,55 @@ been corrected to use exact current manifests and fingerprints, not directory
 count or modification times. The suppressed, Raise +20, and +20 VP controls have
 **not yet been jointly verified**. No sensitivity or balance verdict. **
 
+## November 13 results and corrected interpretation
+
+The uploaded four-condition results archive `leaf-v38-effect-sensitivity-20261113-142159.tgz`
+completed the actual evaluation jobs, but the reporting gate incorrectly raised
+`FAIL_INCOMPLETE: suppression control did not produce zero output`.
+The **data show zero suppressed output**. The actual limitation was **zero
+suppressed activations**: the policy avoided an inert Main Action. We must not
+credit that with having mechanically exercised an inert effect.
+
+The targeted comparison subset contains **8 paired games per intervention**:
+
+| Condition | Actual activations | Actual raised pips | Immediate VP | Paired win-share difference vs official |
+|---|---:|---:|---:|---:|
+| Official +4 | 61 | 190 | 0 | Reference |
+| Disabled | 0 | 0 | 0 | 0.00 |
+| Raise +20 | 73 | 308 | 0 | 0.00 |
+| Gain 20 VP | 79 | 0 | 1,580 | +0.25 |
+
+The +20 VP control is mechanically correct (`79 × 20 = 1580`). Raise +20
+produced real pip increases (`308 / 73 = 4.22` per activation, versus
+`190 / 61 = 3.11` official), although different game trajectories prevent
+per-activation contrasts from being a causal same-state measurement. The
++20 VP paired final-VP difference was +190.75 points; the Raise +20 paired
+final-VP difference was -0.125 points. Win-share estimates are far too
+imprecise to claim competitive sensitivity. Full report and raw TSVs are in
+the uploaded archive.
+
+**Repaired reporting:** zero output plus zero activations is now
+`SUPPRESSED_ZERO_OUTPUT_UNEXERCISED` for the intervention, yielding the overall
+`INCONCLUSIVE_SUPPRESSION_NEVER_ACTIVATED` rather than a false assertion of
+nonzero output. Neither state qualifies as a passed fully exercised suppression
+control. A genuine failure remains an effect that produces nonzero suppressed
+mechanical output or mismatched paired control observations.
+
+**Reassess without rerunning simulations:**
+
+```bash
+python3 bin/verify_v38_effect_sensitivity.py --reassess-archive \
+  ~/Downloads/leaf-v38-effect-sensitivity-20261113-142159.tgz
+```
+
+This reads and rechecks every paired TSV and writes a new `UPLOAD THIS FILE:`
+archive; it does **not** rerun Kotlin/Gradle, redo training, or certify new evidence.
+A return code of 2 means genuinely inconclusive. Next research increment:
+force matched legal Root Four More activations at identical pre-action states
+under official and disabled effects (bypassing no-op avoidance **only** in the
+research control), then add appropriately powered held-out non-VP comparisons
+and genuine counterstrategies before any all-36 audit.
+
 ## Why
 
 The engineering gate must detect a deliberately suppressed effect and an
