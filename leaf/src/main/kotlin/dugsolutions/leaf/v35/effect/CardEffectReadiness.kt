@@ -13,8 +13,6 @@ object CardEffectReadiness {
     val pending: Set<GameEffect> = setOf(
         GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW,
         GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE,
-        GameEffect.GAIN_TWO_SUNLIGHT_TOKENS,
-        GameEffect.FLIP_OWN_DIE_AND_OPPONENT_DIE_IN_BATTLE,
         GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S,
         GameEffect.USE_DIE_FROM_DISCARD_NOW,
         GameEffect.CHOOSE_PLAYER_WITH_WISPS_TRASH_ONE,

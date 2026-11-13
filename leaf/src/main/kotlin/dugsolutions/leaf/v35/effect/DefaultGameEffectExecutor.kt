@@ -150,6 +150,7 @@ class DefaultGameEffectExecutor(
         when (effect) {
             GameEffect.DOUBLE_ONE_DIE,
             GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE,
+            GameEffect.FLIP_OWN_DIE_AND_OPPONENT_DIE_IN_BATTLE,
             GameEffect.RAISE_ALL_DICE_PLUS_2,
             GameEffect.RAISE_ALL_D8S_PLUS_1,
             GameEffect.RAISE_ALL_D8S_PLUS_2,
@@ -196,6 +197,7 @@ class DefaultGameEffectExecutor(
             GameEffect.GAIN_ANY_TWO_CRITTERS,
             GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD,
             GameEffect.GAIN_SUNLIGHT_TOKEN,
+            GameEffect.GAIN_TWO_SUNLIGHT_TOKENS,
             GameEffect.GAIN_ONE_VP,
             GameEffect.RESEARCH_GAIN_TWENTY_VP,
             GameEffect.GAIN_ONE_WISP,

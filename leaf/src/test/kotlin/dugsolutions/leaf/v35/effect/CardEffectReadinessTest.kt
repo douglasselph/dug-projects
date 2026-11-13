@@ -55,7 +55,7 @@ class CardEffectReadinessTest {
         val actor = EffectTestFixture.player(1)
         val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
         val executor = DefaultGameEffectExecutor()
-        val effect = GameEffect.GAIN_TWO_SUNLIGHT_TOKENS
+        val effect = GameEffect.GAIN_UP_TO_D8_AND_USE_NOW
         val request = EffectTestFixture.request(game, actor, effect)
         assertFalse(executor.supports(effect))
         val canExecuteError = assertFailsWith<IllegalArgumentException> {

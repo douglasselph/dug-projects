@@ -563,8 +563,9 @@ class HumanBaselineCultivationStrategy(
                         }
                     }
                     "Flower_11_04" -> {
-                        common["handDice"] = context.self.board.hand.size.toString()
-                        common["handPower"] = context.self.board.hand.sumOf { it.value }.toString()
+                        common["sunlightHeld"] = context.self.board.sunlight.toString()
+                        common["sunlightAvailable"] = context.grove.sunlight.toString()
+                        common["sunlightGainCapacity"] = minOf(2, context.grove.sunlight).toString()
                     }
                     "Flower_17_03" -> {
                         common["spentPlants"] = context.self.board.creature.count { !it.isFaceUp }.toString()

@@ -281,7 +281,9 @@ class HumanBaselineEffectStrategy(
             request.context,
             request.legalChoices.map { choice ->
                 val own = choice.ownerId == request.context.self.id
-                val swing = if (own) {
+                val swing = if (request.effect == GameEffect.FLIP_OWN_DIE_AND_OPPONENT_DIE_IN_BATTLE) {
+                    -DieValueHeuristics.flipGain(choice.die.sides, choice.die.value).toDouble()
+                } else if (own) {
                     DieValueHeuristics.expectedRerollGain(choice.die.sides, choice.die.value)
                 } else {
                     -DieValueHeuristics.expectedRerollGain(choice.die.sides, choice.die.value)
@@ -944,6 +946,7 @@ class HumanBaselineEffectStrategy(
         val DETERMINISTIC_OWN_DIE_BATTLE_TRANSFORMS = setOf(
             GameEffect.DOUBLE_ONE_DIE,
             GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE,
+            GameEffect.FLIP_OWN_DIE_AND_OPPONENT_DIE_IN_BATTLE,
             GameEffect.RAISE_ANY_DIE_PLUS_1,
             GameEffect.RAISE_ONE_DIE_PLUS_1_PER_GRAFTED_FLOWER,
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
@@ -1279,7 +1282,8 @@ class HumanBaselineEffectStrategy(
     ): PriorityScore? {
         val change = when (effect) {
             GameEffect.DOUBLE_ONE_DIE -> minOf(choice.sides, choice.value * 2) - choice.value
-            GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE ->
+            GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE,
+            GameEffect.FLIP_OWN_DIE_AND_OPPONENT_DIE_IN_BATTLE ->
                 DieValueHeuristics.flipGain(choice.sides, choice.value)
             GameEffect.RAISE_ANY_DIE_PLUS_1 -> DieValueHeuristics.actualRaiseGain(choice.sides, choice.value, 1)
             GameEffect.RAISE_D8_PLUS_1 ->

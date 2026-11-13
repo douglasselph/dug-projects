@@ -1,6 +1,6 @@
 # Leaf & Let Die - Active Research and Engineering Tasks
 
-**Status date:** November 13, 2026 — FREE-action integration confirmed present in supplied archive; next deterministic Raise-effects increment prepared; full Kotlin regressions still pending
+**Status date:** November 13, 2026 — FREE Support and revised Raise effects present; NC-13/NC-15 mechanics implemented in this increment; Ubuntu Kotlin regression results still pending.
 
 This is the **active top-level backlog**. It is intentionally shorter than the many historical phase/checkpoint documents under `doc/`.
 
@@ -8,7 +8,7 @@ A historical task ID appearing in an older document does **not** mean that task 
 
 ## NEXT ACTIVE PROGRAM — November 5 authoritative CSV integration (NC-01–NC-27)
 
-**Status: NC-01–NC-03 recognized/verified. FREE-1–4 of NC-04 authorized and their NC-06/11/14 core effects installed; FREE-action scheduler implementation present but full engine validation (NC-23/25/26) remains open. November 13 increment implements NC-07, NC-09, NC-10 and NC-12 Raise behavior and key policy projections; all need Ubuntu test execution before full-game evidence. NC-05 and NC-08 require designer rulings, and the other NC mechanics remain open.** This section was originally prepared by comparing the newly attached
+**Status: NC-01–NC-03 recognized/verified. FREE-1–4 of NC-04 authorized and their NC-06/11/14 core effects installed; FREE-action scheduler implementation present but full engine validation (NC-23/25/26) remains open. November 13 increments implement NC-07, NC-09, NC-10 and NC-12 Raise behavior, plus NC-13 Sunlight and NC-15 die flips with decision contracts and focused tests. All need Ubuntu Kotlin test execution before full-game evidence. NC-05 and NC-08 require designer rulings, and the other NC mechanics remain open.** This section was originally prepared by comparing the newly attached
 `leaf(20261105-234756).tgz` with `leaf(20261105-234502).tgz`, and checking the then-current Kotlin
 converter, registry, action scheduler, effect handlers, policy references, and selected tests.
 The user has designated the newly supplied files under `data/` as **the new card source of truth**.
@@ -43,9 +43,9 @@ these revised CSVs is **not** claimed to pass until those tasks are complete.
 `GameEffect` identities (16 new identities, plus the existing compatible early-Strike
 resolver for Wisp's Last Word). All **72 official effect cells** across the 60 CSV
 card definitions were recognized in an independently compiled Kotlin converter
-smoke check; no `UNKNOWN` was encountered. The 16 changed behaviors remain
-**recognized but not yet executable** until their individual mechanics tasks are
-implemented. `CardEffectReadiness` explicitly rejects those effects and prevents
+smoke check; no `UNKNOWN` was encountered. Originally 16 newly recognized behaviors
+required implementation; as of this patch, **8 remain in `CardEffectReadiness.pending`**.
+`CardEffectReadiness` explicitly rejects those effects and prevents
 full-game research from proceeding with incomplete selected decks. The older
 effect aliases remain for historical inputs; they are not current-rule substitutes.
 The Kotlin test suite has not yet been run against this new patch on Ubuntu.
@@ -162,17 +162,19 @@ without an explicit design decision.
   card counting, repeated raises, filled/locked Battle rows and absence of dice.
   **Implemented in Nov 13 patch:** all eligible dice gain the capped Vines+Flowers amount;
   current-face state and closed Battle rows are respected. Ubuntu tests pending.
-- [ ] **NC-13 — Someday Sunflower (`Flower_11_04`, cost 11).** This was Transplant Tulip;
+- [x] **NC-13 — Someday Sunflower (`Flower_11_04`, cost 11).** This was Transplant Tulip;
   now **Gain 2 Sunlight**. Implement bounded Grove supply and ownership, add/verify
   provenance and a reusable count-based gain, and update old Transplant-specific decisions,
   scorer/market identity and tests. Test gaining 0/1/2 when supply is constrained.
+  **Nov 13 implementation:** Gaining two Sunlight uses repeated physical transfers, with per-token provenance; limited stock yields one token, empty stock makes the action unavailable. Scorer, decision contract and deterministic tests updated. Ubuntu Gradle pending NC-25/26.
 - [x] **NC-14 — Bee-loved Bloom (`Flower_14_01`, cost 14).** Keep gain/steal one Bee and
   stacking **+2 Bee value per activation this round**; add **"Battle: Using a Bee costs no
   Support Action."** Cover stolen/placed Bees and same-round repeat activations.
-- [ ] **NC-15 — Bloom Backflip (`Flower_14_02`, cost 14).** Replace old **Raise +1 and flip
+- [x] **NC-15 — Bloom Backflip (`Flower_14_02`, cost 14).** Replace old **Raise +1 and flip
   every higher opposing die in the same Strike** with **flip one of your dice; in Battle,
   flip one opponent's die**. Implement both chosen targets with valid face/opposite-face
   semantics, lock restrictions, no-reward rules and the phase-specific second step.
+  **Nov 13 implementation:** Own die is flipped in either phase; Battle also flips one selected opponent die from an unresolved row. Both selections prevalidated, with no roll rewards. **Provisional edge interpretation:** a D4 is not flippable (existing `Die.flip()`), and Battle requires both an own and an opposing flippable target. Confirm if desired behavior differs before full stress runs. Ubuntu Gradle pending NC-25/26.
 - [ ] **NC-16 — Petal To Die 4 (`Flower_14_04`, cost 14).** Remove old gain-or-steal path;
   instead **gain a D4 and use it now**, then **discard any number of your D4s and draw the
   same number of dice**. Keep proper supply scarcity, draw order, Roll Rewards, exact dice

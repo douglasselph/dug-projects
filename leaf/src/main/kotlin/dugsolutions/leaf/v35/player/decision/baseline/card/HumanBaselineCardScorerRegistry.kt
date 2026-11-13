@@ -115,7 +115,7 @@ class HumanBaselineCardScorerRegistry(
             SappingSnapdragonBaseline,
             AlluringNectarBaseline,
             PetalToDie4Baseline,
-            TransplantTulipBaseline,
+            SomedaySunflowerBaseline,
             BeeLovedBloomBaseline,
             BloomBackboneBaseline,
             BloomBackflipBaseline,

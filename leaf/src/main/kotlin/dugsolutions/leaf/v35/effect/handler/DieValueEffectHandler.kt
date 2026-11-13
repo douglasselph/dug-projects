@@ -84,6 +84,18 @@ class DieValueEffectHandler : EffectHandler {
             GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE ->
                 modifiableDice(request).any { it.sides > 4 }
 
+            GameEffect.FLIP_OWN_DIE_AND_OPPONENT_DIE_IN_BATTLE ->
+                when (request.phase) {
+                    GameEffectPhase.CULTIVATION ->
+                        modifiableChoices(request) { it.sides > 4 && it.value in 1..it.sides }.isNotEmpty()
+                    GameEffectPhase.BATTLE ->
+                        battleHandChoices(request).any { it.sides > 4 && it.value in 1..it.sides } &&
+                            battleDieChoices(request).any {
+                                it.ownerId != request.actor.id && it.die.sides > 4 &&
+                                    it.die.value in 1..it.die.sides
+                            }
+                }
+
             GameEffect.SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE ->
                 modifiableDice(request).any { it.value >= 2 }
 
@@ -202,6 +214,26 @@ class DieValueEffectHandler : EffectHandler {
                     request,
                     modifiableChoices(request) { it.sides > 4 }
                 ).flip()
+            }
+
+            GameEffect.FLIP_OWN_DIE_AND_OPPONENT_DIE_IN_BATTLE -> {
+                // Flip is a face change, not a roll: no Roll Rewards.
+                // D4 has no opposite face in the existing die model.
+                val ownChoices = if (request.phase == GameEffectPhase.BATTLE) {
+                    battleHandChoices(request).filter { it.sides > 4 && it.value in 1..it.sides }
+                } else {
+                    modifiableChoices(request) { it.sides > 4 && it.value in 1..it.sides }
+                }
+                chooseRequiredHandDie(request, ownChoices).flip()
+                if (request.phase == GameEffectPhase.BATTLE) {
+                    val opposing = battleDieChoices(request).filter {
+                        it.ownerId != request.actor.id && it.die.sides > 4 &&
+                            it.die.value in 1..it.die.sides
+                    }
+                    val choice = chooseRequiredBattleDie(request, opposing)
+                    val (_, die) = resolveBattleDieChoice(request, choice)
+                    die.flip()
+                }
             }
 
             GameEffect.GAIN_VP_PER_ONE_SHOWING -> {

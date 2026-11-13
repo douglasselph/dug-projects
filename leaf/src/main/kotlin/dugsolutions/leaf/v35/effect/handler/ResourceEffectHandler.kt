@@ -44,7 +44,8 @@ class ResourceEffectHandler : EffectHandler {
             GameEffect.GAIN_WATER_TOKEN ->
                 request.game.grove.tokens.hasWater
 
-            GameEffect.GAIN_SUNLIGHT_TOKEN ->
+            GameEffect.GAIN_SUNLIGHT_TOKEN,
+            GameEffect.GAIN_TWO_SUNLIGHT_TOKENS ->
                 request.game.grove.tokens.hasSunlight
 
             GameEffect.MULCH_DIE_FROM_HAND ->
@@ -123,6 +124,13 @@ class ResourceEffectHandler : EffectHandler {
 
             GameEffect.GAIN_SUNLIGHT_TOKEN ->
                 gainSunlight(request)
+
+            GameEffect.GAIN_TWO_SUNLIGHT_TOKENS ->
+                repeat(minOf(2, request.game.grove.tokens.sunlightCount)) {
+                    // Every physical token has its own transfer, Chronicle moment,
+                    // and provenance record. A limited Grove supplies 0/1/2.
+                    gainSunlight(request)
+                }
 
             GameEffect.MULCH_DIE_FROM_HAND ->
                 mulchFromHand(request)

@@ -236,6 +236,32 @@ object CardScoringHelpers {
                 } else PlantResourceProjection.bestRefresh(context, registry)
                 score = score.adjusted(value, "Best legal Plant facing or denial option")
             }
+            GameEffect.GAIN_TWO_SUNLIGHT_TOKENS -> {
+                val available = minOf(2, context.grove.sunlight)
+                val remainingBattles = context.progress.battleRoundsRemaining
+                    ?: context.progress.upcomingRoundTypes.count {
+                        it == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE
+                    }
+                val battlesWithOpportunity = if (phase == CardPhase.BATTLE) {
+                    remainingBattles.coerceAtLeast(1)
+                } else remainingBattles
+                val useful = (battlesWithOpportunity * 2 - context.self.board.sunlight).coerceAtLeast(0)
+                score = score.adjusted(
+                    minOf(available, useful) * 12,
+                    "Up to two available Sunlight tokens for future Battle Main Actions"
+                )
+            }
+            GameEffect.FLIP_OWN_DIE_AND_OPPONENT_DIE_IN_BATTLE -> {
+                val own = revisedRaiseDice.filter { it.sides > 4 && it.value in 1..it.sides }
+                    .maxOfOrNull { DieValueHeuristics.flipGain(it.sides, it.value) } ?: 0
+                addBestGain(own.coerceAtLeast(0), "Best own opposite-face Flip")
+                if (phase == CardPhase.BATTLE) {
+                    score = score.adjusted(
+                        bestBattleRowNeed(context) / 2,
+                        "One opponent die may also be flipped in an unresolved Strike"
+                    )
+                }
+            }
             GameEffect.RAISE_ALL_DICE_PLUS_2 -> addBestGain(
                 dice.sumOf { DieValueHeuristics.actualRaiseGain(it, 2) },
                 "Total +2 gain across all dice"
@@ -618,7 +644,8 @@ object CardScoringHelpers {
             GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW,
             GameEffect.REROLL_DIE_ON_3_DRAW_ONE_CULTIVATION_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3,
             GameEffect.REROLL_DIE_ON_3_DRAW_ONE_AND_REDUCE_OPPOSING_STRIKE_ROW_BY_3 -> DieValueHeuristics.expectedRerollGain(die.sides, die.value).roundToInt()
-            GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE -> DieValueHeuristics.flipGain(die.sides, die.value)
+            GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE,
+            GameEffect.FLIP_OWN_DIE_AND_OPPONENT_DIE_IN_BATTLE -> DieValueHeuristics.flipGain(die.sides, die.value)
             GameEffect.SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE -> -(die.value - 1)
             GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX,
             GameEffect.SET_DIE_UP_TO_D12_TO_MAX -> DieValueHeuristics.setToMaximumGain(die.sides, die.value)

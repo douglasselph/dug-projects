@@ -68,8 +68,6 @@ object GameEffectDecisionRequirements {
             GameEffect.RAISE_DIE_PLUS_3,
             GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW,
             GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE,
-            GameEffect.GAIN_TWO_SUNLIGHT_TOKENS,
-            GameEffect.FLIP_OWN_DIE_AND_OPPONENT_DIE_IN_BATTLE,
             GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S,
             GameEffect.USE_DIE_FROM_DISCARD_NOW,
             GameEffect.CHOOSE_PLAYER_WITH_WISPS_TRASH_ONE,
@@ -137,6 +135,15 @@ object GameEffectDecisionRequirements {
             GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE ->
                 same(EffectDecisionMechanism.EFFECT_DIE)
 
+            GameEffect.FLIP_OWN_DIE_AND_OPPONENT_DIE_IN_BATTLE ->
+                phased(
+                    cultivation = setOf(EffectDecisionMechanism.EFFECT_DIE),
+                    battle = setOf(
+                        EffectDecisionMechanism.EFFECT_DIE,
+                        EffectDecisionMechanism.EFFECT_BATTLE_DIE
+                    )
+                )
+
             GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE ->
                 phased(
                     cultivation = setOf(EffectDecisionMechanism.EFFECT_OPTIONAL_PLANT),
@@ -175,6 +182,7 @@ object GameEffectDecisionRequirements {
             GameEffect.GAIN_TWO_WORMS,
             GameEffect.GAIN_WATER_TOKEN,
             GameEffect.GAIN_SUNLIGHT_TOKEN,
+            GameEffect.GAIN_TWO_SUNLIGHT_TOKENS,
             GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND,
             GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND,
             GameEffect.GAIN_WORM_BOOST_AND_FREE_BATTLE_SUPPORT,
