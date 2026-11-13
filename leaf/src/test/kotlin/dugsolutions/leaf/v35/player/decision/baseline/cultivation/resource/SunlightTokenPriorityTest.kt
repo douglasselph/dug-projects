@@ -100,7 +100,7 @@ class SunlightTokenPriorityTest {
         type = if (name.startsWith("Flower")) PlantType.FLOWER else PlantType.ROOT,
         cost = if (name.startsWith("Flower")) 11 else 9,
         effect = when (name) {
-            "Root_07_01" -> GameEffect.UPGRADE_DIE_AND_USE_NOW
+            "Root_07_01" -> GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW
             "Root_09_02" -> GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE
             "Flower_11_03" -> GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW
             else -> GameEffect.RAISE_ANY_DIE_PLUS_1

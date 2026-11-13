@@ -40,13 +40,14 @@ class RevisedRaiseCatalogIntegrationTest {
         assertEquals(PlantScoringRule.Fixed(2), plants.getCard("Vine_11_03")?.scoringRule)
         assertEquals(PlantScoringRule.Fixed(1), plants.getCard("Flower_11_02")?.scoringRule)
 
-        // Saplink Trellis moved to the old Rise and Vine ID, but its stronger
-        // two-target mechanic must remain pending until NC-08 is approved and implemented.
+        // The new Saplink Trellis effect has a separate executable identity;
+        // it is not the old single-die Raise applied twice.
         val saplink = assertNotNull(plants.getCard("Vine_09_03"))
         assertEquals("Saplink Trellis", saplink.title)
         assertEquals(GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE, saplink.effect)
         assertEquals(saplink.effect, scorers.forPlant(saplink).effect)
-        assertTrue(saplink.effect in CardEffectReadiness.pending)
-        assertFalse(executor.supports(saplink.effect))
+        assertFalse(saplink.effect in CardEffectReadiness.pending)
+        assertTrue(executor.supports(saplink.effect))
+        assertNotNull(GameEffectDecisionRequirements.forEffect(saplink.effect))
     }
 }

@@ -254,21 +254,23 @@ class BattleEnabledPlantAnalyzer(
                     DieValueHeuristics.expectedRerollGain(die.sides, die.value)
                 }
 
-            GameEffect.UPGRADE_DIE_AND_USE_NOW ->
+            GameEffect.UPGRADE_DIE_AND_USE_NOW,
+            GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW ->
                 singleDieCandidates(
                     context,
                     card,
                     dice.filter { located ->
-                        val next = DieValueHeuristics.nextNormalUpgradeSides(located.die.sides)
-                            ?: return@filter false
-                        (context.grove.graftBed[DieSides.from(next)] ?: 0) > 0
+                        val next = if (card.effect == GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW)
+                            DieValueHeuristics.conditionalAwakeningUpgradeSides(located.die.sides, located.die.value)
+                        else DieValueHeuristics.nextNormalUpgradeSides(located.die.sides)
+                        next != null && (context.grove.graftBed[DieSides.from(next)] ?: 0) > 0
                     },
                     mode = BattleAnalysisMode.EXPECTED
                 ) { die ->
-                    DieValueHeuristics.expectedNormalUpgradeUseNowGain(
-                        sides = die.sides,
-                        value = die.value
-                    ) ?: 0.0
+                    val next = if (card.effect == GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW)
+                        DieValueHeuristics.conditionalAwakeningUpgradeSides(die.sides, die.value)
+                    else DieValueHeuristics.nextNormalUpgradeSides(die.sides)
+                    next?.let { DieValueHeuristics.expectedRoll(it) - die.value } ?: 0.0
                 }
 
             else -> emptyList()

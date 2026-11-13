@@ -196,8 +196,9 @@ class HumanBaselineEffectStrategy(
                             )
 
                     request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
-                        request.effect == GameEffect.UPGRADE_DIE_AND_USE_NOW ->
-                        battleOneStepUpgradeUseNowTargetScore(request.context, choice)
+                        (request.effect == GameEffect.UPGRADE_DIE_AND_USE_NOW ||
+                            request.effect == GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW) ->
+                        battleOneStepUpgradeUseNowTargetScore(request.context, choice, request.effect)
                             ?: CardScoringHelpers.scoreDieTarget(
                                 effect = request.effect,
                                 context = request.context,
@@ -953,6 +954,7 @@ class HumanBaselineEffectStrategy(
             GameEffect.RAISE_ONE_DIE_PLUS_1_PER_GRAFTED_FLOWER,
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
             GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE,
+            GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE,
             GameEffect.RAISE_DIE_PLUS_4,
             GameEffect.RESEARCH_RAISE_DIE_PLUS_20,
             GameEffect.SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE,
@@ -1033,19 +1035,25 @@ class HumanBaselineEffectStrategy(
     }
 
     /**
-     * Scores Root Awakening's one-step Upgrade target by the expected value of
-     * the replacement die on the selected die's existing Strike row. The
-     * request already owns normal-step/Graft-Bed legality; strategy analysis
-     * only projects the legal target before the replacement is actually rolled.
+     * Scores a legal one-step or conditional Root Awakening Upgrade target by
+     * its expected replacement value on the die's existing Strike row.
+     * The effect handler owns destination/Graft Bed legality; do not infer
+     * missing inventory from a partial tactical DecisionContext.
      */
     private fun battleOneStepUpgradeUseNowTargetScore(
         context: DecisionContext,
-        choice: EffectDieChoice
+        choice: EffectDieChoice,
+        effect: GameEffect
     ): PriorityScore? {
-        val expectedChange = DieValueHeuristics.expectedNormalUpgradeUseNowGain(
-            sides = choice.sides,
-            value = choice.value
-        ) ?: return null
+        val destination = if (effect == GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW)
+            DieValueHeuristics.conditionalAwakeningUpgradeSides(choice.sides, choice.value)
+        else DieValueHeuristics.nextNormalUpgradeSides(choice.sides)
+        // The effect handler has already filtered legal choices against Graft Bed
+        // inventory. Do not re-check a projected DecisionContext here: that view
+        // may omit stock (e.g. a tactical fixture) even for a legal target.
+        // Rechecking also breaks the pre-existing one-step Upgrade valuation.
+        val upgradeSides = destination ?: return null
+        val expectedChange = DieValueHeuristics.expectedRoll(upgradeSides) - choice.value
         val row = rowFor(context, choice.index) ?: return null
         val analysis = ownTotalChangeAnalyzer(
             context = context,
@@ -1056,7 +1064,7 @@ class HumanBaselineEffectStrategy(
         ) ?: return null
 
         return PriorityScore(analysis.tacticalValue.roundToInt())
-            .adjusted(0, "Expected Battle realization for one-step Upgrade-and-use-now target")
+            .adjusted(0, "Expected Battle realization for Upgrade-and-use-now target")
     }
 
     /**
@@ -1304,6 +1312,8 @@ class HumanBaselineEffectStrategy(
                         it.type == PlantType.VINE || it.type == PlantType.FLOWER
                     }
                 )
+            GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE ->
+                DieValueHeuristics.actualRaiseGain(choice.sides, choice.value, 1)
             GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE ->
                 DieValueHeuristics.actualRaiseGain(
                     choice.sides,

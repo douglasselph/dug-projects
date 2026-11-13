@@ -65,9 +65,7 @@ object GameEffectDecisionRequirements {
     fun forEffect(effect: GameEffect): GameEffectDecisionRequirement? =
         when (effect) {
             GameEffect.UNKNOWN,
-            GameEffect.RAISE_DIE_PLUS_3,
-            GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW,
-            GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE -> null // Retired or recognized-but-pending; never fabricate a legal decision
+            GameEffect.RAISE_DIE_PLUS_3 -> null // Retired or unknown; never fabricate a legal decision
             GameEffect.RESEARCH_NO_EFFECT -> same()
 
             GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
@@ -268,6 +266,8 @@ object GameEffectDecisionRequirements {
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
             GameEffect.RAISE_ONE_DIE_PLUS_1_PER_GRAFTED_FLOWER,
             GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE,
+            GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE,
+            GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW,
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW,
             GameEffect.RAISE_DIE_PLUS_4,

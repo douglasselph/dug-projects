@@ -41,6 +41,9 @@ class UpgradeEffectHandler(
             GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS ->
                 rootAwakeningChoices(request).isNotEmpty()
 
+            GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW ->
+                conditionalAwakeningChoices(request).isNotEmpty()
+
             else -> false
         }
 
@@ -79,14 +82,18 @@ class UpgradeEffectHandler(
             }
 
             GameEffect.UPGRADE_DIE_AND_USE_NOW,
-            GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS -> {
+            GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS,
+            GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW -> {
+                val conditional = request.effect == GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW
                 val die = chooseRequiredHandDie(
                     request = request,
-                    legalChoices = rootAwakeningChoices(request)
+                    legalChoices = if (conditional) conditionalAwakeningChoices(request)
+                        else rootAwakeningChoices(request)
                 )
                 val from = DieSides.from(die.sides)
-                val to = effectNotNull(upgradeResolver.nextNormalStep(from)) {
-                    "Validated Root Awakening source had no next step: $from"
+                val steps = if (conditional && die.value == 3) 2 else 1
+                val to = effectNotNull(upgradeResolver.normalStep(from, steps)) {
+                    "Validated Upgrade source had no $steps-step destination: $from"
                 }
 
                 val battleState =
@@ -154,6 +161,26 @@ class UpgradeEffectHandler(
 
             else -> unsupportedGameEffect(
                 "Unsupported effect reached UpgradeEffectHandler: ${request.effect}"
+            )
+        }
+    }
+
+    /**
+     * NC-05: the die SHOWING 3 follows exactly two positions in the physical
+     * ladder, irrespective of intermediate Graft Bed stock. Every other face
+     * follows one. If the final size is unavailable the source is illegal.
+     * These are the UPGRADE-1/2 provisional interpretations in the register.
+     */
+    private fun conditionalAwakeningChoices(
+        request: GameEffectRequest
+    ): List<EffectDieChoice> {
+        val eligible = if (request.phase == GameEffectPhase.BATTLE)
+            battleHandChoices(request) else handChoices(request.actor)
+        return eligible.filter { choice ->
+            val die = request.actor.dice.hand.getOrNull(choice.index)
+                ?: return@filter false
+            upgradeResolver.canUpgradeNormalSteps(
+                request.game, die, if (die.value == 3) 2 else 1
             )
         }
     }

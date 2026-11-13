@@ -159,6 +159,7 @@ class DefaultGameEffectExecutor(
             GameEffect.RAISE_ALL_D8S_PLUS_1,
             GameEffect.RAISE_ALL_D8S_PLUS_2,
             GameEffect.RAISE_ONE_DIE_PLUS_1_PER_GRAFTED_FLOWER,
+            GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE,
             GameEffect.RAISE_ALL_DICE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
             GameEffect.RAISE_ANY_DIE_PLUS_1,
             GameEffect.RAISE_D8_PLUS_1,
@@ -232,6 +233,7 @@ class DefaultGameEffectExecutor(
                 crossPlayerEffects
 
             GameEffect.UPGRADE_DIE_AND_USE_NOW,
+            GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW,
             GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS,
             GameEffect.UPGRADE_DIE_FROM_HAND ->
                 upgradeEffects

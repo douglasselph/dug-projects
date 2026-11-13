@@ -41,7 +41,8 @@ class NextPlantCatalogIntegrationTest {
             GameEffectDecisionRequirements.forEffect(GameEffect.FLIP_OWN_DIE_AND_OPPONENT_DIE_IN_BATTLE)
                 ?.battle
         )
-        // Other pending effects remain guarded: a partial catalog is not declared ready.
-        assertTrue(GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW in CardEffectReadiness.pending)
+        // NC-05/08 are now executable; broader official-catalog parity is
+        // still gated by NC-23–27 and approval of proposed rule interpretations.
+        assertFalse(GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW in CardEffectReadiness.pending)
     }
 }

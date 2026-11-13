@@ -533,7 +533,7 @@ class HumanBaselineCultivationStrategy(
                         common["synergyPlants"] = raises.toString()
                         common["realizableRaises"] = minOf(2 * raises, headroom).toString()
                         common["dieHeadroom"] = headroom.toString()
-                        common["raiseProjectionNote"] = "Saplink two-target detail awaits NC-08"
+                        common["raiseProjectionNote"] = "Projected two distinct targets per graft; live choices recalculate after each Raise"
                     }
                     "Flower_11_02" -> {
                         val raises = context.self.board.creature.count { it.type.name == "VINE" || it.type.name == "FLOWER" }

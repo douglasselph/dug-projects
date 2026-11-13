@@ -39,6 +39,13 @@ Relevant rulebook pages: **pp. 8–11** (Roll Rewards, helpers and upgrades), **
 
 ### UPGRADE — Conditional Root Awakening
 
+**NC-05 implementation note (Nov 13):** The UPGRADE-1 and UPGRADE-2
+proposals are implemented for mechanical verification, not yet ACCEPTED by
+the designer. If unavailable, the required final die disables that target
+without changing any die or spending the activation. D4 is returned when
+upgraded; no Roll Reward is suppressed. These semantics remain subject to
+explicit approval before balance results are trusted.
+
 **Card:** Root Awakening (`Root_07_01`): "Upgrade 1 die by 2 steps if it shows 3; otherwise, 1 step. Use the new die now."
 
 - **UPGRADE-1 — PROPOSED:** 'Steps' are **positions in the ordinary fixed ladder** `D4 → D6 → D8 → D10 → D12 → D20`, not the number of sizes currently stocked. A die showing 3 must upgrade exactly two ladder positions; another face must upgrade exactly one. This **does not inherit** Overgrowth's explicitly different 'skip missing sizes' rule.
@@ -46,6 +53,12 @@ Relevant rulebook pages: **pp. 8–11** (Roll Rewards, helpers and upgrades), **
 - **UPGRADE-3 — SETTLED CONSEQUENCE:** Return replaced D4 to the Grove, remove replaced larger dice from the game; the new die replaces it in Hand, is rolled once with Roll Rewards, and in Battle occupies the **same legal open Strike Square** as the old die. Do not count this as adding an extra die to the Square.
 
 ### RAISE — Repeated Raise packages
+
+**NC-08 implementation note (Nov 13):** RAISE-1/2 are implemented as
+provisional mechanics. A two-die iteration requires distinct targets; one
+eligible die receives just one Raise, no eligible dice produce no Raise. Each
+new iteration uses current headroom. The source card counts if grafted.
+Please approve or amend the one-target fallback before a balance verdict.
 
 **Cards:** Saplink Trellis (`Vine_09_03`), Bloom Backbone (`zFlower_11_02`), Vine Yield (`Vine_07_04`).
 

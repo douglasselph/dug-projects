@@ -10,11 +10,9 @@ import dugsolutions.leaf.v35.game.Game
  * This is an implementation checklist, not a game rule or card-data override.
  */
 object CardEffectReadiness {
-    val pending: Set<GameEffect> = setOf(
-        GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW,
-        GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE,
-        // NC-16/17 current immediate-use Plant effects are implemented.
-    )
+    // No newly recognized official effect remains mechanically unimplemented.
+    // NC-04 design approvals and NC-23–27 full-game verification are separate gates.
+    val pending: Set<GameEffect> = emptySet()
 
     /**
      * Guard at the start of a full-game run. This checks the actually chosen

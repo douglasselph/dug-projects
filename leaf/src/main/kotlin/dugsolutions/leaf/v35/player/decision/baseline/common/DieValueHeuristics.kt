@@ -94,6 +94,15 @@ object DieValueHeuristics {
         else -> null
     }
 
+    /** Fixed ladder, without skipping empty Graft Bed sizes. */
+    fun conditionalAwakeningUpgradeSides(sides: Int, value: Int): Int? {
+        val one = nextNormalUpgradeSides(sides) ?: return null
+        return if (value == 3) nextNormalUpgradeSides(one) else one
+    }
+
+    fun expectedConditionalAwakeningGain(sides: Int, value: Int): Double? =
+        conditionalAwakeningUpgradeSides(sides, value)?.let { expectedRoll(it) - value }
+
     /**
      * Expected signed face-value change for "Upgrade a die; use it now."
      * The replacement has not been rolled yet, so this is mathematical

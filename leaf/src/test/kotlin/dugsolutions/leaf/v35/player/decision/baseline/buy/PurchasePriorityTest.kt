@@ -32,7 +32,7 @@ class PurchasePriorityTest {
 
     @Test
     fun `card acquire value breaks a same-cost Plant tie`() {
-        val awakening = plant("Root_07_01", GameEffect.UPGRADE_DIE_AND_USE_NOW)
+        val awakening = plant("Root_07_01", GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW)
         val cause = plant("Root_09_02", GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE)
 
         val strong = PurchasePriority.score(DecisionContext.EMPTY, BuyItem.Plant(awakening)).total

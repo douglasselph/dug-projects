@@ -1,6 +1,6 @@
 # Leaf & Let Die - Active Research and Engineering Tasks
 
-**Status date:** November 13, 2026 — NC-16 Petal To Die 4 and NC-17 Forget-Me-Not implementation added atop FREE Support, revised Raise, NC-13/15 Plants, NC-18–20 Wisps and NC-21/22 Round gains. Only two new effect identities (NC-05 Root Awakening and NC-08 Saplink Trellis) remain deliberately blocked. NOW interpretations remain PROPOSED; Ubuntu Kotlin regression and official-card research acceptance have not been run.
+**Status date:** November 13, 2026 — NC-05 Root Awakening and NC-08 Saplink Trellis implemented as PROVISIONAL UPGRADE-1/2 and RAISE-1/2 interpretations on top of prior NC increments. No newly recognized official effect remains on `CardEffectReadiness.pending`. **This is not full research readiness:** NC-04 remaining designer approvals, NC-23–24 audits, and NC-25–27 Kotlin/full-game acceptance are still required.
 
 This is the **active top-level backlog**. It is intentionally shorter than the many historical phase/checkpoint documents under `doc/`.
 
@@ -8,7 +8,7 @@ A historical task ID appearing in an older document does **not** mean that task 
 
 ## NEXT ACTIVE PROGRAM — November 5 authoritative CSV integration (NC-01–NC-27)
 
-**Status: NC-01–NC-03 recognized/verified. FREE-1–4 of NC-04 authorized and their NC-06/11/14 core effects installed; FREE-action scheduler implementation present but full engine validation (NC-23/25/26) remains open. November 13 increments implement NC-07, NC-09, NC-10 and NC-12 Raise behavior, plus NC-13 Sunlight and NC-15 die flips with decision contracts and focused tests. November 13 Wisp increment adds NC-18/19 mechanics and refreshes NC-20 current identity references; these are conditional on approval of the WISP-1–3 interpretations. All need Ubuntu Kotlin test execution before full-game evidence. NC-21/22 bounded Round gain mechanics are newly installed, subject to NOW-1/2/4 approval and Ubuntu tests; only two effect identities remain pending (NC-05/08). NC-05 and NC-08 require designer rulings, and other remaining NC mechanics are open.** This section was originally prepared by comparing the newly attached
+**Status: NC-01–NC-03 recognized/verified. FREE-1–4 of NC-04 authorized and their NC-06/11/14 core effects installed; FREE-action scheduler implementation present but full engine validation (NC-23/25/26) remains open. November 13 increments implement NC-07, NC-09, NC-10 and NC-12 Raise behavior, plus NC-13 Sunlight and NC-15 die flips with decision contracts and focused tests. November 13 Wisp increment adds NC-18/19 mechanics and refreshes NC-20 current identity references; these are conditional on approval of the WISP-1–3 interpretations. All need Ubuntu Kotlin test execution before full-game evidence. NC-21/22 bounded Round gain mechanics are newly installed, subject to NOW-1/2/4 approval and Ubuntu tests; NC-05/08 have now been implemented provisionally. NC-05 and NC-08 are mechanically implemented under PROPOSED designer rulings, and NC-23–27 verification remains open.** This section was originally prepared by comparing the newly attached
 `leaf(20261105-234756).tgz` with `leaf(20261105-234502).tgz`, and checking the then-current Kotlin
 converter, registry, action scheduler, effect handlers, policy references, and selected tests.
 The user has designated the newly supplied files under `data/` as **the new card source of truth**.
@@ -35,8 +35,8 @@ catalog verified until the new tests and full-game matrix pass.
 active research provenance, R0, Sunlight parity, regression evidence scripts and
 current documentation now use `data/Round_Cards.csv`. Historical protected-baseline
 manifests and legacy documents retain the old path/hash as *archival evidence*.
-The new Surge/Swell effect text is authoritative and is now converted to distinct pending
-mechanical identities. Execution support is now installed for **NC-21 and NC-22**, pending Ubuntu regression and approval of NOW-1/2/4. Full Kotlin game execution with
+The new Surge/Swell effect text is authoritative and now maps to distinct
+mechanically implemented identities. Execution support is now installed for **NC-21 and NC-22**, pending Ubuntu regression and approval of NOW-1/2/4. Full Kotlin game execution with
 these revised CSVs is **not** claimed to pass until those tasks are complete.
 
 **Converter status:** All **17 previously unmatched exact texts** now map to deliberate
@@ -44,9 +44,10 @@ these revised CSVs is **not** claimed to pass until those tasks are complete.
 resolver for Wisp's Last Word). All **72 official effect cells** across the 60 CSV
 card definitions were recognized in an independently compiled Kotlin converter
 smoke check; no `UNKNOWN` was encountered. Originally 16 newly recognized behaviors
-required implementation; as of this patch, **4 remain in `CardEffectReadiness.pending`**.
-`CardEffectReadiness` explicitly rejects those effects and prevents
-full-game research from proceeding with incomplete selected decks. The older
+required implementation; as of this patch, **none remain in `CardEffectReadiness.pending` as of NC-05/08**.
+`CardEffectReadiness` originally blocked unfinished effects and now has an empty
+pending set; future incomplete identities must be added before simulation. This
+alone does **not** certify complete full-game correctness. The older
 effect aliases remain for historical inputs; they are not current-rule substitutes.
 The Kotlin test suite has not yet been run against this new patch on Ubuntu.
 
@@ -65,7 +66,7 @@ b2ef7563ca1a09d15af2b6a1f12a016469a14fbfd5d2ea54eb85cb59658470aa  data/Wisp_Card
 
 Complete in the order shown. A checkbox means **work still to do**, not a claim that all underlying
 features are missing; many reusable primitives already exist. Keep implementation in small,
-reviewable commits and changed-files ZIPs rooted at `leaf/`. Do not change official CSV content
+reviewable commits and changed-files ZIPs whose paths are relative to the `leaf/` working directory. Do not change official CSV content
 without an explicit design decision.
 
 #### P0 — Establish one executable source of truth (do first)
@@ -89,8 +90,7 @@ without an explicit design decision.
   audit rejects it if it reappears beside the canonical file. Historical
   baselines remain intact. Tests cover exact new Surge/Swell raw wording and
   strict path selection. **Filename/provenance migration complete; runtime
-  mechanical implementation and whole-game regression remain blocked by the
-  two outstanding Plant mechanics, pending rule approvals and NC-25–27 validation.**
+  mechanical integration is present but full-game regression, designer approvals and NC-23–27 validation remain outstanding.**
 - [x] **NC-03 — Recognize all exact new texts and fail closed on pending mechanics.** Added
   16 dedicated `GameEffect` identities, 17 explicit converters (Wisp's Last Word
   reuses the existing equivalent early-Strike handler), and tests covering all
@@ -99,9 +99,9 @@ without an explicit design decision.
   `CardEffectReadiness` and rejected at full-game startup or effect execution.
   Historical aliases retain their original meaning. The converter independently
   compiled and recognized 72/72 official effect cells; full Gradle tests await
-  Ubuntu. **Do not interpret this checkmark as mechanics complete:** each pending
-  identity must receive a real handler, legal targeting and policy support in
-  the remaining NC-05/08 mechanics and NC-25–27 verification before production
+  Ubuntu. **Do not interpret this checkmark as the research acceptance gate:** handlers
+  for the original pending identities are now present, but NC-04 approvals and
+  NC-23–27 verification remain necessary before production
   gameplay/research can resume.
 - [ ] **NC-04 — Approve the recorded interpretations for revised card mechanics.** A source-backed
   interpretation register and deterministic fixture plan have been prepared in
@@ -123,13 +123,16 @@ without an explicit design decision.
 
 #### P1 — Plant mechanics: revised effect execution (13 changed rows)
 
-- [ ] **NC-05 — Root Awakening (`Root_07_01`, cost 7).** Replace unconditional one-step
-  `UPGRADE_DIE_AND_USE_NOW` with **two steps if the selected die shows 3; otherwise one step;
-  use the replacement immediately**. Cover D4–D20 ladder, missing inventory, roll rewards,
-  ownership, player Dice Hand and live Battle Grid placement, and capacity/locked rows. Do not
-  reuse Wisp Overgrowth's “skip missing” semantics without an explicit rule basis.
-  **BLOCKED ON NC-04:** UPGRADE-1/2 availability/illegality decisions still proposed. Do not
-  implement a gameplay fallback without approval.
+- [x] **NC-05 — Root Awakening (`Root_07_01`, cost 7).** Executable conditional
+  exact-size upgrade: a die showing 3 upgrades **two positions** in the fixed
+  D4→D6→D8→D10→D12→D20 ladder; another face upgrades one. Availability of
+  the *final* replacement is required, but intermediate stock is irrelevant;
+  no fallback, no oversized upgrade, and no partial mutation if no legal target.
+  The replacement is rolled in Hand with normal Roll Rewards; in Battle it
+  replaces the original die in the same open Grid Square. Updated action
+  decisions, Human Baseline approximations, and focused tests. **UPGRADE-1/2
+  implemented PROVISIONALLY, not designer-approved**. Ubuntu regression and
+  full research review remain NC-25–27.
 - [x] **NC-06 — Root Appreciation (`Root_07_02`, cost 7).** Retain gain-1-Worm and stacking
   **+1 per Worm per activation this round**; add **"Battle: Playing a Worm costs no Support
   Action."** This is a Battle action-economy rule, not just a different Critter value.
@@ -141,12 +144,16 @@ without an explicit design decision.
   **Nov 13 implementation:** one chosen die gets the grafted-Flower count, including face-down
   grafts; executable decision contract, Battle projection and real-CSV test added.
   Ubuntu Kotlin tests remain pending under NC-25/26.
-- [ ] **NC-08 — Saplink Trellis (`Vine_09_03`, cost 9).** The cost-9 row used to be Rise and
-  Vine. It is now Saplink Trellis: **for each Root or Vine, Raise 2 dice +1**. Implement
-  multi-target/per-graft iteration and legal target decisions, maxima and capacities. Its
-  incoming VP icon is **1 VP**, not the previous 2 at this ID.
-  **BLOCKED ON NC-04:** two distinct targets per iteration and fallback when fewer
-  than two dice can benefit require RAISE-1/2 approval. Effect remains pending.
+- [x] **NC-08 — Saplink Trellis (`Vine_09_03`, cost 9).** Execute one
+  iteration per currently grafted Root/Vine, including spent cards. Each
+  iteration chooses up to two **distinct** live owned dice with headroom,
+  Raises each +1, then recomputes legal targets for the next iteration.
+  Reuse across iterations is legal; if fewer than two can benefit, Raise only
+  those available, with caps and Battle row locks enforced. Correct cost-9
+  1-VP identity and updated Human Baseline scoring/targeting. **RAISE-1/2
+  implemented PROVISIONALLY, not designer-approved**. Exact tactical
+  multi-row valuation remains an NC-24 calibration item; Kotlin acceptance is
+  NC-25–27.
 - [x] **NC-09 — Berry Tasty (`Vine_11_02`, cost 11).** Change **all owned D8s +1 → +2**,
   observing die-face cap, phase and Battle row constraints. Reuse the all-D8 mechanism with an
   explicit magnitude, not a card-name shortcut. **Implemented in Nov 13 patch** using a
@@ -281,7 +288,7 @@ NC-07/09/10/12, including decision requirements, Human Baseline scoring, Battle 
 projections, and focused tests against the actual CSVs. The Wisp increment adds NC-18/19 choices, baseline score updates, and NC-20 name cleanup.
 This new Round increment adds NC-21/22 bounded die-size choice, Surge Discard gain,
 Swell immediate-use Battle roll and placement, policy scoring, and tests; four Plant
-mechanical identities remain pending. WISP-1–3 and NOW-1/2/4 are implemented as provisional
+official mechanics are now provisionally implemented; the NC-04/23–27 gates remain. WISP-1–3 and NOW-1/2/4 are implemented as provisional
 interpretations and must be approved before validity claims. It does **not** change official CSV files,
 not yet approved interpretations, the v38 Battle schedule, or protected policy weights.
 The current archive has no `.git` metadata and Gradle 8.13 is not available in this execution

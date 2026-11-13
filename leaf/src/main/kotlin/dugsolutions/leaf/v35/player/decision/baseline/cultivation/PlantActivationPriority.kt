@@ -91,5 +91,6 @@ object PlantActivationPriority {
      * development is guaranteed by the chosen branch.
      */
     private fun permanentlyImprovesDicePool(effect: GameEffect): Boolean =
-        effect == GameEffect.UPGRADE_DIE_AND_USE_NOW
+        effect == GameEffect.UPGRADE_DIE_AND_USE_NOW ||
+            effect == GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW
 }

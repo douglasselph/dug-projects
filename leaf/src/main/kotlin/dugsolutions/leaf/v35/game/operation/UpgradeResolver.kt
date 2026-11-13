@@ -58,6 +58,15 @@ class UpgradeResolver {
         }
     }
 
+    /** Exact size N positions higher in the fixed ladder, ignoring stock only for the intermediate sizes. */
+    fun normalStep(sides: DieSides, steps: Int): DieSides? {
+        require(steps >= 1) { "Normal Upgrade step must be >= 1: $steps" }
+        return largerSizes(sides).getOrNull(steps - 1)
+    }
+
+    fun canUpgradeNormalSteps(game: Game, die: Die, steps: Int): Boolean =
+        normalStep(DieSides.from(die.sides), steps)?.let(game.grove.graftBed::has) == true
+
     /** Larger sizes that are currently available in the shared Graft Bed. */
     fun availableLargerSizes(
         game: Game,

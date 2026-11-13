@@ -167,10 +167,15 @@ object CardScoringHelpers {
                 score = score.adjusted(improvement * 3, "Poor dice can be replaced")
             }
             GameEffect.UPGRADE_DIE_AND_USE_NOW,
-            GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS -> {
-                val upgrades = dice.mapNotNull { die ->
-                    val upgradedSides = nextSides(die.sides)
-                    if (upgradedSides <= die.sides) null
+            GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS,
+            GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW -> {
+                val eligibleDice = if (effect == GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW)
+                    revisedRaiseDice else dice
+                val upgrades = eligibleDice.mapNotNull { die ->
+                    val upgradedSides = if (effect == GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW)
+                        DieValueHeuristics.conditionalAwakeningUpgradeSides(die.sides, die.value)
+                    else DieValueHeuristics.nextNormalUpgradeSides(die.sides)
+                    if (upgradedSides == null || (context.grove.graftBed[DieSides.from(upgradedSides)] ?: 0) <= 0) null
                     else ExpectedDrawProjection.upgradeDelta(die.sides, die.value, upgradedSides)
                 }
                 val bestUpgrade = upgrades.maxOrNull()
@@ -297,6 +302,23 @@ object CardScoringHelpers {
                 val count = context.self.board.creature.count { it.type == PlantType.ROOT || it.type == PlantType.VINE }
                 val realizable = realizableSequentialRaises(dice, count)
                 score = score.adjusted(realizable * 5, "Realizable +1 Raises from Root/Vine grafts")
+            }
+            GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE -> {
+                val count = context.self.board.creature.count {
+                    it.type == PlantType.ROOT || it.type == PlantType.VINE
+                }
+                // Capacity-aware upper bound; real strategy still chooses a fresh
+                // pair on each iteration, as enforced by the live effect handler.
+                val remaining = revisedRaiseDice.map { (it.sides - it.value).coerceAtLeast(0) }.toMutableList()
+                var gained = 0
+                repeat(count) {
+                    remaining.indices.sortedByDescending { remaining[it] }
+                        .filter { remaining[it] > 0 }.take(2).forEach { index ->
+                            remaining[index]--
+                            gained++
+                        }
+                }
+                addBestGain(gained, "Up to $gained total pips from per-graft distinct-die pairs")
             }
             GameEffect.REROLL_DIE_ON_3_DRAW_ONE_CULTIVATION_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3,
             GameEffect.REROLL_DIE_ON_3_DRAW_ONE_AND_REDUCE_OPPOSING_STRIKE_ROW_BY_3 -> {
@@ -585,7 +607,7 @@ object CardScoringHelpers {
         val vp = projectedVp(context, effectiveScoringRule(context, card))
         if (vp > 0) score = score.adjusted(vp * 3, "Projected end-game VP")
         val effectiveEffect = effectiveEffect(context, card)
-        if (SimpleEffectMagnitude.drawCount(effectiveEffect) != null || effectiveEffect == GameEffect.UPGRADE_DIE_AND_USE_NOW || effectiveEffect == GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS) {
+        if (SimpleEffectMagnitude.drawCount(effectiveEffect) != null || effectiveEffect == GameEffect.UPGRADE_DIE_AND_USE_NOW || effectiveEffect == GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS || effectiveEffect == GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW) {
             score = score.adjusted(4, "Broadly useful effect")
         }
         return score
@@ -690,6 +712,10 @@ object CardScoringHelpers {
             GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3 -> 3 - die.value
             GameEffect.UPGRADE_DIE_AND_USE_NOW,
             GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS -> nextSides(die.sides) - die.sides
+            GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW ->
+                DieValueHeuristics.expectedConditionalAwakeningGain(die.sides, die.value)?.roundToInt() ?: 0
+            GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE ->
+                DieValueHeuristics.actualRaiseGain(die.sides, die.value, 1)
             else -> 0
         }
         var score = PriorityScore(50).adjusted(gain * 4, "Target value swing")

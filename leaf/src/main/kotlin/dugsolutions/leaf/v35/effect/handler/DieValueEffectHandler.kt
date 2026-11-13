@@ -140,6 +140,14 @@ class DieValueEffectHandler : EffectHandler {
                             it.card.type == PlantType.VINE
                     }
 
+            GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE ->
+                (if (request.phase == GameEffectPhase.BATTLE) battleHandChoices(request).isNotEmpty()
+                 else modifiableDice(request).isNotEmpty()) &&
+                    request.actor.creature.cards.any {
+                        it.card.type == PlantType.ROOT ||
+                            it.card.type == PlantType.VINE
+                    }
+
             else -> false
         }
 
@@ -328,6 +336,28 @@ class DieValueEffectHandler : EffectHandler {
                         it.card.type == PlantType.VINE
                 }
                 repeatRaises(request, count)
+            }
+
+            GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE -> {
+                val count = request.actor.creature.cards.count {
+                    it.card.type == PlantType.ROOT || it.card.type == PlantType.VINE
+                }
+                repeat(count) {
+                    // A separate pair per graft. Targets must differ within the
+                    // iteration, but can be chosen again during the next graft's
+                    // iteration. Recompute headroom after every Raise.
+                    val firstChoices = saplinkChoices(request)
+                    if (firstChoices.isNotEmpty()) {
+                        val first = chooseRequiredHandDie(request, firstChoices)
+                        first.adjustBy(1)
+                        val secondChoices = saplinkChoices(request).filter { choice ->
+                            request.actor.dice.hand.getOrNull(choice.index) !== first
+                        }
+                        if (secondChoices.isNotEmpty()) {
+                            chooseRequiredHandDie(request, secondChoices).adjustBy(1)
+                        }
+                    }
+                }
             }
 
             else -> unsupportedGameEffect(
@@ -650,6 +680,10 @@ class DieValueEffectHandler : EffectHandler {
             )
         )
     }
+
+    private fun saplinkChoices(request: GameEffectRequest): List<dugsolutions.leaf.v35.player.decision.effect.EffectDieChoice> =
+        (if (request.phase == GameEffectPhase.BATTLE) battleHandChoices(request)
+         else modifiableChoices(request)).filter { it.value < it.sides }
 
     private fun repeatRaises(
         request: GameEffectRequest,
