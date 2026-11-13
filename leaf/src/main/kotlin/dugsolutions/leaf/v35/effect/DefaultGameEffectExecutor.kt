@@ -191,7 +191,8 @@ class DefaultGameEffectExecutor(
             GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE,
             GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS,
             GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW,
-            GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND ->
+            GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND,
+            GameEffect.USE_DIE_FROM_DISCARD_NOW ->
                 drawEffects
 
             GameEffect.GAIN_D10_TO_DISCARD,
@@ -238,6 +239,7 @@ class DefaultGameEffectExecutor(
             GameEffect.TRASH_CRITTER_TO_RAISE_DIE_PLUS_5 ->
                 vineAndDineEffect
 
+            GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S,
             GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4,
             GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW,
             GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_ONLY_THEN_CYCLE_D4S,

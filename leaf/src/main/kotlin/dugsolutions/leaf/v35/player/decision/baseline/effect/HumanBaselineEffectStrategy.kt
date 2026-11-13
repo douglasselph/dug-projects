@@ -226,7 +226,8 @@ class HumanBaselineEffectStrategy(
                             )
 
                     request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
-                        request.effect == GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND ->
+                        request.effect == GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND ||
+                        request.effect == GameEffect.USE_DIE_FROM_DISCARD_NOW ->
                         battleRollDiscardIntoBattleTargetScore(request.context, choice)
                             ?: CardScoringHelpers.scoreDieTarget(
                                 effect = request.effect,
@@ -764,6 +765,7 @@ class HumanBaselineEffectStrategy(
                 PriorityScore(50 + (expectedGain * 5).roundToInt())
                     .adjusted(choice.selected.size, "Evaluate the complete redraw subset")
             }
+            GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S,
             GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW,
             GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_ONLY_THEN_CYCLE_D4S,
             GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_ONLY_THEN_CYCLE_D4S,

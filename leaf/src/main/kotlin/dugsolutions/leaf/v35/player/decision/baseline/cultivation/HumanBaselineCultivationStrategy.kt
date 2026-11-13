@@ -549,18 +549,13 @@ class HumanBaselineCultivationStrategy(
                         common["beeValue"] = context.self.board.beeValue.toString()
                     }
                     "Flower_14_04" -> {
+                        // NC-16 current wording: always gain/use a real Grove
+                        // D4, then optionally cycle owned Hand D4s. The legacy
+                        // Gain-vs-Trash Raise +4 branch does not apply.
                         common["ownedD4"] = ((context.self.board.supply + context.self.board.hand + context.self.board.discard).count { it.sides == 4 } + context.self.board.mulch.count { it.storedDieSides?.value == 4 } + context.self.board.pendingMulch.count { it.storedDieSides?.value == 4 }).toString()
-                        val choices = CardScoringHelpers.petalToDie4CultivationChoices(context)
-                        choices.forEach { petalChoice ->
-                            val score = CardScoringHelpers.petalToDie4BranchScore(context, petalChoice).total
-                            when (petalChoice) {
-                                dugsolutions.leaf.v35.player.decision.effect.PetalToDie4Choice.GainD4 -> common["gainD4Branch"] = score.toString()
-                                is dugsolutions.leaf.v35.player.decision.effect.PetalToDie4Choice.TrashD4AndRaiseAll -> {
-                                    val prior = common["bestTrashD4Branch"]?.toIntOrNull()
-                                    if (prior == null || score > prior) common["bestTrashD4Branch"] = score.toString()
-                                }
-                            }
-                        }
+                        common["groveD4Available"] = ((context.grove.graftBed[dugsolutions.leaf.v35.random.die.DieSides.D4] ?: 0) > 0).toString()
+                        common["cycleEligibleD4"] = (context.self.board.hand.count { it.sides == 4 } + 1).toString()
+                        common["currentPetalEffect"] = "GAIN_D4_USE_NOW_THEN_CYCLE_D4S"
                     }
                     "Flower_11_04" -> {
                         common["sunlightHeld"] = context.self.board.sunlight.toString()

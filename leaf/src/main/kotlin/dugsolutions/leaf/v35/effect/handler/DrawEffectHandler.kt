@@ -109,7 +109,8 @@ class DrawEffectHandler(
             GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE ->
                 burstingBlossomChoices(request).isNotEmpty()
 
-            GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND ->
+            GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND,
+            GameEffect.USE_DIE_FROM_DISCARD_NOW ->
                 request.actor.dice.discard.isNotEmpty() &&
                     hasBattlePlacementCapacity(
                         request = request,
@@ -277,7 +278,8 @@ class DrawEffectHandler(
                 }
             }
 
-            GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND -> {
+            GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND,
+            GameEffect.USE_DIE_FROM_DISCARD_NOW -> {
                 val die = chooseRequiredDiscardDie(
                     request,
                     discardChoices(request.actor)
@@ -291,7 +293,8 @@ class DrawEffectHandler(
                 val rolled = rollResolver.roll(request.actor, die)
                 placeIfBattle(
                     request = request,
-                    resolution = rolled
+                    resolution = rolled,
+                    required = request.effect == GameEffect.USE_DIE_FROM_DISCARD_NOW
                 )
             }
 
@@ -779,7 +782,8 @@ class DrawEffectHandler(
 
     private fun placeIfBattle(
         request: GameEffectRequest,
-        resolution: RollResolution
+        resolution: RollResolution,
+        required: Boolean = false
     ) {
         if (request.phase != GameEffectPhase.BATTLE) {
             return
@@ -795,6 +799,12 @@ class DrawEffectHandler(
             }
 
         if (battlePlacementResolver.legalRows(battleState, request.actor).isEmpty()) {
+            // The current Forget-Me-Not "Use it now" cannot degrade to a
+            // future Discard gain. In particular, a Roll Reward may have
+            // closed an initially open Strike before placement.
+            stateCheck(!required) {
+                "Use-it-now die has no available Battle Strike after its Roll Reward"
+            }
             stateCheck(request.actor.dice.removeExactFromHand(die) != null) {
                 "Battle effect die with no legal Strike Square could not be removed from Hand: $die"
             }

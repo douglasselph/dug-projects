@@ -49,6 +49,13 @@ class PetalToDie4Effect(
 
     override fun canExecute(request: GameEffectRequest): Boolean =
         when (request.effect) {
+            GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S ->
+                request.game.grove.graftBed.has(DieSides.D4) &&
+                    (request.phase != GameEffectPhase.BATTLE ||
+                        request.battleState?.let {
+                            battlePlacementResolver.availableSlots(it, request.actor) > 0
+                        } == true)
+
             GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4 ->
                 oldLegalChoices(request).isNotEmpty()
 
@@ -68,6 +75,9 @@ class PetalToDie4Effect(
         }
 
         when (request.effect) {
+            GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S ->
+                executeCurrent(request, executor)
+
             GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4 ->
                 executePrinted(request)
 
@@ -79,6 +89,111 @@ class PetalToDie4Effect(
                 executeRedesigned(request, executor)
 
             else -> error("Unexpected Petal To Die 4 effect: ${request.effect}")
+        }
+    }
+
+    /**
+     * NC-16 current official wording, separate from historical research paths:
+     * gain a physical Grove D4, roll/use it immediately, then optionally cycle
+     * any subset of your live D4 Hand dice.  This cannot steal an opponent D4.
+     */
+    private fun executeCurrent(request: GameEffectRequest, executor: GameEffectExecutor) {
+        // Validate mandatory gain/use before any mutation. Empty Grove stock or
+        // a full/locked Battle Grid makes this entire activation unavailable.
+        effectCheck(canExecute(request)) { "Petal To Die 4 needs a Grove D4 and an open Strike Square" }
+        stateCheck(request.game.grove.graftBed.take(DieSides.D4)) {
+            "Petal To Die 4's available Grove D4 disappeared"
+        }
+        val gained = request.game.dieFactory(DieSides.D4)
+        request.actor.dice.addToHand(gained)
+        request.game.chronicle.record(Moment.DieGained(request.actor.id, DieSides.D4))
+
+        val roller = rollResolver(request, executor)
+        val gainedRoll = roller.roll(request.actor, gained)
+        if (request.phase == GameEffectPhase.BATTLE) {
+            val battle = battleStateForEffect(request, "PetalToDie4UseNow")
+            stateCheck(battlePlacementResolver.legalRows(battle, request.actor).isNotEmpty()) {
+                "Petal To Die 4 lost its legal Battle placement after Roll Rewards"
+            }
+            val placed = battlePlacementResolver.placeNewHandDie(
+                battleState = battle,
+                player = request.actor,
+                die = gained,
+                reason = BattleDiePlacementReason.EFFECT,
+                context = request.decisionContext()
+            )
+            request.game.assetProvenance.markBattlePlacement(request.actor.id, gained, placed.row)
+            request.game.chronicle.record(
+                Moment.BattleDieRow(
+                    rollSequence = gainedRoll.chronicleSequence,
+                    playerId = request.actor.id,
+                    sides = gained.sides,
+                    value = gained.value,
+                    row = placed.row
+                )
+            )
+        }
+
+        // Optional selection happens *after* the gained D4 is rolled and placed:
+        // the new die itself is eligible. Previously resolved rows stay locked.
+        val legal = when (request.phase) {
+            GameEffectPhase.CULTIVATION -> handChoices(request.actor) { it.sides == 4 }
+            GameEffectPhase.BATTLE -> battleHandChoices(request).filter { it.sides == 4 }
+        }
+        val chosen = request.effectDecisionStrategy().chooseDice(
+            ChooseEffectDiceRequest(
+                effect = request.effect,
+                legalChoices = legal,
+                minChoices = 0,
+                maxChoices = legal.size,
+                context = request.decisionContext()
+            )
+        )
+        decisionCheck(chosen.selected.all { it in legal }) {
+            "Petal To Die 4 selected non-D4, locked, or absent Hand die: ${chosen.selected}; legal=$legal"
+        }
+        // The choice class also disallows duplicates. Resolve by physical
+        // identity before changing Hand indices or recycling the Draw supply.
+        val selectedDice = chosen.selected.map { resolveHandDie(request.actor, it) }
+        if (request.phase == GameEffectPhase.BATTLE) {
+            val battle = battleStateForEffect(request, "PetalToDie4Cycle")
+            selectedDice.forEach { die ->
+                stateCheck(battle.grid.removeDie(die) != null) {
+                    "Selected Petal To Die 4 Battle D4 lost its open Strike location: $die"
+                }
+            }
+        }
+        selectedDice.forEach { die ->
+            stateCheck(request.actor.dice.removeExactFromHand(die) != null) {
+                "Selected Petal To Die 4 D4 no longer belongs to Hand: $die"
+            }
+            request.actor.dice.addToDiscard(die)
+        }
+        repeat(selectedDice.size) {
+            val drawn = roller.draw(request.actor) ?: return@repeat
+            if (request.phase == GameEffectPhase.BATTLE) {
+                val battle = battleStateForEffect(request, "PetalToDie4Redraw")
+                stateCheck(battlePlacementResolver.legalRows(battle, request.actor).isNotEmpty()) {
+                    "Petal To Die 4 mandatory replacement has no open Strike Square after Roll Rewards"
+                }
+                val placed = battlePlacementResolver.placeNewHandDie(
+                    battleState = battle,
+                    player = request.actor,
+                    die = drawn.die,
+                    reason = BattleDiePlacementReason.EFFECT,
+                    context = request.decisionContext()
+                )
+                request.game.assetProvenance.markBattlePlacement(request.actor.id, drawn.die, placed.row)
+                request.game.chronicle.record(
+                    Moment.BattleDieRow(
+                        rollSequence = drawn.chronicleSequence,
+                        playerId = request.actor.id,
+                        sides = drawn.die.sides,
+                        value = drawn.die.value,
+                        row = placed.row
+                    )
+                )
+            }
         }
     }
 

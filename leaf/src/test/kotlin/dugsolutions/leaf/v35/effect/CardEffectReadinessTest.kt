@@ -39,7 +39,7 @@ class CardEffectReadinessTest {
         val roundValues = object : RoundValueResolver {
             override fun effectFor(card: RoundCard, slot: RoundEffectSlot): GameEffect =
                 if (card.name == "Battle_Scatter_Swell" && slot == RoundEffectSlot.SECOND) {
-                    GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S
+                    GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW
                 } else {
                     RoundValueResolver.CANONICAL.effectFor(card, slot)
                 }
@@ -56,7 +56,7 @@ class CardEffectReadinessTest {
         assertEquals(GameEffect.GAIN_UP_TO_D8_AND_USE_NOW, swell.secondEffect.effect)
         game.roundDeck.setupExact(listOf(swell))
         assertEquals(
-            GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S,
+            GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW,
             game.config.roundValues.effectFor(swell, RoundEffectSlot.SECOND)
         )
 
@@ -67,7 +67,7 @@ class CardEffectReadinessTest {
         val error = assertFailsWith<IllegalStateException> {
             runner.run(game)
         }
-        assertTrue(error.message.orEmpty().contains("GAIN_D4_USE_NOW_THEN_CYCLE_D4S"))
+        assertTrue(error.message.orEmpty().contains("UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW"))
         assertEquals(GameStatus.READY, game.status)
     }
 
@@ -76,7 +76,7 @@ class CardEffectReadinessTest {
         val actor = EffectTestFixture.player(1)
         val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
         val executor = DefaultGameEffectExecutor()
-        val effect = GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S
+        val effect = GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW
         val request = EffectTestFixture.request(game, actor, effect)
         assertFalse(executor.supports(effect))
         val canExecuteError = assertFailsWith<IllegalArgumentException> {

@@ -1,6 +1,6 @@
 # Leaf & Let Die - Active Research and Engineering Tasks
 
-**Status date:** November 13, 2026 — FREE Support, revised Raise, NC-13/NC-15 Plants and NC-18–20 Wisps present. This increment implements bounded Battle Round gains (NC-21 Surge / NC-22 Swell). NOW-1/2/4 interpretations remain PROPOSED; Ubuntu Kotlin regressions have not been run.
+**Status date:** November 13, 2026 — NC-16 Petal To Die 4 and NC-17 Forget-Me-Not implementation added atop FREE Support, revised Raise, NC-13/15 Plants, NC-18–20 Wisps and NC-21/22 Round gains. Only two new effect identities (NC-05 Root Awakening and NC-08 Saplink Trellis) remain deliberately blocked. NOW interpretations remain PROPOSED; Ubuntu Kotlin regression and official-card research acceptance have not been run.
 
 This is the **active top-level backlog**. It is intentionally shorter than the many historical phase/checkpoint documents under `doc/`.
 
@@ -8,7 +8,7 @@ A historical task ID appearing in an older document does **not** mean that task 
 
 ## NEXT ACTIVE PROGRAM — November 5 authoritative CSV integration (NC-01–NC-27)
 
-**Status: NC-01–NC-03 recognized/verified. FREE-1–4 of NC-04 authorized and their NC-06/11/14 core effects installed; FREE-action scheduler implementation present but full engine validation (NC-23/25/26) remains open. November 13 increments implement NC-07, NC-09, NC-10 and NC-12 Raise behavior, plus NC-13 Sunlight and NC-15 die flips with decision contracts and focused tests. November 13 Wisp increment adds NC-18/19 mechanics and refreshes NC-20 current identity references; these are conditional on approval of the WISP-1–3 interpretations. All need Ubuntu Kotlin test execution before full-game evidence. NC-21/22 bounded Round gain mechanics are newly installed, subject to NOW-1/2/4 approval and Ubuntu tests; only four effect identities remain pending (NC-05/08/16/17). NC-05 and NC-08 require designer rulings, and other remaining NC mechanics are open.** This section was originally prepared by comparing the newly attached
+**Status: NC-01–NC-03 recognized/verified. FREE-1–4 of NC-04 authorized and their NC-06/11/14 core effects installed; FREE-action scheduler implementation present but full engine validation (NC-23/25/26) remains open. November 13 increments implement NC-07, NC-09, NC-10 and NC-12 Raise behavior, plus NC-13 Sunlight and NC-15 die flips with decision contracts and focused tests. November 13 Wisp increment adds NC-18/19 mechanics and refreshes NC-20 current identity references; these are conditional on approval of the WISP-1–3 interpretations. All need Ubuntu Kotlin test execution before full-game evidence. NC-21/22 bounded Round gain mechanics are newly installed, subject to NOW-1/2/4 approval and Ubuntu tests; only two effect identities remain pending (NC-05/08). NC-05 and NC-08 require designer rulings, and other remaining NC mechanics are open.** This section was originally prepared by comparing the newly attached
 `leaf(20261105-234756).tgz` with `leaf(20261105-234502).tgz`, and checking the then-current Kotlin
 converter, registry, action scheduler, effect handlers, policy references, and selected tests.
 The user has designated the newly supplied files under `data/` as **the new card source of truth**.
@@ -89,7 +89,8 @@ without an explicit design decision.
   audit rejects it if it reappears beside the canonical file. Historical
   baselines remain intact. Tests cover exact new Surge/Swell raw wording and
   strict path selection. **Filename/provenance migration complete; runtime
-  mechanical implementation and whole-game regression remain blocked by NC-05–NC-24.**
+  mechanical implementation and whole-game regression remain blocked by the
+  two outstanding Plant mechanics, pending rule approvals and NC-25–27 validation.**
 - [x] **NC-03 — Recognize all exact new texts and fail closed on pending mechanics.** Added
   16 dedicated `GameEffect` identities, 17 explicit converters (Wisp's Last Word
   reuses the existing equivalent early-Strike handler), and tests covering all
@@ -100,7 +101,8 @@ without an explicit design decision.
   compiled and recognized 72/72 official effect cells; full Gradle tests await
   Ubuntu. **Do not interpret this checkmark as mechanics complete:** each pending
   identity must receive a real handler, legal targeting and policy support in
-  NC-05–NC-24 before production gameplay/research can resume.
+  the remaining NC-05/08 mechanics and NC-25–27 verification before production
+  gameplay/research can resume.
 - [ ] **NC-04 — Approve the recorded interpretations for revised card mechanics.** A source-backed
   interpretation register and deterministic fixture plan have been prepared in
   `doc/rules/CARD_EFFECT_INTERPRETATIONS.md` and
@@ -178,15 +180,25 @@ without an explicit design decision.
   flip one opponent's die**. Implement both chosen targets with valid face/opposite-face
   semantics, lock restrictions, no-reward rules and the phase-specific second step.
   **Nov 13 implementation:** Own die is flipped in either phase; Battle also flips one selected opponent die from an unresolved row. Both selections prevalidated, with no roll rewards. **Provisional edge interpretation:** a D4 is not flippable (existing `Die.flip()`), and Battle requires both an own and an opposing flippable target. Confirm if desired behavior differs before full stress runs. Ubuntu Gradle pending NC-25/26.
-- [ ] **NC-16 — Petal To Die 4 (`Flower_14_04`, cost 14).** Remove old gain-or-steal path;
+- [x] **NC-16 — Petal To Die 4 (`Flower_14_04`, cost 14).** Remove old gain-or-steal path;
   instead **gain a D4 and use it now**, then **discard any number of your D4s and draw the
   same number of dice**. Keep proper supply scarcity, draw order, Roll Rewards, exact dice
   ownership, replacement/placement in a Battle row, and zero-D4 edge cases. Preserve old
-  research variants as opt-in history only.
-- [ ] **NC-17 — Forget-Me-Not (`Flower_17_02`, cost 17).** Replace **roll one die from
+  research variants as opt-in history only. **Nov 13 implementation:** source
+  must be an available physical Grove D4; it is rolled and placed immediately,
+  then any chosen current-Hand D4s (including the gained one) are cycled with
+  normal Draws and Roll Rewards. Battle rejects a full/locked Grid, never steals
+  an opposing D4, and leaves older experimental branches intact. NOW-1–3 remain
+  proposed rulings and Kotlin regression acceptance is pending.
+- [x] **NC-17 — Forget-Me-Not (`Flower_17_02`, cost 17).** Replace **roll one die from
   Discard into Hand** with **choose a die from Discard and "Use it now"**. Confirm the
   intended new phase-specific behavior (possibly existing machinery in Cultivation, but
   Battle grid entry/capacity is an added requirement), then test it explicitly.
+  **Nov 13 implementation:** explicit current effect identity routes to the
+  existing exact-Discard-die recovery and roll pathway, with mandatory legal
+  open-row Battle placement instead of silently falling back to Discard.
+  Selection and valuation retain the old equivalent operation's logic. NOW-1/2
+  interpretations are provisional; full Kotlin acceptance remains NC-25/26.
 
 #### P2 — Wisp and Round mechanics (not secondary for correctness)
 

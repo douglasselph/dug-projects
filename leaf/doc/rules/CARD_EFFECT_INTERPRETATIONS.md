@@ -72,6 +72,8 @@ assumptions have also been replaced.
 
 ### NOW — 'Use it now' and Battle capacity
 
+**Additional implementation (November 13):** NC-16 Petal To Die 4 and NC-17 Forget-Me-Not now use the proposed NOW-1/2/3 semantics, with strict Grove D4 availability, current Hand recovery, Battle placement and optional D4 cycling. These are implementation assumptions, not designer-approved rule changes. If an immediate Roll Reward closes the last available Strike after the die is rolled but before placement, current execution fails explicitly; failure-atomic handling and timing need a focused NC-25 scenario before full-research certification.
+
 **Implementation status (November 13):** NC-21 Surge and NC-22 Swell use the proposed NOW-1/2/4 semantics, with real Graft Bed size selection, an actual die movement, Roll Rewards for Swell and closed/full-row restrictions. These remain **PROPOSED**, not approved card rules. An edge case for follow-up NC-25/26: an immediate Wisp triggered by Swell's roll can change Strike availability before the newly rolled die is placed; test/settle that ordering before claiming complete full-game parity.
 
 **Cards:** Petal To Die 4 (`zFlower_14_04`), Forget-Me-Not (`zFlower_17_02`), Swell (`Battle_Scatter_Swell`), Root Awakening (`Root_07_01`).

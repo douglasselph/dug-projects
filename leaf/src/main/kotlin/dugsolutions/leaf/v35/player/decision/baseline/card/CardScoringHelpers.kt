@@ -334,6 +334,22 @@ object CardScoringHelpers {
                     "Projected Butterfly acquisition, refresh and opponent denial"
                 )
             }
+            GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S -> {
+                // The new card cannot steal a D4: Grove stock is mandatory.
+                // Evaluate the immediate die as a current-round asset, and
+                // retain the option to exchange poor D4 results for fresh draws.
+                val available = (context.grove.graftBed[dugsolutions.leaf.v35.random.die.DieSides.D4] ?: 0) > 0
+                if (available) {
+                    val expected = dugsolutions.leaf.v35.player.decision.baseline.common.DieValueHeuristics.expectedRoll(4)
+                    score = score.adjusted((expected * 3).roundToInt(), "Current D4 roll usable now")
+                    val existing = context.self.board.hand.filter { it.sides == 4 }
+                    val redrawMean = context.self.board.supply.minOfOrNull { it.sides }?.let {
+                        dugsolutions.leaf.v35.player.decision.baseline.common.DieValueHeuristics.expectedRoll(it)
+                    } ?: expected
+                    val cycle = existing.sumOf { max(0.0, redrawMean - it.value) }
+                    score = score.adjusted((cycle * 3).roundToInt(), "Optional D4 cycling")
+                }
+            }
             GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW,
             GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_ONLY_THEN_CYCLE_D4S,
             GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_ONLY_THEN_CYCLE_D4S,
@@ -405,7 +421,8 @@ object CardScoringHelpers {
                 }
                 if (best != null) score = score.adjusted(best, "Projected capped Raise and resulting Draws")
             }
-            GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND -> {
+            GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND,
+            GameEffect.USE_DIE_FROM_DISCARD_NOW -> {
                 val candidates = context.self.board.discard.map { die ->
                     val availability = FutureDiceAvailability.forDiscardDie(context, die)
                     val quality = (DieValueHeuristics.expectedRoll(die.sides) * 3).roundToInt()
@@ -676,7 +693,8 @@ object CardScoringHelpers {
             else -> 0
         }
         var score = PriorityScore(50).adjusted(gain * 4, "Target value swing")
-        if (effect == GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND) {
+        if (effect == GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND ||
+            effect == GameEffect.USE_DIE_FROM_DISCARD_NOW) {
             val discardDie = context.self.board.discard.firstOrNull { it.index == die.index }
             if (discardDie != null) {
                 val availability = FutureDiceAvailability.forDiscardDie(context, discardDie)

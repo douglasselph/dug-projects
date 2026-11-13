@@ -5,7 +5,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.card.ConfiguredCardScorer
 
 object ForgetMeNotBaseline : ConfiguredCardScorer(
     cardNames = setOf("Flower_17_02"),
-    effect = GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND,
+    effect = GameEffect.USE_DIE_FROM_DISCARD_NOW,
     cultivationPlayBase = 72,
     battlePlayBase = 82
 )

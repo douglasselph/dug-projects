@@ -67,9 +67,7 @@ object GameEffectDecisionRequirements {
             GameEffect.UNKNOWN,
             GameEffect.RAISE_DIE_PLUS_3,
             GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW,
-            GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE,
-            GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S,
-            GameEffect.USE_DIE_FROM_DISCARD_NOW -> null // Retired or recognized-but-pending; never fabricate a legal decision
+            GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE -> null // Retired or recognized-but-pending; never fabricate a legal decision
             GameEffect.RESEARCH_NO_EFFECT -> same()
 
             GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
@@ -199,6 +197,15 @@ object GameEffectDecisionRequirements {
             GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS ->
                 same()
 
+            GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S ->
+                phased(
+                    cultivation = setOf(EffectDecisionMechanism.EFFECT_DICE_SET),
+                    battle = setOf(
+                        EffectDecisionMechanism.BATTLE_DIE_PLACEMENT,
+                        EffectDecisionMechanism.EFFECT_DICE_SET
+                    )
+                )
+
             GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4 ->
                 phased(
                     cultivation = setOf(EffectDecisionMechanism.EFFECT_PETAL_TO_DIE_4),
@@ -317,7 +324,8 @@ object GameEffectDecisionRequirements {
             GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT ->
                 same(EffectDecisionMechanism.EFFECT_PLANT_EFFECT)
 
-            GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND ->
+            GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND,
+            GameEffect.USE_DIE_FROM_DISCARD_NOW ->
                 phased(
                     cultivation = setOf(EffectDecisionMechanism.EFFECT_DIE),
                     battle = setOf(

@@ -36,7 +36,11 @@ class ExecutableGameFixtureTest {
         val physicalWisps = ExecutableGameFixture.wisps(wisps)
         assertTrue(physicalWisps.isNotEmpty())
         assertTrue(physicalWisps.none { it.effect in CardEffectReadiness.pending })
-        assertTrue(physicalWisps.none { it.name == "Wisp_Award_VP" || it.name == "Wisp_Award_VP2" })
+        // NC-18/19 are executable now: the CSV-backed fixture should retain
+        // their physical copies rather than silently exclude them.
+        listOf("Wisp_Award_VP", "Wisp_Award_VP2").forEach { id ->
+            assertEquals(requireNotNull(wisps.getCard(id)).quantity, physicalWisps.count { it.name == id })
+        }
         physicalWisps.groupingBy { it.name }.eachCount().forEach { (id, count) ->
             assertTrue(count <= requireNotNull(wisps.getCard(id)).quantity)
         }

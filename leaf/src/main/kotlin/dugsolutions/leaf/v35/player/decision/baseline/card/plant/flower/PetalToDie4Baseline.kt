@@ -5,7 +5,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.card.ConfiguredCardScorer
 
 object PetalToDie4Baseline : ConfiguredCardScorer(
     cardNames = setOf("Flower_14_04"),
-    effect = GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW,
+    effect = GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S,
     cultivationPlayBase = 65,
     battlePlayBase = 65
 )
