@@ -128,6 +128,21 @@ R3B.1a added effect-aware Human Baseline handling for the simple research contro
 
 The v38 official card-text synchronization changed **definition fingerprints** even where card effect semantics were unchanged. The Root Four More and Sapping Snapdragon *example question specifications* have been deliberately re-fingerprinted to the current official CSV rows (without changing their explicit historical `LEGACY_WHOLE_BATTLE` selection). Their old fingerprints remain historical provenance, not current valid inputs. On this documentation checkpoint, **80 Python research-tool tests passed** after the example correction; these do not exercise the Kotlin game engine or certify the old experiment artifacts against v38.
 
+### November 13 verified mechanical gate and next research check
+
+The uploaded mechanical report `leaf-current-card-mechanics-20261113-131420.tgz` reports **PASS**: 1,807 unit, 88 integration and 253 simulation tests passed (one long-memory simulation test skipped). It confirms a current catalog audit and the existing v38 full-game regression tests; it **does not** certify each individual effect or balanced gameplay. Its recorded checkout had uncommitted/unknown changes.
+
+The next reproducible functional gate is:
+
+```bash
+python3 bin/verify_current_card_research_readiness.py --plan-only \
+  --mechanical-archive ~/Downloads/leaf-current-card-mechanics-20261113-131420.tgz
+python3 bin/verify_current_card_research_readiness.py --run \
+  --mechanical-archive ~/Downloads/leaf-current-card-mechanics-20261113-131420.tgz
+```
+
+This reuses the existing compile-once two-question v38 runner and validates both evidence bundles without launching a second learning system. It checks official effect exercise, suppression, seat pairing and source/ruleset fingerprints, then writes **one** consolidated upload-ready archive. It remains **functional research validation only**, not a credible 36-Plant balance conclusion. See [current card research readiness](doc/research/experiments/card-balance/CURRENT_CARD_RESEARCH_READINESS.md). Rerun the mechanical gate if the checkout/CSV differs from that report.
+
 ### v38-01 Battle rules migration and validation
 
 The **Three Engagements** Battle system is now the **adopted rule and code default**, not merely experimental Candidate B. The existing whole-Battle implementation remains selectable strictly for historical comparisons:

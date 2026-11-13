@@ -1,18 +1,8 @@
 # Leaf & Let Die - Active Research and Engineering Tasks
 
-**Status date:** November 13, 2026 — all revised official effect identities now have implementation routes (`CardEffectReadiness.pending` is empty), but mechanics/balance are not certified. **NC-23/24 verification increment:** the v38 Engagement continuation policy now counts granted free Bee/Butterfly moves correctly when evaluating combinations after the two paid Support slots have been used. Focused cost/reachability regressions and a one-command `bin/verify_current_card_mechanics` acceptance gate have been added. The Python official catalog audit passes; Kotlin/Gradle/full-game acceptance, remaining policy audits, research scenarios and NC-04 designer approvals are **not yet verified**.
+**Status date:** November 13, 2026 — all revised official effect identities now have implementation routes (`CardEffectReadiness.pending` is empty), but individual card-effect balance is not certified. **NC-25/26 mechanical gate PASS:** the newly uploaded `leaf-current-card-mechanics-20261113-131420.tgz` records 1,807 passed `test`, 88 passed `integrationTest`, and 253 passed `simulationTest` cases (one additional simulation test skipped). It includes the previously repaired integration tests, and its official catalog fingerprint is `1c3ae395d2c24db6db70954b7d81b15b1f4ee6afcec8eb31c0e5a3b12c808ea9`. HEAD at test was `c726183563828c8a580d8dd4e2f9372e8a21965f`; working tree was recorded dirty/unknown. This confirms the regression stage, not full deterministic coverage of every effect, clean source parity or balanced cards.
 
-**NC-25/26 verification checkpoint (November 13):** The uploaded
-`leaf-current-card-mechanics-20261113-125720.tgz` reports a passing official
-CSV catalog audit and successful `test` and `simulationTest` stages, but the
-combined mechanical gate **FAILED at `integrationTest`**. Four failures
-were stale integration expectations: the retired `Wisps_Resolve` ID, the old
-Wisp of Honor +1 VP play effect, obsolete Transplant Tulip, and older Plant
-effect enum names in the CSV contract test. The four corresponding integration
-tests have been corrected against the November 13 official catalog. **The fixes have not yet been rerun on
-Ubuntu; NC-25 and NC-26 remain OPEN** until the full gate passes and the
-remaining coverage/behavioral questions are checked. The Git HEAD recorded
-in that run was `c726183563828c8a580d8dd4e2f9372e8a21965f`.
+**NC-27 research follow-up:** `bin/verify_current_card_research_readiness.py` now validates the mechanical evidence against current CSVs and JUnit XML, then optionally executes/validates the existing two-question v38 pilot (Root Four More and Sapping Snapdragon) through the *existing* compile-once, isolated-process runner. It requires actual official effect exercise and enforces provenance, suppression and pairing through the evidence reader. This new gate has Python/unit and plan-only preflight verification; **the Kotlin question pilot has NOT yet been rerun on the November 13 source**. See `doc/research/experiments/card-balance/CURRENT_CARD_RESEARCH_READINESS.md`. NC-24, complete NC-25 effect coverage, the NC-26 current research pilot and A2 sensitivity remain open.
 
 This is the **active top-level backlog**. It is intentionally shorter than the many historical phase/checkpoint documents under `doc/`.
 
@@ -20,7 +10,7 @@ A historical task ID appearing in an older document does **not** mean that task 
 
 ## NEXT ACTIVE PROGRAM — November 5 authoritative CSV integration (NC-01–NC-27)
 
-**Status: NC-01–NC-03 recognized/verified. FREE-1–4 of NC-04 authorized and their NC-06/11/14 core effects installed; FREE-action scheduler implementation present but full engine validation (NC-23/25/26) remains open. November 13 increments implement NC-07, NC-09, NC-10 and NC-12 Raise behavior, plus NC-13 Sunlight and NC-15 die flips with decision contracts and focused tests. November 13 Wisp increment adds NC-18/19 mechanics and refreshes NC-20 current identity references; these are conditional on approval of the WISP-1–3 interpretations. All need Ubuntu Kotlin test execution before full-game evidence. NC-21/22 bounded Round gain mechanics are newly installed, subject to NOW-1/2/4 approval and Ubuntu tests; NC-05/08 have now been implemented provisionally. NC-05 and NC-08 are mechanically implemented under PROPOSED designer rulings, and NC-23–27 verification remains open.** This section was originally prepared by comparing the newly attached
+**Status:** NC-01–NC-22 revised effects are implemented with identified/proposed rules interpretations; FREE-1–4 are designer-approved, while UPGRADE, RAISE, WISP and NOW cases remain provisional. The **November 13 current catalog** passed 1,807 unit, 88 integration and 253 simulation tests (one memory-stress skip) in the uploaded mechanical gate. NC-23 free-action scheduling received positive regressions, but end-to-end policy and telemetry review remains open. NC-24 wider policy/feature compatibility, NC-25 per-effect deterministic coverage, NC-26 fresh two-question research pilot and NC-27 final provenance/release evidence are still partial. **Do not label all cards verified or balanced from the green suite.** This section was originally prepared by comparing the newly attached
 `leaf(20261105-234756).tgz` with `leaf(20261105-234502).tgz`, and checking the then-current Kotlin
 converter, registry, action scheduler, effect handlers, policy references, and selected tests.
 The user has designated the newly supplied files under `data/` as **the new card source of truth**.
@@ -29,7 +19,7 @@ adopted **Three Engagements** Battle structure or the 3/2/2 Round schedule.
 
 **Start here, before A2/A3 or new large research runs.** Previously verified V38-4–V38-7
 results belong to the **previous card catalog**. Preserve those results and do not label the new
-catalog verified until the new tests and full-game matrix pass.
+catalog regression-verified by the new mechanical gate; per-effect coverage and current research replay remain separate gates.
 
 ### Audited input and why a migration is required
 
@@ -48,7 +38,7 @@ active research provenance, R0, Sunlight parity, regression evidence scripts and
 current documentation now use `data/Round_Cards.csv`. Historical protected-baseline
 manifests and legacy documents retain the old path/hash as *archival evidence*.
 The new Surge/Swell effect text is authoritative and now maps to distinct
-mechanically implemented identities. Execution support is now installed for **NC-21 and NC-22**, pending Ubuntu regression and approval of NOW-1/2/4. Full Kotlin game execution with
+mechanically implemented identities. Execution support is now installed for **NC-21 and NC-22** and the November 13 full Kotlin suite passed; approval of NOW-1/2/4 and complete effect-case coverage remain open. Full Kotlin game execution with
 these revised CSVs is **not** claimed to pass until those tasks are complete.
 
 **Converter status:** All **17 previously unmatched exact texts** now map to deliberate
@@ -61,7 +51,7 @@ required implementation; as of this patch, **none remain in `CardEffectReadiness
 pending set; future incomplete identities must be added before simulation. This
 alone does **not** certify complete full-game correctness. The older
 effect aliases remain for historical inputs; they are not current-rule substitutes.
-The Kotlin test suite has not yet been run against this new patch on Ubuntu.
+The November 13 uploaded Kotlin mechanical suite subsequently PASSED; this previous implementation note is retained for chronology. See the top checkpoint for exact counts and limitations.
 
 New incoming SHA-256 fingerprints (record these in manifests, not as permanently hardcoded
 expected hashes):
@@ -143,19 +133,19 @@ without an explicit design decision.
   The replacement is rolled in Hand with normal Roll Rewards; in Battle it
   replaces the original die in the same open Grid Square. Updated action
   decisions, Human Baseline approximations, and focused tests. **UPGRADE-1/2
-  implemented PROVISIONALLY, not designer-approved**. Ubuntu regression and
+  implemented PROVISIONALLY, not designer-approved**. effect-specific review and
   full research review remain NC-25–27.
 - [x] **NC-06 — Root Appreciation (`Root_07_02`, cost 7).** Retain gain-1-Worm and stacking
   **+1 per Worm per activation this round**; add **"Battle: Playing a Worm costs no Support
   Action."** This is a Battle action-economy rule, not just a different Critter value.
   **Nov 12 implementation present:** permission and stacking effects in source;
-  focused and whole-game regressions remain NC-25/26.
+  focused and whole-game regressions are now mechanically verified under the November 13 gate; detailed effect-specific coverage remains NC-25.
 - [x] **NC-07 — Vine Yield (`Vine_07_04`, cost 7).** Replace flat Raise +1 with **Raise one die
   +1 per grafted Flower**. Count the correct current grafted cards (face-up/down as the rules
   define), choose and cap the target die, and verify both phases and Battle row legality.
   **Nov 13 implementation:** one chosen die gets the grafted-Flower count, including face-down
   grafts; executable decision contract, Battle projection and real-CSV test added.
-  Ubuntu Kotlin tests remain pending under NC-25/26.
+  November 13 Kotlin suites passed; individual effect-case coverage remains under NC-25.
 - [x] **NC-08 — Saplink Trellis (`Vine_09_03`, cost 9).** Execute one
   iteration per currently grafted Root/Vine, including spent cards. Each
   iteration chooses up to two **distinct** live owned dice with headroom,
@@ -169,7 +159,7 @@ without an explicit design decision.
 - [x] **NC-09 — Berry Tasty (`Vine_11_02`, cost 11).** Change **all owned D8s +1 → +2**,
   observing die-face cap, phase and Battle row constraints. Reuse the all-D8 mechanism with an
   explicit magnitude, not a card-name shortcut. **Implemented in Nov 13 patch** using a
-  shared magnitude-based D8 Raise with Battle locked-row safeguards; Ubuntu tests pending.
+  shared magnitude-based D8 Raise with Battle locked-row safeguards; November 13 full suites passed; dedicated balance/coverage review pending.
 - [x] **NC-10 — Rise and Vine (`Vine_11_03`, cost 11).** This ID was Saplink Trellis; it is now
   **Raise all your dice +2** (already a known effect) with incoming **2 VP**. Swap name,
   policy/scorer identity and effect semantics consistently with NC-08; update ID/title-based
@@ -185,12 +175,12 @@ without an explicit design decision.
   Vine/Flower** with **all your dice +1 for each grafted Vine or Flower**. Test per-die caps,
   card counting, repeated raises, filled/locked Battle rows and absence of dice.
   **Implemented in Nov 13 patch:** all eligible dice gain the capped Vines+Flowers amount;
-  current-face state and closed Battle rows are respected. Ubuntu tests pending.
+  current-face state and closed Battle rows are respected. November 13 full suites passed; dedicated balance/coverage review pending.
 - [x] **NC-13 — Someday Sunflower (`Flower_11_04`, cost 11).** This was Transplant Tulip;
   now **Gain 2 Sunlight**. Implement bounded Grove supply and ownership, add/verify
   provenance and a reusable count-based gain, and update old Transplant-specific decisions,
   scorer/market identity and tests. Test gaining 0/1/2 when supply is constrained.
-  **Nov 13 implementation:** Gaining two Sunlight uses repeated physical transfers, with per-token provenance; limited stock yields one token, empty stock makes the action unavailable. Scorer, decision contract and deterministic tests updated. Ubuntu Gradle pending NC-25/26.
+  **Nov 13 implementation:** Gaining two Sunlight uses repeated physical transfers, with per-token provenance; limited stock yields one token, empty stock makes the action unavailable. Scorer, decision contract and deterministic tests updated. November 13 full suites passed; deterministic effect-coverage review remains NC-25.
 - [x] **NC-14 — Bee-loved Bloom (`Flower_14_01`, cost 14).** Keep gain/steal one Bee and
   stacking **+2 Bee value per activation this round**; add **"Battle: Using a Bee costs no
   Support Action."** Cover stolen/placed Bees and same-round repeat activations.
@@ -198,7 +188,7 @@ without an explicit design decision.
   every higher opposing die in the same Strike** with **flip one of your dice; in Battle,
   flip one opponent's die**. Implement both chosen targets with valid face/opposite-face
   semantics, lock restrictions, no-reward rules and the phase-specific second step.
-  **Nov 13 implementation:** Own die is flipped in either phase; Battle also flips one selected opponent die from an unresolved row. Both selections prevalidated, with no roll rewards. **Provisional edge interpretation:** a D4 is not flippable (existing `Die.flip()`), and Battle requires both an own and an opposing flippable target. Confirm if desired behavior differs before full stress runs. Ubuntu Gradle pending NC-25/26.
+  **Nov 13 implementation:** Own die is flipped in either phase; Battle also flips one selected opponent die from an unresolved row. Both selections prevalidated, with no roll rewards. **Provisional edge interpretation:** a D4 is not flippable (existing `Die.flip()`), and Battle requires both an own and an opposing flippable target. Confirm if desired behavior differs before full stress runs. November 13 full suites passed; deterministic effect-coverage review remains NC-25.
 - [x] **NC-16 — Petal To Die 4 (`Flower_14_04`, cost 14).** Remove old gain-or-steal path;
   instead **gain a D4 and use it now**, then **discard any number of your D4s and draw the
   same number of dice**. Keep proper supply scarcity, draw order, Roll Rewards, exact dice
@@ -217,7 +207,7 @@ without an explicit design decision.
   existing exact-Discard-die recovery and roll pathway, with mandatory legal
   open-row Battle placement instead of silently falling back to Discard.
   Selection and valuation retain the old equivalent operation's logic. NOW-1/2
-  interpretations are provisional; full Kotlin acceptance remains NC-25/26.
+  interpretations are provisional; full Kotlin suite passed November 13 but effect-specific evidence remains NC-25/26.
 
 #### P2 — Wisp and Round mechanics (not secondary for correctness)
 
@@ -227,13 +217,13 @@ without an explicit design decision.
   supply/empty-hand behavior. Preserve its printed **2 end-game VP** if unplayed.
   **Nov 13: implemented targeted player choice and victim-owned selection,
   excluding the played Wisp from legal targets. WISP-1/2 remain PROPOSED,
-  not designer-approved, and Ubuntu tests remain outstanding.**
+  not designer-approved, and November 13 full Kotlin suites passed; effect-specific coverage and approval remain outstanding.**
 - [x] **NC-19 — Berry Patient (`Wisp_Award_VP2`).** Replace old **play for +1 VP** with
   **each player who has Wisps Trashes one**. Include self as the wording specifies, resolve
   simultaneous/ordered selection deterministically, and preserve printed **3 end-game VP**.
   **Nov 13: implemented as snapshot-based victim choices with atomic validation,
   source-card exclusion and ordinary played-card cleanup unchanged; WISP-2/3
-  interpretations remain PROPOSED until approved. Ubuntu tests pending.**
+  interpretations remain PROPOSED until approved. November 13 full suites passed; dedicated balance/coverage review pending.**
 - [x] **NC-20 — Wisp's Last Word (new ID `Wisps_Last_Word`).** Replace retired
   `Wisps_Resolve` identity and old `"Wisp's Resolve"` title with **"Wisp's Last Word"**:
   **immediately finish any unresolved Strike: Resolve → Doom → Cleanup**. Reuse the verified
@@ -244,9 +234,9 @@ without an explicit design decision.
   **Nov 13: current CSV identity was already mapped to the proven early-Strike
   coordinator. Active comments and synthetic scenarios now use Last Word; the
   `Wisps_Resolve` scorer alias remains intentionally for historical compatibility.
-  The actual effect semantics are unchanged; Ubuntu regression remains due.**
-- [x] **NC-21 — Round Surge, `Battle_Bloom_Surge`.** Official CSV: **"Gain up to a D12. Place in Discard."** Implemented bounded available-size choice from D4/D6/D8/D10/D12, with invalid-choice rejection before mutation, actual gained die tracked via `Moment.DieGained`, and no Roll Reward or Battle placement. D4 is selectable only if physically present in the Graft Bed; no available qualifying die makes the action unavailable. Human Baseline values the best available size's *future* discounted gain, not a fixed D12. Focused tests added; Ubuntu Gradle remains NC-25/26.
-- [x] **NC-22 — Round Swell, `Battle_Scatter_Swell`.** Official CSV: **"Gain up to a D8. Use it now."** Implemented available-size choice from D4/D6/D8, actual gain to Hand, normal roll and Roll Reward, and a legal player-chosen open Battle Square placement, with Chronicle row and provenance. Mandatory capacity precheck prevents full/closed/withdrawn placement; no silent Discard fallback. Human Baseline projects immediate Strike contribution and reward opportunities, not future Discard value. **Provisional NOW-1/2/4 semantics** require designer confirmation before trusting balance results; further audit is needed if an immediate Wisp changes row availability between the Roll Reward and placement. The official CSV's Swell image/icon still depict D12/D10; this is a card-layout issue, not mechanics. Focused tests added; Ubuntu Gradle remains NC-25/26.
+  The actual effect semantics are unchanged; November 13 regression suites passed; approval/coverage review remains open.**
+- [x] **NC-21 — Round Surge, `Battle_Bloom_Surge`.** Official CSV: **"Gain up to a D12. Place in Discard."** Implemented bounded available-size choice from D4/D6/D8/D10/D12, with invalid-choice rejection before mutation, actual gained die tracked via `Moment.DieGained`, and no Roll Reward or Battle placement. D4 is selectable only if physically present in the Graft Bed; no available qualifying die makes the action unavailable. Human Baseline values the best available size's *future* discounted gain, not a fixed D12. Focused tests added; November 13 full suites passed; deterministic effect-coverage review remains NC-25.
+- [x] **NC-22 — Round Swell, `Battle_Scatter_Swell`.** Official CSV: **"Gain up to a D8. Use it now."** Implemented available-size choice from D4/D6/D8, actual gain to Hand, normal roll and Roll Reward, and a legal player-chosen open Battle Square placement, with Chronicle row and provenance. Mandatory capacity precheck prevents full/closed/withdrawn placement; no silent Discard fallback. Human Baseline projects immediate Strike contribution and reward opportunities, not future Discard value. **Provisional NOW-1/2/4 semantics** require designer confirmation before trusting balance results; further audit is needed if an immediate Wisp changes row availability between the Roll Reward and placement. The official CSV's Swell image/icon still depict D12/D10; this is a card-layout issue, not mechanics. Focused tests added; November 13 full suites passed; deterministic effect-coverage review remains NC-25.
 
 #### P3 — Cross-cutting scheduling, decisions, and regressions
 
@@ -261,10 +251,9 @@ without an explicit design decision.
   **PARTIAL Nov 13:** the Three Engagements scheduler already distinguishes paid/free Support slots,
   includes finite-resource guards and telemetry. The engagement continuation policy now also
   accounts for *free* Bee/Butterfly capacity in combined tactical reachability, rather than
-  treating all physical moves as paid. Focused cost/reachability tests were added (Ubuntu execution
-  pending). The legacy whole-Battle scheduler remains intentionally unbounded for historical
+  treating all physical moves as paid. Focused cost/reachability tests were added (verified by November 13 mechanical gate). The legacy whole-Battle scheduler remains intentionally unbounded for historical
   comparison; its free permissions must not be represented as the v38 two-paid-slot rule.
-  End-to-end policy/infinite-loop/telemetry coverage and full tests remain NC-23/25/26 work.
+  November 13 regression suites passed, including free-Support tests. End-to-end policy/infinite-loop/telemetry coverage remains NC-23/24/25 work.
 - [ ] **NC-24 — Update legal choices, strategy/policy valuation, and reports.** Audit
   `GameEffectDecisionRequirements`, family handlers, Human Baseline Plant/Wisp/Round scorers,
   `BattleRoundEffectPriority`, multi-die target strategy, learned/frozen effect features,
@@ -286,25 +275,25 @@ without an explicit design decision.
   two paid slots and battle cleanup; new BattleSupportActionCostTest and
   EngagementSupportContinuationTest cases cover paid-versus-free classification and
   cumulative reachability with 0/1 paid slots. Catalog structural audit passes, but
-  deterministic effect coverage is not yet complete or Gradle-verified.
+  the November 13 Gradle suite has passed, but deterministic effect-case coverage remains incomplete.
 - [ ] **NC-26 — Run full v38 and research smoke gates on new definitions.** Execute focused
   new tests, `./gradlew test integrationTest simulationTest`, and the verified deterministic
   2/3/4-player × THREE_ENGAGEMENTS/LEGACY_WHOLE_BATTLE full-game 3/2/2 matrix. Then run
   **two structurally different revised-card questions** through the generic v38 runner,
   checking actual activation, suppressed-effect zero output, policy scope, provenance,
   resumability and report completeness. These are functional checks, **not balance verdicts**.
-  **READY TO RUN ON UBUNTU, NOT YET PASSED:** `bash bin/verify_current_card_mechanics`
+  **PASS on the uploaded November 13 Ubuntu run:** `bash bin/verify_current_card_mechanics`
   performs one read-only catalog audit followed by a *single Gradle invocation* of the
   three test suites (including the existing v38 2/3/4-player dual-engine matrix),
   and exports logs, JUnit XML and the catalog manifest as one verified `.tgz` in
-  `~/Downloads`. This does **not** replace the two generic research-question smoke tests.
+  `~/Downloads`. The uploaded results include 1,807 unit, 88 integration and 253 simulation cases passing, with one skipped long-memory test. This does **not** replace the two generic research-question smoke tests; run `python3 bin/verify_current_card_research_readiness.py --run --mechanical-archive PATH` for that separate gate.
 - [ ] **NC-27 — Rebaseline provenance, update handoff and release in small patches.** Make the
   question runner, manifest, official CSV hash collection and `data/README.md` identify the
   new Round path and all four canonical catalogs; flag archived results/policy weights as
   historical. Keep experimental overrides opt-in, and update the known-effect catalog,
   documentation, `TASKS.md` statuses and repeatable Ubuntu commands. Provide changed-files
   ZIPs whose paths are relative to `leaf/`, a Git commit message per increment and verified failure evidence.
-  **PARTIAL Nov 13:** canonical catalog audit and current acceptance launcher are maintained;
+  **PARTIAL Nov 13:** canonical catalog audit and current acceptance launcher are maintained; the new `bin/verify_current_card_research_readiness.py` checks mechanical artifacts, ruleset provenance and the existing two-card v38 pilot evidence in a single upload-ready bundle (Ubuntu pilot not yet run);
   README's obsolete `16 unimplemented` description is corrected. No old result or policy
   weights have been re-fingerprinted. Keep historical results separate from new runs.
 
@@ -326,7 +315,7 @@ interpretations and must be approved before validity claims. It does **not** cha
 not yet approved interpretations, the v38 Battle schedule, or protected policy weights.
 The current archive has no `.git` metadata and Gradle 8.13 is not available in this execution
 environment, so the new Kotlin tests are **authored but not run**. Completing all NC-05–NC-24
-and proving full-game/research parity under NC-25/26 is mandatory before labeling any of the
+and proving effect-level/research parity under NC-25/26 is mandatory before labeling any of the
 36 effects balanced or launching an overnight full-catalog study.
 
 ---
