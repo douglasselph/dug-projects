@@ -1,6 +1,6 @@
 # Leaf & Let Die - Active Research and Engineering Tasks
 
-**Status date:** November 13, 2026 — FREE Support, revised Raise, NC-13/NC-15 Plant mechanics present. This increment implements revised Wisp of Honor/Berry Patient mechanics (NC-18/19), and NC-20 current-identity cleanup. WISP-1–3 interpretations remain PROPOSED; Ubuntu Kotlin regressions have not been run.
+**Status date:** November 13, 2026 — FREE Support, revised Raise, NC-13/NC-15 Plants and NC-18–20 Wisps present. This increment implements bounded Battle Round gains (NC-21 Surge / NC-22 Swell). NOW-1/2/4 interpretations remain PROPOSED; Ubuntu Kotlin regressions have not been run.
 
 This is the **active top-level backlog**. It is intentionally shorter than the many historical phase/checkpoint documents under `doc/`.
 
@@ -8,7 +8,7 @@ A historical task ID appearing in an older document does **not** mean that task 
 
 ## NEXT ACTIVE PROGRAM — November 5 authoritative CSV integration (NC-01–NC-27)
 
-**Status: NC-01–NC-03 recognized/verified. FREE-1–4 of NC-04 authorized and their NC-06/11/14 core effects installed; FREE-action scheduler implementation present but full engine validation (NC-23/25/26) remains open. November 13 increments implement NC-07, NC-09, NC-10 and NC-12 Raise behavior, plus NC-13 Sunlight and NC-15 die flips with decision contracts and focused tests. November 13 Wisp increment adds NC-18/19 mechanics and refreshes NC-20 current identity references; these are conditional on approval of the WISP-1–3 interpretations. All need Ubuntu Kotlin test execution before full-game evidence. NC-05 and NC-08 require designer rulings, and other remaining NC mechanics are open.** This section was originally prepared by comparing the newly attached
+**Status: NC-01–NC-03 recognized/verified. FREE-1–4 of NC-04 authorized and their NC-06/11/14 core effects installed; FREE-action scheduler implementation present but full engine validation (NC-23/25/26) remains open. November 13 increments implement NC-07, NC-09, NC-10 and NC-12 Raise behavior, plus NC-13 Sunlight and NC-15 die flips with decision contracts and focused tests. November 13 Wisp increment adds NC-18/19 mechanics and refreshes NC-20 current identity references; these are conditional on approval of the WISP-1–3 interpretations. All need Ubuntu Kotlin test execution before full-game evidence. NC-21/22 bounded Round gain mechanics are newly installed, subject to NOW-1/2/4 approval and Ubuntu tests; only four effect identities remain pending (NC-05/08/16/17). NC-05 and NC-08 require designer rulings, and other remaining NC mechanics are open.** This section was originally prepared by comparing the newly attached
 `leaf(20261105-234756).tgz` with `leaf(20261105-234502).tgz`, and checking the then-current Kotlin
 converter, registry, action scheduler, effect handlers, policy references, and selected tests.
 The user has designated the newly supplied files under `data/` as **the new card source of truth**.
@@ -36,7 +36,7 @@ active research provenance, R0, Sunlight parity, regression evidence scripts and
 current documentation now use `data/Round_Cards.csv`. Historical protected-baseline
 manifests and legacy documents retain the old path/hash as *archival evidence*.
 The new Surge/Swell effect text is authoritative and is now converted to distinct pending
-mechanical identities. Execution support remains outstanding in **NC-21 and NC-22**. Full Kotlin game execution with
+mechanical identities. Execution support is now installed for **NC-21 and NC-22**, pending Ubuntu regression and approval of NOW-1/2/4. Full Kotlin game execution with
 these revised CSVs is **not** claimed to pass until those tasks are complete.
 
 **Converter status:** All **17 previously unmatched exact texts** now map to deliberate
@@ -44,7 +44,7 @@ these revised CSVs is **not** claimed to pass until those tasks are complete.
 resolver for Wisp's Last Word). All **72 official effect cells** across the 60 CSV
 card definitions were recognized in an independently compiled Kotlin converter
 smoke check; no `UNKNOWN` was encountered. Originally 16 newly recognized behaviors
-required implementation; as of this patch, **6 remain in `CardEffectReadiness.pending`**.
+required implementation; as of this patch, **4 remain in `CardEffectReadiness.pending`**.
 `CardEffectReadiness` explicitly rejects those effects and prevents
 full-game research from proceeding with incomplete selected decks. The older
 effect aliases remain for historical inputs; they are not current-rule substitutes.
@@ -214,15 +214,8 @@ without an explicit design decision.
   coordinator. Active comments and synthetic scenarios now use Last Word; the
   `Wisps_Resolve` scorer alias remains intentionally for historical compatibility.
   The actual effect semantics are unchanged; Ubuntu regression remains due.**
-- [ ] **NC-21 — Round Surge, `Battle_Bloom_Surge`.** In new `Round_Cards.csv`, Surge is
-  **"Gain up to a D12. Place in Discard."**, not fixed D12. Add legal die-size selection
-  from available D4/D6/D8/D10/D12 as defined, handle zero available supply and record actual
-  gained type. Do not silently map to `GAIN_D12_TO_DISCARD`.
-- [ ] **NC-22 — Round Swell, `Battle_Scatter_Swell`.** It is now
-  **"Gain up to a D8. Use it now."**, replacing fixed **D10 to Discard**. Add legal
-  die-size selection and immediate Battle placement/roll/rewards without exceeding a Strike
-  Square's 3-die capacity or changing locked rows. Its incoming image/icon fields still
-  refer to D12/D10: **flag for card-layout correction**, not a simulator assumption.
+- [x] **NC-21 — Round Surge, `Battle_Bloom_Surge`.** Official CSV: **"Gain up to a D12. Place in Discard."** Implemented bounded available-size choice from D4/D6/D8/D10/D12, with invalid-choice rejection before mutation, actual gained die tracked via `Moment.DieGained`, and no Roll Reward or Battle placement. D4 is selectable only if physically present in the Graft Bed; no available qualifying die makes the action unavailable. Human Baseline values the best available size's *future* discounted gain, not a fixed D12. Focused tests added; Ubuntu Gradle remains NC-25/26.
+- [x] **NC-22 — Round Swell, `Battle_Scatter_Swell`.** Official CSV: **"Gain up to a D8. Use it now."** Implemented available-size choice from D4/D6/D8, actual gain to Hand, normal roll and Roll Reward, and a legal player-chosen open Battle Square placement, with Chronicle row and provenance. Mandatory capacity precheck prevents full/closed/withdrawn placement; no silent Discard fallback. Human Baseline projects immediate Strike contribution and reward opportunities, not future Discard value. **Provisional NOW-1/2/4 semantics** require designer confirmation before trusting balance results; further audit is needed if an immediate Wisp changes row availability between the Roll Reward and placement. The official CSV's Swell image/icon still depict D12/D10; this is a card-layout issue, not mechanics. Focused tests added; Ubuntu Gradle remains NC-25/26.
 
 #### P3 — Cross-cutting scheduling, decisions, and regressions
 
@@ -273,9 +266,10 @@ rewrite or multi-hour balance run now.
 **Current scope (Nov 13):** canonical catalog routing and strict conversion are implemented.
 The FREE-action increment is present in this archive. The accompanying new Raise patch implements
 NC-07/09/10/12, including decision requirements, Human Baseline scoring, Battle tactical
-projections, and focused tests against the actual CSVs. The present Wisp increment
-adds NC-18/19 choices, baseline score updates, and NC-20 name cleanup, reducing
-mechanically pending identities to six. WISP-1–3 are implemented as provisional
+projections, and focused tests against the actual CSVs. The Wisp increment adds NC-18/19 choices, baseline score updates, and NC-20 name cleanup.
+This new Round increment adds NC-21/22 bounded die-size choice, Surge Discard gain,
+Swell immediate-use Battle roll and placement, policy scoring, and tests; four Plant
+mechanical identities remain pending. WISP-1–3 and NOW-1/2/4 are implemented as provisional
 interpretations and must be approved before validity claims. It does **not** change official CSV files,
 not yet approved interpretations, the v38 Battle schedule, or protected policy weights.
 The current archive has no `.git` metadata and Gradle 8.13 is not available in this execution

@@ -72,6 +72,8 @@ assumptions have also been replaced.
 
 ### NOW — 'Use it now' and Battle capacity
 
+**Implementation status (November 13):** NC-21 Surge and NC-22 Swell use the proposed NOW-1/2/4 semantics, with real Graft Bed size selection, an actual die movement, Roll Rewards for Swell and closed/full-row restrictions. These remain **PROPOSED**, not approved card rules. An edge case for follow-up NC-25/26: an immediate Wisp triggered by Swell's roll can change Strike availability before the newly rolled die is placed; test/settle that ordering before claiming complete full-game parity.
+
 **Cards:** Petal To Die 4 (`zFlower_14_04`), Forget-Me-Not (`zFlower_17_02`), Swell (`Battle_Scatter_Swell`), Root Awakening (`Root_07_01`).
 
 - **NOW-1 — PROPOSED:** For a die gained from the Grove or selected from Discard, 'Use it now' means **move it into the player's current Dice Hand, roll it once, award normal Roll Rewards, and retain the rolled result for current use**. During Cultivation it remains in Hand for Build/Buy; during Battle it must also be placed into an **open Strike Square with room**, chosen legally by the player. It does not jump automatically to Discard. This differs from replacing a die in place (Root Awakening), which needs no additional square capacity.

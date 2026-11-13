@@ -7,6 +7,7 @@ import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase
 import dugsolutions.leaf.v35.chronicle.domain.EffectSourceKind
 import dugsolutions.leaf.v35.chronicle.domain.Moment
+import dugsolutions.leaf.v35.effect.handler.BoundedDieGainEffectHandler
 import dugsolutions.leaf.v35.effect.handler.CrossPlayerEffectHandler
 import dugsolutions.leaf.v35.effect.handler.DieValueEffectHandler
 import dugsolutions.leaf.v35.effect.handler.DeferredRoundEffectHandler
@@ -41,6 +42,7 @@ class DefaultGameEffectExecutor(
     private val dieValueEffects: EffectHandler = DieValueEffectHandler(),
     private val drawEffects: EffectHandler = DrawEffectHandler(),
     private val resourceEffects: EffectHandler = ResourceEffectHandler(),
+    private val boundedDieGainEffects: EffectHandler = BoundedDieGainEffectHandler(),
     private val crossPlayerEffects: EffectHandler = CrossPlayerEffectHandler(),
     private val upgradeEffects: EffectHandler = UpgradeEffectHandler(),
     private val vineAndDineEffect: EffectHandler = VineAndDineEffect(),
@@ -219,6 +221,10 @@ class DefaultGameEffectExecutor(
             GameEffect.MULCH_DIE_FROM_DISCARD,
             GameEffect.MULCH_DIE_FROM_HAND ->
                 resourceEffects
+
+            GameEffect.GAIN_UP_TO_D12_TO_DISCARD,
+            GameEffect.GAIN_UP_TO_D8_AND_USE_NOW ->
+                boundedDieGainEffects
 
             GameEffect.GAIN_WATER_AND_SPEND_1_TO_REROLL_TWO_OWN_OR_ONE_OPPONENT_BATTLE_DIE,
             GameEffect.SWAP_OWN_DIE_WITH_OPPONENT_SAME_SIZE ->

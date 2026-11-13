@@ -15,8 +15,7 @@ object CardEffectReadiness {
         GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE,
         GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S,
         GameEffect.USE_DIE_FROM_DISCARD_NOW,
-        GameEffect.GAIN_UP_TO_D12_TO_DISCARD,
-        GameEffect.GAIN_UP_TO_D8_AND_USE_NOW
+        // NC-21/22 bounded Round die gains are now implemented.
     )
 
     /**

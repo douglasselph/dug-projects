@@ -69,9 +69,7 @@ object GameEffectDecisionRequirements {
             GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW,
             GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE,
             GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S,
-            GameEffect.USE_DIE_FROM_DISCARD_NOW,
-            GameEffect.GAIN_UP_TO_D12_TO_DISCARD,
-            GameEffect.GAIN_UP_TO_D8_AND_USE_NOW -> null // Retired or recognized-but-pending; never fabricate a legal decision
+            GameEffect.USE_DIE_FROM_DISCARD_NOW -> null // Retired or recognized-but-pending; never fabricate a legal decision
             GameEffect.RESEARCH_NO_EFFECT -> same()
 
             GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
@@ -160,8 +158,18 @@ object GameEffectDecisionRequirements {
                     battle = setOf(EffectDecisionMechanism.EFFECT_OPPONENT_PLANT_WOUND)
                 )
 
-            GameEffect.GAIN_ANY_DIE_TO_DISCARD ->
+            GameEffect.GAIN_ANY_DIE_TO_DISCARD,
+            GameEffect.GAIN_UP_TO_D12_TO_DISCARD ->
                 same(EffectDecisionMechanism.EFFECT_DIE_SIZE)
+
+            GameEffect.GAIN_UP_TO_D8_AND_USE_NOW ->
+                phased(
+                    cultivation = emptySet(),
+                    battle = setOf(
+                        EffectDecisionMechanism.EFFECT_DIE_SIZE,
+                        EffectDecisionMechanism.BATTLE_DIE_PLACEMENT
+                    )
+                )
 
             GameEffect.GAIN_ANY_TWO_CRITTERS ->
                 same(EffectDecisionMechanism.REWARD_CRITTER)
