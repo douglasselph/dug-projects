@@ -112,6 +112,15 @@ controlled card-question smoke tests, followed by targeted A2/A3/A4 balance rese
 
 ## Current v38 effect-sensitivity calibration (A2 diagnostic pilot)
 
+The first uploaded A2 experiment (`leaf-v38-effect-sensitivity-20261113-135015.tgz`)
+was **FAIL_INCOMPLETE**, not an effect-balance result: official Root Four More
+discovery/held-out evaluation succeeded, but the frozen-comparison wrapper
+assumed its output root contained only one historical R3A result directory.
+The wrapper now uses current manifest/ruleset/source/catalog/settings matching
+to select the intended run without deleting history; the adapted and 36-card
+index callers use the same selector. The actual four-control A2 experiment must
+still be rerun on Ubuntu before any sensitivity or balance conclusions.
+
 The green mechanical test suite does **not** prove effect-balance sensitivity. The
 November 13 research-readiness attempts uploaded as `133054` and `133105` both stopped
 before running games because the path to the earlier mechanical PASS archive did not

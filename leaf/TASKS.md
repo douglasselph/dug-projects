@@ -2,6 +2,8 @@
 
 **Status date:** November 13, 2026 — all revised official effect identities now have implementation routes (`CardEffectReadiness.pending` is empty), but individual card-effect balance is not certified. **NC-25/26 mechanical gate PASS:** the newly uploaded `leaf-current-card-mechanics-20261113-131420.tgz` records 1,807 passed `test`, 88 passed `integrationTest`, and 253 passed `simulationTest` cases (one additional simulation test skipped). It includes the previously repaired integration tests, and its official catalog fingerprint is `1c3ae395d2c24db6db70954b7d81b15b1f4ee6afcec8eb31c0e5a3b12c808ea9`. HEAD at test was `c726183563828c8a580d8dd4e2f9372e8a21965f`; working tree was recorded dirty/unknown. This confirms the regression stage, not full deterministic coverage of every effect, clean source parity or balanced cards.
 
+**A2 calibration attempt, November 13 (`leaf-v38-effect-sensitivity-20261113-135015.tgz`): FAIL_INCOMPLETE.** The v38 official Root Four More R3A training and held-out evaluation completed, but the paired wrapper stopped before suppressed/positive-control comparisons because it counted **two historical fingerprinted directories** and required one. The current changeset fixes this by matching a run's R3A manifest to the current question, Grove, Battle ruleset, source/launcher digests, official CSV/research digests, and training/evaluation settings. It also updates the adapted-countersearch and all-card screening callers, so research history may safely coexist. Python selection tests pass; **the actual four-condition A2 calibration has not yet completed and must be rerun on Ubuntu** before assessing effect sensitivity. Do not advance to 36-Plant balance verdicts based on this failed run.
+
 **NC-27 research follow-up:** `bin/verify_current_card_research_readiness.py` now validates the mechanical evidence against current CSVs and JUnit XML, then optionally executes/validates the existing two-question v38 pilot (Root Four More and Sapping Snapdragon) through the *existing* compile-once, isolated-process runner. It requires actual official effect exercise and enforces provenance, suppression and pairing through the evidence reader. This new gate has Python/unit and plan-only preflight verification; **the Kotlin question pilot has NOT yet been rerun on the November 13 source**. See `doc/research/experiments/card-balance/CURRENT_CARD_RESEARCH_READINESS.md`. NC-24, complete NC-25 effect coverage, the NC-26 current research pilot and A2 sensitivity remain open.
 
 This is the **active top-level backlog**. It is intentionally shorter than the many historical phase/checkpoint documents under `doc/`.
@@ -541,7 +543,7 @@ After the vertical slice passes:
 
 **Status:** PARTIAL / OPEN.
 
-**November 13 current-v38 sensitivity increment (implementation ready, Ubuntu run pending):**
+**November 13 current-v38 sensitivity increment (first Ubuntu attempt incomplete; historical-result selector corrected):**
 `bin/verify_v38_effect_sensitivity.py` reuses the existing Root Four More question,
 R3A official discovery, the target-seat suppressed comparison, and isolated frozen-policy
 evaluations for `RESEARCH_RAISE_DIE_PLUS_20` and `RESEARCH_GAIN_TWENTY_VP`.
@@ -549,7 +551,7 @@ It checks unchanged control matchup, aligned seeds/seats, exact +20 VP per actua
 zero suppressed mechanical output, and whether the non-VP exaggerated Raise actually
 produced raised pips under physical caps. It reports paired win/VP/Strike-VP differences
 with exploratory intervals and explicitly **does not** certify outcome sensitivity or card balance.
-Nine new Python checks passed locally; full Kotlin/Java calibration is **NOT YET RUN**.
+The official Kotlin/Java cohort ran, but the wrapper failed before the disabled and exaggerated evaluations because it saw multiple historical result manifests. New manifest-matched selection tests pass; the full four-condition calibration remains **NOT COMPLETE**.
 The two uploaded research-readiness attempts (`133054`, `133105`) both failed before
 launch because the specified mechanical `.tgz` did not exist at the Ubuntu path; rerun
 or restore the PASS mechanical archive and execute this pilot on Ubuntu.
@@ -572,6 +574,12 @@ Do not solve this by hardcoding special intelligence for every experimental card
 ### A3 - Run the 36-Plant effect sanity audit
 
 **Status:** BLOCKED on A1/A2 being credible enough; not yet a completed all-card study.
+**Before A3 execution:** `bin/plant_catalog_screen.py` still defaults to the historical
+`root-four-more.json` question template (`LEGACY_WHOLE_BATTLE`). Select and validate
+an explicit current-v38 `THREE_ENGAGEMENTS` template, suitable learning budgets,
+and current official fingerprints before launching any all-36 catalog run.
+The manifest-selection fix is research plumbing, not authorization to run
+that historical default as a current-rules balance study.
 
 For each current Plant:
 

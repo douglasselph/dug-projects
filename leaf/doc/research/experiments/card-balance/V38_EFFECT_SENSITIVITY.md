@@ -1,7 +1,12 @@
 # V38 Root Four More — effect-sensitivity calibration (A2, first slice)
 
-**Status:** New Python runner and preflight tested November 13, 2026. **No new Kotlin
-research cohort has yet been run. No balance verdict.**
+**Status:** First November 13 Ubuntu attempt (`leaf-v38-effect-sensitivity-20261113-135015.tgz`)
+was **FAIL_INCOMPLETE**. Official R3A Root Four More Buy training and held-out
+comparison executed; the wrapper then failed selecting the current output because
+a historical R3A output directory was also present. The selection code has now
+been corrected to use exact current manifests and fingerprints, not directory
+count or modification times. The suppressed, Raise +20, and +20 VP controls have
+**not yet been jointly verified**. No sensitivity or balance verdict. **
 
 ## Why
 
@@ -20,6 +25,19 @@ was a file-input failure **before** any new card-question run, not a rules failu
 The original passing mechanical archive is still valid evidence of the
 particular checkout and CSVs it tested, but changes to Git HEAD require a new
 verification run.
+
+## Historical result selection (November 13 fix)
+
+R3A intentionally creates a separate hashed directory for each unique input
+manifest. Multiple directories under an experiment's output root are normal
+after changes to source or study settings. `plant_question_pair.py` and callers
+now require the **current** manifest: same planned nine-card Grove and target,
+source and R3A launcher digests, authoritative CSV and research-input hashes,
+ruleset provenance, and specified seeds/training budget. Matching zero or
+multiple current manifests is an explicit error; no stale or arbitrarily newest
+run is selected. Existing valid checkpoints remain resumable. The same selector
+is used by `plant_question_adapt.py` and the exploratory `plant_catalog_screen.py`
+index, whose output-root lookup also follows the current Battle structure.
 
 ## Run on Ubuntu from `leaf/`
 
