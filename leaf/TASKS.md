@@ -541,6 +541,20 @@ After the vertical slice passes:
 
 **Status:** PARTIAL / OPEN.
 
+**November 13 current-v38 sensitivity increment (implementation ready, Ubuntu run pending):**
+`bin/verify_v38_effect_sensitivity.py` reuses the existing Root Four More question,
+R3A official discovery, the target-seat suppressed comparison, and isolated frozen-policy
+evaluations for `RESEARCH_RAISE_DIE_PLUS_20` and `RESEARCH_GAIN_TWENTY_VP`.
+It checks unchanged control matchup, aligned seeds/seats, exact +20 VP per actual resolution,
+zero suppressed mechanical output, and whether the non-VP exaggerated Raise actually
+produced raised pips under physical caps. It reports paired win/VP/Strike-VP differences
+with exploratory intervals and explicitly **does not** certify outcome sensitivity or card balance.
+Nine new Python checks passed locally; full Kotlin/Java calibration is **NOT YET RUN**.
+The two uploaded research-readiness attempts (`133054`, `133105`) both failed before
+launch because the specified mechanical `.tgz` did not exist at the Ubuntu path; rerun
+or restore the PASS mechanical archive and execute this pilot on Ubuntu.
+See `doc/research/experiments/card-balance/V38_EFFECT_SENSITIVITY.md`.
+
 R3B.1 established important mechanical isolation and sensitivity controls, including no-effect and +20-VP controls. R3B.1a then made Human Baseline effect-aware for the simple calibration controls (no-op, +20 VP, Raise +20 and Draw 4). Those increments still do **not** prove that arbitrary effects, multi-card synergies or long-horizon strategies are evaluated/exploited as strongly as a capable player could exploit them.
 
 Required before strong all-card conclusions:

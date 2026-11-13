@@ -110,6 +110,36 @@ to `~/Downloads`, even when tests fail. A successful run establishes **mechanica
 readiness only**, not that any of the 36 Plants is balanced. The next gates are two distinct
 controlled card-question smoke tests, followed by targeted A2/A3/A4 balance research.
 
+## Current v38 effect-sensitivity calibration (A2 diagnostic pilot)
+
+The green mechanical test suite does **not** prove effect-balance sensitivity. The
+November 13 research-readiness attempts uploaded as `133054` and `133105` both stopped
+before running games because the path to the earlier mechanical PASS archive did not
+exist in `~/Downloads` on Ubuntu. Restore a PASS archive there (or rerun
+`bash bin/verify_current_card_mechanics`) before running acceptance experiments.
+
+For a first **mechanically measured, seat-isolated** A2 pilot:
+
+```bash
+python3 bin/verify_v38_effect_sensitivity.py --plan
+python3 bin/verify_v38_effect_sensitivity.py --run \
+  --mechanical-archive ~/Downloads/leaf-current-card-mechanics-20261113-131420.tgz
+```
+
+The second command requires that exact file to exist and still match the current
+Git HEAD and official catalogs. If it does not, rerun the mechanical gate and
+replace the path with its newly printed `UPLOAD THIS FILE:` location. The A2
+launcher compiles once, then runs the established frozen Buy-policy comparisons in
+isolated Java processes and packages a single `.tgz` in `~/Downloads` even on failure.
+
+It compares official Root Four More, disabled, Raise +20 (capped), and +20 immediate
+VP; measures **actual** effect resolutions, pips and VP, and records matched outcome
+differences. This is a tiny two-player one-Grove **calibration check**, not an
+all-36-card balance result or an assertion that Raise +20 must increase winning.
+See [`V38_EFFECT_SENSITIVITY.md`](doc/research/experiments/card-balance/V38_EFFECT_SENSITIVITY.md).
+
+---
+
 ## Historical simulator baseline - November 4, 2026
 
 ### Operational simulator
