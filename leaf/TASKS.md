@@ -2,6 +2,18 @@
 
 **Status date:** November 13, 2026 — all revised official effect identities now have implementation routes (`CardEffectReadiness.pending` is empty), but mechanics/balance are not certified. **NC-23/24 verification increment:** the v38 Engagement continuation policy now counts granted free Bee/Butterfly moves correctly when evaluating combinations after the two paid Support slots have been used. Focused cost/reachability regressions and a one-command `bin/verify_current_card_mechanics` acceptance gate have been added. The Python official catalog audit passes; Kotlin/Gradle/full-game acceptance, remaining policy audits, research scenarios and NC-04 designer approvals are **not yet verified**.
 
+**NC-25/26 verification checkpoint (November 13):** The uploaded
+`leaf-current-card-mechanics-20261113-125720.tgz` reports a passing official
+CSV catalog audit and successful `test` and `simulationTest` stages, but the
+combined mechanical gate **FAILED at `integrationTest`**. Four failures
+were stale integration expectations: the retired `Wisps_Resolve` ID, the old
+Wisp of Honor +1 VP play effect, obsolete Transplant Tulip, and older Plant
+effect enum names in the CSV contract test. The four corresponding integration
+tests have been corrected against the November 13 official catalog. **The fixes have not yet been rerun on
+Ubuntu; NC-25 and NC-26 remain OPEN** until the full gate passes and the
+remaining coverage/behavioral questions are checked. The Git HEAD recorded
+in that run was `c726183563828c8a580d8dd4e2f9372e8a21965f`.
+
 This is the **active top-level backlog**. It is intentionally shorter than the many historical phase/checkpoint documents under `doc/`.
 
 A historical task ID appearing in an older document does **not** mean that task is still open. Inspect current source/tests/results, then use this file as the current prioritization unless the user explicitly changes it.

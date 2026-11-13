@@ -125,11 +125,23 @@ class CardEffectContractTest {
             // CSV catalog: it also contains retired mechanics and controlled
             // Petal/Sapping research variants. Do not require enum equality.
             val officialExamples = mapOf(
-                "Root Appreciation" to GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND,
+                // November 2026 official definitions. The deprecated alternatives
+                // remain in GameEffect only for historical research/replay.
+                "Root Awakening" to GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW,
+                "Root Appreciation" to GameEffect.GAIN_WORM_BOOST_AND_FREE_BATTLE_SUPPORT,
                 "Root Down Payment" to GameEffect.GAIN_VP_PER_ONE_SHOWING,
-                "Bee-loved Bloom" to GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND,
+                "Vine Yield" to GameEffect.RAISE_ONE_DIE_PLUS_1_PER_GRAFTED_FLOWER,
+                "Saplink Trellis" to GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE,
+                "Berry Tasty" to GameEffect.RAISE_ALL_D8S_PLUS_2,
+                "Rise and Vine" to GameEffect.RAISE_ALL_DICE_PLUS_2,
                 "Vine and Punishment" to GameEffect.REROLL_DIE_ON_3_DRAW_ONE_CULTIVATION_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3,
-                "Petal To Die 4" to GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW,
+                "Alluring Nectar" to GameEffect.GAIN_OR_STEAL_BUTTERFLY_REFRESH_AND_FREE_BATTLE_SUPPORT,
+                "Bloom Backbone" to GameEffect.RAISE_ALL_DICE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
+                "Someday Sunflower" to GameEffect.GAIN_TWO_SUNLIGHT_TOKENS,
+                "Bee-loved Bloom" to GameEffect.GAIN_OR_STEAL_BEE_BOOST_AND_FREE_BATTLE_SUPPORT,
+                "Bloom Backflip" to GameEffect.FLIP_OWN_DIE_AND_OPPONENT_DIE_IN_BATTLE,
+                "Petal To Die 4" to GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S,
+                "Forget-Me-Not" to GameEffect.USE_DIE_FROM_DISCARD_NOW,
                 "Sapping Snapdragon" to GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
                 "O Edelweiss" to GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE
             )
@@ -138,6 +150,29 @@ class CardEffectContractTest {
                 assertEquals(expected, card.effect, "Official effect for $title")
                 assertTrue(expected in loaded, "$title is absent from the loaded effect catalog")
             }
+            // Wisp and Battle Round titles/IDs are intentionally stable even
+            // when their printed effect is revised. Guard those mappings too.
+            val officialWisps = mapOf(
+                "Wisp_Award_VP" to GameEffect.CHOOSE_PLAYER_WITH_WISPS_TRASH_ONE,
+                "Wisp_Award_VP2" to GameEffect.EACH_PLAYER_WITH_WISPS_TRASH_ONE,
+                "Wisps_Last_Word" to GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW
+            )
+            officialWisps.forEach { (id, expected) ->
+                val card = harness.catalog.requireWisp(id)
+                assertEquals(expected, card.effect, "Official effect for Wisp $id")
+                assertTrue(expected in loaded, "$id is absent from the loaded effect catalog")
+            }
+
+            val officialBattleRoundSeconds = mapOf(
+                "Battle_Bloom_Surge" to GameEffect.GAIN_UP_TO_D12_TO_DISCARD,
+                "Battle_Scatter_Swell" to GameEffect.GAIN_UP_TO_D8_AND_USE_NOW
+            )
+            officialBattleRoundSeconds.forEach { (id, expected) ->
+                val card = harness.catalog.requireRound(id)
+                assertEquals(expected, card.secondEffect.effect, "Official second effect for Round $id")
+                assertTrue(expected in loaded, "$id is absent from the loaded effect catalog")
+            }
+
             assertTrue(GameEffect.UNKNOWN !in loaded)
             assertTrue(
                 GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW !in loaded,

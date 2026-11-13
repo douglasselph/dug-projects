@@ -72,21 +72,23 @@ class EffectFamilySanityTest {
     }
 
     @Test
-    fun `current Transplant Tulip draws one die during Cultivation without discarding`() {
+    fun `current Queens Blossom draws two dice during Cultivation without discarding`() {
         val p1 = ScriptedDecisionDirector()
         val p2 = ScriptedDecisionDirector().apply { finishBuildWithWater() }
-        val randomizer = ScriptedRandomizer().rolls(7)
+        val randomizer = ScriptedRandomizer().rolls(7, 9)
 
         cultivationHarness(randomizer = randomizer, first = p1, second = p2).use { harness ->
             harness.setPlayerDice(
                 playerId = 1,
-                supply = listOf(DieSpec(DieSides.D8)),
+                supply = listOf(DieSpec(DieSides.D8), DieSpec(DieSides.D10)),
                 hand = listOf(DieSpec(DieSides.D6, 5))
             )
+            // The old Transplant Tulip was replaced by Someday Sunflower.
+            // Queen's Blossom is the current official Flower that draws dice.
             harness.graftPlant(1, "Berry Tasty")
-            val tulip = harness.graftPlant(1, "Transplant Tulip", faceUp = true)
+            val queen = harness.graftPlant(1, "Flower_17_04", faceUp = true)
 
-            p1.cultivation.thenMain(CultivationMainAction.ActivatePlant(tulip))
+            p1.cultivation.thenMain(CultivationMainAction.ActivatePlant(queen))
             p1.cultivation.thenMain(CultivationMainAction.RoundEffect1)
             p1.cultivation.thenDone()
 
@@ -94,15 +96,15 @@ class EffectFamilySanityTest {
             harness.runCultivationBuildActions()
             val player = harness.snapshot().player(1)
 
-            assertEquals(listOf(6, 8), player.hand.map { it.sides })
-            assertEquals(listOf(5, 7), player.hand.map { it.value })
+            assertEquals(listOf(6, 8, 10), player.hand.map { it.sides })
+            assertEquals(listOf(5, 7, 9), player.hand.map { it.value })
             assertTrue(player.discard.isEmpty())
             assertEquals(
-                GameEffect.DRAW_ONE_DIE_AND_SWAP_TWO_OWN_DICE_RAISE_ONE_PLUS_2_IN_BATTLE,
+                GameEffect.DRAW_TWO_DICE,
                 plantEffectsFor(harness, 1).single().effect
             )
             assertEquals(
-                listOf(7),
+                listOf(7, 9),
                 ChronicleQueries.dieRollsFor(harness.chronicleEntries(), PlayerId(1)).map { it.value }
             )
             randomizer.assertExhausted()

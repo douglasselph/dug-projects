@@ -225,24 +225,32 @@ class CultivationSupportSanityTest {
         val first = scriptedSupportPlayer { it is SupportAction.PlayWisp }
         val second = ScriptedDecisionDirector().apply { finishBuildWithWater() }
 
+        // Pollinating Wisp is playable in Cultivation and has a deterministic
+        // effect with no additional target-selection requirements. Wisp of Honor
+        // no longer awards VP; its current effect asks a player to Trash a Wisp.
         cultivationHarness(
             first = first,
             second = second,
-            wispNames = listOf("Wisp_Award_VP")
+            wispNames = listOf("Wisp_Gain_Green")
         ).use { harness ->
             val card = harness.giveNextWisp(1)
-            assertEquals("Wisp_Award_VP", card.name)
+            assertEquals("Wisp_Gain_Green", card.name)
             harness.revealNextRound()
 
             harness.runCultivationBuildActions()
             val snapshot = harness.snapshot()
 
-            assertEquals(1, snapshot.player(1).vp)
+            assertEquals(0, snapshot.player(1).vp)
             assertTrue(snapshot.player(1).wisps.isEmpty())
+            assertEquals(listOf(Butterfly.GREEN), snapshot.player(1).butterflies.map { it.butterfly })
+            assertTrue(snapshot.player(1).butterflies.single().faceUp)
             assertEquals(SupportActionKind.WISP, supportKinds(harness).single())
             assertTrue(
                 ChronicleQueries.effectsFor(harness.chronicleEntries(), PlayerId(1))
-                    .any { it.effect == GameEffect.GAIN_ONE_VP && it.sourceName == "Wisp_Award_VP" }
+                    .any {
+                        it.effect == GameEffect.GAIN_OR_REFRESH_GREEN_BUTTERFLY &&
+                            it.sourceName == "Wisp_Gain_Green"
+                    }
             )
             first.assertExhausted()
             second.assertExhausted()
