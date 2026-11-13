@@ -56,6 +56,14 @@ object CardScoringHelpers {
         }
         var score = PriorityScore(base)
         val dice = context.self.board.hand
+        // Revised grouped Raises only affect dice in unresolved Battle rows.
+        // Keep existing historical effect scoring unchanged until NC-24.
+        val revisedRaiseDice = if (phase == CardPhase.BATTLE && context.battle != null) {
+            val openHandIndices = context.battle.rows.filterNot { it.closed }
+                .flatMap { row -> row.forPlayer(context.self.id)?.dice.orEmpty() }
+                .map { it.handIndex }.toSet()
+            dice.filter { it.index in openHandIndices }
+        } else dice
         val buyPower = normalPurchasingPower
             ?: PurchaseThresholdHeuristics.purchasingPower(context.self.board)
         val tiers = PurchaseThresholdHeuristics.availableCostTiers(context.grove)
@@ -88,10 +96,15 @@ object CardScoringHelpers {
                 SharedDieEffectOutcome.bestProjectedPips(effect, dice) ?: 0,
                 "Best D8 +1 target"
             )
-            GameEffect.RAISE_ALL_D8S_PLUS_1 -> addBestGain(
-                dice.filter { it.sides == 8 }.sumOf { DieValueHeuristics.actualRaiseGain(it, 1) },
-                "Total +1 gain across all D8s"
-            )
+            GameEffect.RAISE_ALL_D8S_PLUS_1,
+            GameEffect.RAISE_ALL_D8S_PLUS_2 -> {
+                val amount = if (effect == GameEffect.RAISE_ALL_D8S_PLUS_2) 2 else 1
+                val eligible = if (effect == GameEffect.RAISE_ALL_D8S_PLUS_2) revisedRaiseDice else dice
+                addBestGain(
+                    eligible.filter { it.sides == 8 }.sumOf { DieValueHeuristics.actualRaiseGain(it, amount) },
+                    "Total +$amount gain across all D8s"
+                )
+            }
             GameEffect.RAISE_LOWEST_DIE_PLUS_1 -> {
                 val lowest = dice.minOfOrNull { it.value }
                 val gain = lowest?.let { value ->
@@ -240,6 +253,19 @@ object CardScoringHelpers {
                     ExpectedDrawProjection.scoreAdjustment(it, phase == CardPhase.BATTLE)
                 }
                 if (best != null) score = score.adjusted(best, "Projected discard-and-draw outcome")
+            }
+            GameEffect.RAISE_ONE_DIE_PLUS_1_PER_GRAFTED_FLOWER -> {
+                val count = context.self.board.creature.count { it.type == PlantType.FLOWER }
+                addBestGain(bestRaise(revisedRaiseDice, count), "Best single die +$count from grafted Flowers")
+            }
+            GameEffect.RAISE_ALL_DICE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER -> {
+                val count = context.self.board.creature.count {
+                    it.type == PlantType.VINE || it.type == PlantType.FLOWER
+                }
+                addBestGain(
+                    revisedRaiseDice.sumOf { DieValueHeuristics.actualRaiseGain(it, count) },
+                    "Total +$count gain per die from Vine/Flower grafts"
+                )
             }
             GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE -> {
                 val count = context.self.board.creature.count { it.type == PlantType.ROOT || it.type == PlantType.VINE }

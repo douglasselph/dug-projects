@@ -1,6 +1,6 @@
 # Leaf & Let Die - Active Research and Engineering Tasks
 
-**Status date:** November 12, 2026 — FREE-action implementation patch prepared; Kotlin regression still pending
+**Status date:** November 13, 2026 — FREE-action integration confirmed present in supplied archive; next deterministic Raise-effects increment prepared; full Kotlin regressions still pending
 
 This is the **active top-level backlog**. It is intentionally shorter than the many historical phase/checkpoint documents under `doc/`.
 
@@ -8,7 +8,7 @@ A historical task ID appearing in an older document does **not** mean that task 
 
 ## NEXT ACTIVE PROGRAM — November 5 authoritative CSV integration (NC-01–NC-27)
 
-**Status: NC-01, NC-02 and NC-03 recognition implemented and statically verified. FREE-1–4 of NC-04 authorized and implementation added (unverified in full Kotlin suite). Other NC-04 rulings and the remaining NC work are open.** This section was originally prepared by comparing the newly attached
+**Status: NC-01–NC-03 recognized/verified. FREE-1–4 of NC-04 authorized and their NC-06/11/14 core effects installed; FREE-action scheduler implementation present but full engine validation (NC-23/25/26) remains open. November 13 increment implements NC-07, NC-09, NC-10 and NC-12 Raise behavior and key policy projections; all need Ubuntu test execution before full-game evidence. NC-05 and NC-08 require designer rulings, and the other NC mechanics remain open.** This section was originally prepared by comparing the newly attached
 `leaf(20261105-234756).tgz` with `leaf(20261105-234502).tgz`, and checking the then-current Kotlin
 converter, registry, action scheduler, effect handlers, policy references, and selected tests.
 The user has designated the newly supplied files under `data/` as **the new card source of truth**.
@@ -110,7 +110,11 @@ without an explicit design decision.
   placement/capacity. **Designer approval is still needed for the marked PROPOSED decisions;**
   the register must not be mistaken for newly adopted rules. After approval, record accepted
   choices in the register and use its fixture IDs for Kotlin regression tests in NC-05–NC-25.
-  November 12 follow-up: FREE-1–4 were authorized and a focused effect/scheduler implementation added. No official CSVs were changed. Full Kotlin regressions remain pending; other NC-04 decisions are not approved.
+  November 13 verification: FREE-1–4 code is present in the latest source archive, including
+  `BattleFreeSupportState`, the three card handlers and paid/free Engagement accounting. Related
+  deterministic test fixtures were repaired across later patches, but no complete passing
+  Ubuntu `test integrationTest simulationTest` report was supplied. Do not equate fixture
+  readiness with card-effect balance certification. All other NC-04 decisions remain PROPOSED.
 
 #### P1 — Plant mechanics: revised effect execution (13 changed rows)
 
@@ -119,34 +123,50 @@ without an explicit design decision.
   use the replacement immediately**. Cover D4–D20 ladder, missing inventory, roll rewards,
   ownership, player Dice Hand and live Battle Grid placement, and capacity/locked rows. Do not
   reuse Wisp Overgrowth's “skip missing” semantics without an explicit rule basis.
-- [ ] **NC-06 — Root Appreciation (`Root_07_02`, cost 7).** Retain gain-1-Worm and stacking
+  **BLOCKED ON NC-04:** UPGRADE-1/2 availability/illegality decisions still proposed. Do not
+  implement a gameplay fallback without approval.
+- [x] **NC-06 — Root Appreciation (`Root_07_02`, cost 7).** Retain gain-1-Worm and stacking
   **+1 per Worm per activation this round**; add **"Battle: Playing a Worm costs no Support
   Action."** This is a Battle action-economy rule, not just a different Critter value.
-- [ ] **NC-07 — Vine Yield (`Vine_07_04`, cost 7).** Replace flat Raise +1 with **Raise one die
+  **Nov 12 implementation present:** permission and stacking effects in source;
+  focused and whole-game regressions remain NC-25/26.
+- [x] **NC-07 — Vine Yield (`Vine_07_04`, cost 7).** Replace flat Raise +1 with **Raise one die
   +1 per grafted Flower**. Count the correct current grafted cards (face-up/down as the rules
   define), choose and cap the target die, and verify both phases and Battle row legality.
+  **Nov 13 implementation:** one chosen die gets the grafted-Flower count, including face-down
+  grafts; executable decision contract, Battle projection and real-CSV test added.
+  Ubuntu Kotlin tests remain pending under NC-25/26.
 - [ ] **NC-08 — Saplink Trellis (`Vine_09_03`, cost 9).** The cost-9 row used to be Rise and
   Vine. It is now Saplink Trellis: **for each Root or Vine, Raise 2 dice +1**. Implement
   multi-target/per-graft iteration and legal target decisions, maxima and capacities. Its
   incoming VP icon is **1 VP**, not the previous 2 at this ID.
-- [ ] **NC-09 — Berry Tasty (`Vine_11_02`, cost 11).** Change **all owned D8s +1 → +2**,
+  **BLOCKED ON NC-04:** two distinct targets per iteration and fallback when fewer
+  than two dice can benefit require RAISE-1/2 approval. Effect remains pending.
+- [x] **NC-09 — Berry Tasty (`Vine_11_02`, cost 11).** Change **all owned D8s +1 → +2**,
   observing die-face cap, phase and Battle row constraints. Reuse the all-D8 mechanism with an
-  explicit magnitude, not a card-name shortcut.
-- [ ] **NC-10 — Rise and Vine (`Vine_11_03`, cost 11).** This ID was Saplink Trellis; it is now
+  explicit magnitude, not a card-name shortcut. **Implemented in Nov 13 patch** using a
+  shared magnitude-based D8 Raise with Battle locked-row safeguards; Ubuntu tests pending.
+- [x] **NC-10 — Rise and Vine (`Vine_11_03`, cost 11).** This ID was Saplink Trellis; it is now
   **Raise all your dice +2** (already a known effect) with incoming **2 VP**. Swap name,
   policy/scorer identity and effect semantics consistently with NC-08; update ID/title-based
-  fixtures, market selection, research overrides and development reporting.
-- [ ] **NC-11 — Alluring Nectar (`Flower_11_01`, cost 11).** Keep gain/steal Butterfly and
+  fixtures, market selection, research overrides and development reporting. **Nov 13:**
+  current ID/Plant scorer, Buy synergy diagnosis and Cultivation activation observations updated;
+  the existing +2 all-dice mechanic remains the canonical implementation. Further
+  system-wide stale-label/frozen-weight audit remains in NC-24/27.
+- [x] **NC-11 — Alluring Nectar (`Flower_11_01`, cost 11).** Keep gain/steal Butterfly and
   refresh all owned Butterflies; add **"Battle: Using a Butterfly costs no Support Action."**
   Cover theft, unavailable colors, Refresh, ordinary resource consumption and free-use timing.
-- [ ] **NC-12 — Bloom Backbone (`Flower_11_02`, cost 11).** Replace **one die +1 per grafted
+  **Implemented in Nov 12 FREE-action patch;** full regression acceptance remains NC-25/26.
+- [x] **NC-12 — Bloom Backbone (`Flower_11_02`, cost 11).** Replace **one die +1 per grafted
   Vine/Flower** with **all your dice +1 for each grafted Vine or Flower**. Test per-die caps,
   card counting, repeated raises, filled/locked Battle rows and absence of dice.
+  **Implemented in Nov 13 patch:** all eligible dice gain the capped Vines+Flowers amount;
+  current-face state and closed Battle rows are respected. Ubuntu tests pending.
 - [ ] **NC-13 — Someday Sunflower (`Flower_11_04`, cost 11).** This was Transplant Tulip;
   now **Gain 2 Sunlight**. Implement bounded Grove supply and ownership, add/verify
   provenance and a reusable count-based gain, and update old Transplant-specific decisions,
   scorer/market identity and tests. Test gaining 0/1/2 when supply is constrained.
-- [ ] **NC-14 — Bee-loved Bloom (`Flower_14_01`, cost 14).** Keep gain/steal one Bee and
+- [x] **NC-14 — Bee-loved Bloom (`Flower_14_01`, cost 14).** Keep gain/steal one Bee and
   stacking **+2 Bee value per activation this round**; add **"Battle: Using a Bee costs no
   Support Action."** Cover stolen/placed Bees and same-round repeat activations.
 - [ ] **NC-15 — Bloom Backflip (`Flower_14_02`, cost 14).** Replace old **Raise +1 and flip
@@ -199,6 +219,9 @@ without an explicit design decision.
   resource/ready Butterfly normally. Update legal generation, action counting, policy
   opportunities, Wisp/Sunlight interactions and telemetry; prevent free-action infinite loops.
   Ensure legacy Battle comparison is either supported consistently or explicitly constrained.
+  **PARTIAL Nov 12:** the Three Engagements scheduler distinguishes paid/free Support slots,
+  includes finite-resource guards and telemetry; legacy Battle, policy reachability and full
+  invariants still require NC-23/25/26 review.
 - [ ] **NC-24 — Update legal choices, strategy/policy valuation, and reports.** Audit
   `GameEffectDecisionRequirements`, family handlers, Human Baseline Plant/Wisp/Round scorers,
   `BattleRoundEffectPriority`, multi-die target strategy, learned/frozen effect features,
@@ -232,9 +255,15 @@ checks and A3/A4 all-36-card effect/purchase analysis. A2 enhancements can be bu
 when an individual effect actually requires them; do **not** start an unrelated generalized AI
 rewrite or multi-hour balance run now.
 
-**Current scope:** catalog path and converter recognition have already been implemented. The
-November 6 interpretation record adds rule recommendations and pending mechanical fixture
-specifications only; no new gameplay changes, effect handlers, or Kotlin tests are claimed.
+**Current scope (Nov 13):** canonical catalog routing and strict conversion are implemented.
+The FREE-action increment is present in this archive. The accompanying new Raise patch implements
+NC-07/09/10/12, including decision requirements, Human Baseline scoring, Battle tactical
+projections, and focused tests against the actual CSVs. It does **not** change official CSV files,
+not yet approved interpretations, the v38 Battle schedule, or protected policy weights.
+The current archive has no `.git` metadata and Gradle 8.13 is not available in this execution
+environment, so the new Kotlin tests are **authored but not run**. Completing all NC-05–NC-24
+and proving full-game/research parity under NC-25/26 is mandatory before labeling any of the
+36 effects balanced or launching an overnight full-catalog study.
 
 ---
 

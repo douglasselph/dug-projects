@@ -67,10 +67,7 @@ object GameEffectDecisionRequirements {
             GameEffect.UNKNOWN,
             GameEffect.RAISE_DIE_PLUS_3,
             GameEffect.UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW,
-            GameEffect.RAISE_ONE_DIE_PLUS_1_PER_GRAFTED_FLOWER,
             GameEffect.RAISE_TWO_DICE_PLUS_1_PER_ROOT_OR_VINE,
-            GameEffect.RAISE_ALL_D8S_PLUS_2,
-            GameEffect.RAISE_ALL_DICE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
             GameEffect.GAIN_TWO_SUNLIGHT_TOKENS,
             GameEffect.FLIP_OWN_DIE_AND_OPPONENT_DIE_IN_BATTLE,
             GameEffect.GAIN_D4_USE_NOW_THEN_CYCLE_D4S,
@@ -183,6 +180,8 @@ object GameEffectDecisionRequirements {
             GameEffect.GAIN_WORM_BOOST_AND_FREE_BATTLE_SUPPORT,
             GameEffect.RAISE_ALL_DICE_PLUS_2,
             GameEffect.RAISE_ALL_D8S_PLUS_1,
+            GameEffect.RAISE_ALL_D8S_PLUS_2,
+            GameEffect.RAISE_ALL_DICE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
             GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS ->
                 same()
 
@@ -242,6 +241,7 @@ object GameEffectDecisionRequirements {
             GameEffect.RAISE_D8_PLUS_1,
             GameEffect.RAISE_LOWEST_DIE_PLUS_1,
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
+            GameEffect.RAISE_ONE_DIE_PLUS_1_PER_GRAFTED_FLOWER,
             GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE,
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW,

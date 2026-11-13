@@ -527,18 +527,21 @@ class HumanBaselineCultivationStrategy(
             is CultivationMainAction.ActivatePlant -> {
                 common["card"] = main.card.card.name
                 when (main.card.card.name) {
-                    "Vine_11_03" -> {
+                    "Vine_09_03" -> {
                         val raises = context.self.board.creature.count { it.type.name == "ROOT" || it.type.name == "VINE" }
                         val headroom = context.self.board.hand.sumOf { (it.sides - it.value).coerceAtLeast(0) }
                         common["synergyPlants"] = raises.toString()
-                        common["realizableRaises"] = minOf(raises, headroom).toString()
+                        common["realizableRaises"] = minOf(2 * raises, headroom).toString()
                         common["dieHeadroom"] = headroom.toString()
+                        common["raiseProjectionNote"] = "Saplink two-target detail awaits NC-08"
                     }
                     "Flower_11_02" -> {
                         val raises = context.self.board.creature.count { it.type.name == "VINE" || it.type.name == "FLOWER" }
                         val headroom = context.self.board.hand.sumOf { (it.sides - it.value).coerceAtLeast(0) }
                         common["synergyPlants"] = raises.toString()
-                        common["realizableRaises"] = minOf(raises, headroom).toString()
+                        common["realizableRaises"] = context.self.board.hand.sumOf {
+                            minOf((it.sides - it.value).coerceAtLeast(0), raises)
+                        }.toString()
                         common["dieHeadroom"] = headroom.toString()
                     }
                     "Flower_14_01" -> {

@@ -73,6 +73,7 @@ class CardEffectReadinessTest {
         val converter = GameEffectConverter()
         assertEquals(GameEffect.RAISE_ALL_D8S_PLUS_1, converter("Raise all your D8s +1"))
         assertEquals(GameEffect.RAISE_ALL_D8S_PLUS_2, converter("Raise all your D8s +2"))
-        assertTrue(GameEffect.RAISE_ALL_D8S_PLUS_2 in CardEffectReadiness.pending)
+        assertFalse(GameEffect.RAISE_ALL_D8S_PLUS_2 in CardEffectReadiness.pending)
+        assertTrue(DefaultGameEffectExecutor().supports(GameEffect.RAISE_ALL_D8S_PLUS_2))
     }
 }

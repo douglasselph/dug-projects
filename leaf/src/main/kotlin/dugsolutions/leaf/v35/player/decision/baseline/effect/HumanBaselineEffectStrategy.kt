@@ -945,6 +945,7 @@ class HumanBaselineEffectStrategy(
             GameEffect.DOUBLE_ONE_DIE,
             GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE,
             GameEffect.RAISE_ANY_DIE_PLUS_1,
+            GameEffect.RAISE_ONE_DIE_PLUS_1_PER_GRAFTED_FLOWER,
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
             GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE,
             GameEffect.RAISE_DIE_PLUS_4,
@@ -1283,6 +1284,12 @@ class HumanBaselineEffectStrategy(
             GameEffect.RAISE_ANY_DIE_PLUS_1 -> DieValueHeuristics.actualRaiseGain(choice.sides, choice.value, 1)
             GameEffect.RAISE_D8_PLUS_1 ->
                 if (choice.sides == 8) DieValueHeuristics.actualRaiseGain(choice.sides, choice.value, 1) else return null
+            GameEffect.RAISE_ONE_DIE_PLUS_1_PER_GRAFTED_FLOWER ->
+                DieValueHeuristics.actualRaiseGain(
+                    choice.sides,
+                    choice.value,
+                    context.self.board.creature.count { it.type == PlantType.FLOWER }
+                )
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER ->
                 DieValueHeuristics.actualRaiseGain(
                     choice.sides,

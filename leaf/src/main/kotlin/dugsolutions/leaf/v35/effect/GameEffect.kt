@@ -2,8 +2,8 @@ package dugsolutions.leaf.v35.effect
 
 enum class GameEffect {
     UNKNOWN,
-    // Official catalog identities awaiting their actual mechanics (see TASKS.md).
-    // Recognition is deliberately separate from executable effect resolution.
+    // Revised official catalog identities (see TASKS.md for per-effect readiness).
+    // Recognition is separate from executable effect resolution.
     UPGRADE_DIE_CONDITIONAL_TWO_STEPS_AND_USE_NOW,
     GAIN_WORM_BOOST_AND_FREE_BATTLE_SUPPORT,
     RAISE_ONE_DIE_PLUS_1_PER_GRAFTED_FLOWER,

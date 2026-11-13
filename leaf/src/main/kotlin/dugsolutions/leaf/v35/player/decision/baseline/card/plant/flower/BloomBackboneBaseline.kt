@@ -10,7 +10,7 @@ import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 
 object BloomBackboneBaseline : ConfiguredCardScorer(
     cardNames = setOf("Flower_11_02"),
-    effect = GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
+    effect = GameEffect.RAISE_ALL_DICE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
     cultivationPlayBase = 70,
     battlePlayBase = 70
 ), BaselineInfluencer {

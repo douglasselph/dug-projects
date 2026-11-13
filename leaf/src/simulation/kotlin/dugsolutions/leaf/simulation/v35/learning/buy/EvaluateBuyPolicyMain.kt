@@ -956,7 +956,9 @@ internal class EffectResourceAccumulator {
             }
             GameEffect.MULCH_DIE_FROM_DISCARD, GameEffect.MULCH_DIE_FROM_HAND,
             GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD -> add("Mulch")
-            GameEffect.RAISE_ALL_DICE_PLUS_2, GameEffect.RAISE_ALL_D8S_PLUS_1, GameEffect.RAISE_ANY_DIE_PLUS_1,
+            GameEffect.RAISE_ALL_DICE_PLUS_2, GameEffect.RAISE_ALL_D8S_PLUS_1,
+            GameEffect.RAISE_ALL_D8S_PLUS_2, GameEffect.RAISE_ALL_DICE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
+            GameEffect.RAISE_ONE_DIE_PLUS_1_PER_GRAFTED_FLOWER, GameEffect.RAISE_ANY_DIE_PLUS_1,
             GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE,
             GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW,
             GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE,

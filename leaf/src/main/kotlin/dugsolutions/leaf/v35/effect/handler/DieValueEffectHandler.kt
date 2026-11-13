@@ -54,7 +54,8 @@ class DieValueEffectHandler : EffectHandler {
                 modifiableDice(request).isNotEmpty()
 
             GameEffect.RAISE_D8_PLUS_1,
-            GameEffect.RAISE_ALL_D8S_PLUS_1 ->
+            GameEffect.RAISE_ALL_D8S_PLUS_1,
+            GameEffect.RAISE_ALL_D8S_PLUS_2 ->
                 modifiableDice(request).any { it.sides == 8 }
 
             GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE ->
@@ -108,6 +109,11 @@ class DieValueEffectHandler : EffectHandler {
             GameEffect.SET_DIE_UP_TO_D12_TO_MAX ->
                 modifiableDice(request).any { it.sides <= 12 }
 
+            GameEffect.RAISE_ONE_DIE_PLUS_1_PER_GRAFTED_FLOWER ->
+                modifiableDice(request).isNotEmpty() &&
+                    request.actor.creature.cards.any { it.card.type == PlantType.FLOWER }
+
+            GameEffect.RAISE_ALL_DICE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER ->
                 modifiableDice(request).isNotEmpty() &&
                     request.actor.creature.cards.any {
@@ -153,7 +159,10 @@ class DieValueEffectHandler : EffectHandler {
                 raiseD8One(request)
 
             GameEffect.RAISE_ALL_D8S_PLUS_1 ->
-                raiseAllD8sOne(request)
+                raiseAllD8s(request, 1)
+
+            GameEffect.RAISE_ALL_D8S_PLUS_2 ->
+                raiseAllD8s(request, 2)
 
             GameEffect.RAISE_LOWEST_DIE_PLUS_1 ->
                 raiseLowestOne(request)
@@ -260,6 +269,18 @@ class DieValueEffectHandler : EffectHandler {
                     request,
                     modifiableChoices(request) { it.sides <= 12 }
                 ).adjustToMax()
+
+            GameEffect.RAISE_ONE_DIE_PLUS_1_PER_GRAFTED_FLOWER -> {
+                val count = request.actor.creature.cards.count { it.card.type == PlantType.FLOWER }
+                raiseOne(request, count)
+            }
+
+            GameEffect.RAISE_ALL_DICE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER -> {
+                val count = request.actor.creature.cards.count {
+                    it.card.type == PlantType.VINE || it.card.type == PlantType.FLOWER
+                }
+                modifiableDice(request).forEach { it.adjustBy(count) }
+            }
 
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER -> {
                 val count = request.actor.creature.cards.count {
@@ -509,14 +530,15 @@ class DieValueEffectHandler : EffectHandler {
     }
 
 
-    private fun raiseAllD8sOne(
-        request: GameEffectRequest
+    private fun raiseAllD8s(
+        request: GameEffectRequest,
+        amount: Int
     ) {
         modifiableDice(request)
             .filter { it.sides == 8 }
             .forEach { die ->
                 val before = die.value
-                die.adjustBy(1)
+                die.adjustBy(amount)
                 request.game.chronicle.record(
                     Moment.DieValueChanged(
                         playerId = request.actor.id,

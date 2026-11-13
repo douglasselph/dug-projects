@@ -5,7 +5,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.card.ConfiguredCardScorer
 
 object BerryImportantBaseline : ConfiguredCardScorer(
     cardNames = setOf("Vine_11_02"),
-    effect = GameEffect.RAISE_ALL_D8S_PLUS_1,
+    effect = GameEffect.RAISE_ALL_D8S_PLUS_2,
     cultivationPlayBase = 30,
     battlePlayBase = 30
 )

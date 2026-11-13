@@ -117,6 +117,14 @@ class BattleEnabledPlantAnalyzer(
                 raiseCandidates(context, card, dice.filter { it.die.value == lowest }, 1)
             }
 
+            GameEffect.RAISE_ONE_DIE_PLUS_1_PER_GRAFTED_FLOWER ->
+                raiseCandidates(
+                    context,
+                    card,
+                    dice,
+                    context.self.board.creature.count { it.type == PlantType.FLOWER }
+                )
+
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER ->
                 raiseCandidates(
                     context,
@@ -180,7 +188,19 @@ class BattleEnabledPlantAnalyzer(
                     }
                 )
 
-            GameEffect.RAISE_ALL_D8S_PLUS_1 ->
+            GameEffect.RAISE_ALL_DICE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER -> {
+                val count = context.self.board.creature.count {
+                    it.type == PlantType.VINE || it.type == PlantType.FLOWER
+                }
+                listOfNotNull(
+                    analyzeGroupedChanges(context, card, dice, BattleAnalysisMode.DETERMINISTIC) { die ->
+                        DieValueHeuristics.actualRaiseGain(die.sides, die.value, count).toDouble()
+                    }
+                )
+            }
+
+            GameEffect.RAISE_ALL_D8S_PLUS_1,
+            GameEffect.RAISE_ALL_D8S_PLUS_2 ->
                 listOfNotNull(
                     analyzeGroupedChanges(
                         context = context,
@@ -188,7 +208,10 @@ class BattleEnabledPlantAnalyzer(
                         dice = dice.filter { it.die.sides == 8 },
                         mode = BattleAnalysisMode.DETERMINISTIC
                     ) { die ->
-                        DieValueHeuristics.actualRaiseGain(die.sides, die.value, 1).toDouble()
+                        DieValueHeuristics.actualRaiseGain(
+                            die.sides, die.value,
+                            if (card.effect == GameEffect.RAISE_ALL_D8S_PLUS_2) 2 else 1
+                        ).toDouble()
                     }
                 )
 
@@ -356,7 +379,7 @@ class BattleEnabledPlantAnalyzer(
     }
 
     private fun locatedDice(context: DecisionContext): List<LocatedBattleDie> =
-        context.battle?.rows.orEmpty().flatMap { row ->
+        context.battle?.rows.orEmpty().filterNot { it.closed }.flatMap { row ->
             row.forPlayer(context.self.id)?.dice.orEmpty().map { die ->
                 LocatedBattleDie(row.row, die)
             }
