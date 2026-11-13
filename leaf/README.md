@@ -397,3 +397,23 @@ The root keeps `README.md` (orientation), `TASKS.md` (active backlog), and `AGEN
 ### v38 reusable Plant-question research checkpoint
 
 `V38-6` main-runtime integration passed on November 5 (20 focused Kotlin tests), and `V38-7` passed its seven-stage Ubuntu v38 two-question pilot. Its direct-Java output was independently reviewed with `bin/plant_question_evidence.py`, which produces comparable `evidence.json` and `ASSESSMENT.md` reports after verifying original stage-archive checksums, paired suppression and ruleset identities. Run `python3 bin/plant_question_evidence.py ~/Downloads/leaf-v38-question-runner-verification-20261105-144745.tgz` to recreate the report without new games. See `doc/research/experiments/card-balance/PLANT_QUESTION_EVIDENCE.md` and `TASKS.md`. The pilot is intentionally too small for any card-balance conclusion; old legacy Battle cohorts remain separate.
+
+### A2 v38 Root Four More activation opportunity-cost diagnostic
+
+To see which Main Actions the Human Baseline **actually takes** when Root
+Four More's effect is suppressed, replay the saved competitive-study Buy
+weights without retraining:
+
+```bash
+python3 bin/trace_v38_root_four_more_alternatives.py \
+  --archive ~/Downloads/leaf-v38-competitive-sensitivity-f2854f6546708175e408.tgz \
+  --games 32 --plan
+python3 bin/trace_v38_root_four_more_alternatives.py \
+  --archive ~/Downloads/leaf-v38-competitive-sensitivity-f2854f6546708175e408.tgz \
+  --games 32
+```
+
+See `doc/research/experiments/card-balance/V38_ROOT_FOUR_MORE_OPPORTUNITY_COST.md`
+for the documented priority-scale mismatch, emitted Main-action alternatives,
+limitations and acceptance criteria. This is diagnostic replay, not a card
+balance certification.

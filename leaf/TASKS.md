@@ -586,6 +586,22 @@ attribution tests pass; the Kotlin simulation run **has not been performed**.
 See `doc/research/experiments/card-balance/V38_COMPETITIVE_SENSITIVITY.md`.
 A2 remains OPEN until fresh Ubuntu experimental evidence and stronger replication.
 
+**A2 opportunity-cost follow-up (Nov 13): NOT YET RUN.** Root Four More's
+Human Baseline Cultivation score uses a 58-point activation base plus 3 priority
+points per capped Raise pip, versus 35 + 4 points per expected Draw pip (D8 =
+53). This is a concrete potential preference-scale mismatch; it is not yet a
+causal diagnosis of the +14.8-point suppressed win-share observation. Added an
+opt-in, non-mutating Main-decision diagnostic and
+`bin/trace_v38_root_four_more_alternatives.py`, which replays frozen Buy
+weights from the completed A2 archive and reports the actual action selected
+when suppressed Root Four More was a legal choice, including scored Draw,
+other Plant/Round alternatives, next-die expected pips, and available +4
+Raise headroom. The Kotlin and replay must pass on Ubuntu before changing any
+Human Baseline coefficients. The diagnostic does not establish that all
+alternative actions were better or make an effect-balance verdict. See
+`doc/research/experiments/card-balance/V38_ROOT_FOUR_MORE_OPPORTUNITY_COST.md`.
+
+
 ### A3 - Run the 36-Plant effect sanity audit
 
 **Status:** BLOCKED on A1/A2 being credible enough; not yet a completed all-card study.

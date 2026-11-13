@@ -316,6 +316,11 @@ object R3APlantScreenMain {
                         researchPlantEffectsBySeat = if (o.effectAudience == "targeted" && calibratedEffect != null && "targeted" in roleAt)
                             mapOf(roleAt.indexOf("targeted") to mapOf(o.targetId to calibratedEffect)) else emptyMap()
                     ))
+                    if (System.getenv("LEAF_TRACE_SUPPRESSED_PLANT_ALTERNATIVES") == o.targetId &&
+                        o.effectVariant == "effect:RESEARCH_NO_EFFECT") {
+                        println("TRACE_SUPPRESSED_GAME\tmatchup=$name\tsample=$sample\t" +
+                            "targetSeat=${roleAt.indexOf("targeted")}\tseed=${o.seed + 1000000L + mi * o.holdoutGames + sample}")
+                    }
                     val result = runner.run(game)
                     val summaries = GameSummaryExtractor.extract(game, result)
                     for (seat in 0..1) {

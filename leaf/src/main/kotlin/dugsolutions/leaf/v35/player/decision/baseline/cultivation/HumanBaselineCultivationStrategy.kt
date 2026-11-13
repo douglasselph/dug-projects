@@ -119,22 +119,21 @@ class HumanBaselineCultivationStrategy(
             request = request,
             legalChoices = compost.legalChoices
         )
-        val selected = scoreEngine.chooseValue(
-            context = request.context,
-            candidates = mulch.legalChoices.map { choice ->
-                DecisionCandidate(
-                    choice = choice,
-                    score = scoreWithRefreshUncertainty(request, choice, compost),
-                    tags = tags(request, choice),
-                    observations = calibrationObservations(request, choice)
-                )
-            },
-            influenceRegistry = influenceRegistry
-        )
+        val candidates = mulch.legalChoices.map { choice ->
+            DecisionCandidate(
+                choice = choice,
+                score = scoreWithRefreshUncertainty(request, choice, compost),
+                tags = tags(request, choice),
+                observations = calibrationObservations(request, choice)
+            )
+        }
+        val scored = scoreEngine.scoreCandidates(request.context, candidates, influenceRegistry)
+        val selected = scoreEngine.choose(scored)
+        SuppressedPlantAlternativeTrace.record(request, scored, selected)
         return attachMulchProbability(
                 selected = attachCompostProbability(
                     selected = attachPocketedSparkProbability(
-                        selected = attachOvergrowthProbability(selected, overgrowth),
+                        selected = attachOvergrowthProbability(selected.choice, overgrowth),
                         gate = pocketedSpark
                     ),
                     request = request,

@@ -1,6 +1,6 @@
 # A2 — v38 Competitive Sensitivity, Root Four More
 
-**Status:** Implemented pilot orchestration; Kotlin/Java experiment NOT YET EXECUTED.
+**Status:** Ubuntu pilot executed November 13; mechanical/comparative sensitivity partial, strong countersearch NOT demonstrated.
 
 ## Research question
 
@@ -12,6 +12,53 @@ that consequence change after Buy-policy adaptation and opponent countersearch?
 This is **not** a claim that Root Four More is too strong, too weak, or balanced.
 The prior four-state forced calibration measured only local tactical sensitivity;
 it did not measure game-level strategy and opportunity cost.
+
+## November 13 Ubuntu results and offline policy audit
+
+The 8-game smoke and default 128-game held-out pilot both completed using the
+adopted v38 rules. The larger archive is
+`leaf-v38-competitive-sensitivity-f2854f6546708175e408.tgz`.
+
+Frozen reference official Raise +4 won 50.8% of 128 targeted games; suppressed
+won 65.6% (+14.8 percentage points, +2.56 final VP/game), Raise +20 won 48.8%
+(-2.0 points, +0.36 VP/game), and +20 VP won 100% (+49.2 points,
++181.34 VP/game). The official, suppressed, Raise +20, and VP20 conditions
+recorded 1,001, 4, 1,014, and 1,184 effect resolutions respectively.
+Raise +20 added +6.09 actual raised pips per game over official, but its paired
+win-share interval included zero. VP20 was a clear positive competitive control.
+
+**Critical interpretation:** "frozen" freezes only learned **Buy weights**,
+not the Human Baseline's state-dependent activation choices. The suppressed
+condition avoided almost all activations, so its unexpectedly improved outcome
+cannot be interpreted as evidence that the printed ability harms skilled human
+play. Acquisition/activation opportunity costs require focused analysis.
+
+The separately adapted suppressed Buy weights were byte-identical to the
+original targeted specialist. The Raise +20 challenger weights were
+byte-identical to the original unrestricted generalist, and the resulting
+"countersearch" held-out TSV exactly matched the preexisting adapted matchup.
+The official-effect challenger had different weights but *improved the
+specialist's win share* (+14.1 points) rather than defeating it. The Raise +20
+adapted specialist did have distinct Buy weights, which proves only parameter
+difference, not human-level behavior or an effective counter.
+
+Use the portable, read-only archive auditor without rerunning Java or relying on
+historical output directories:
+
+```bash
+python3 bin/audit_v38_competitive_evidence.py \
+  ~/Downloads/leaf-v38-competitive-sensitivity-f2854f6546708175e408.tgz
+```
+
+It revalidates archived checkpoint SHA-256 markers, legal held-out row/seat
+coverage, controlled effects, reported paired deltas and saved Buy-weight
+identity. It labels search novelty/effectiveness separately. It does **not**
+validate the archive against current Git HEAD, establish full-game causal
+replay of identical actions, or certify card balance.
+
+**A2 remains open.** Prioritize consequence-aware Plant activation behavior,
+opportunity-cost evidence, and independent stronger held-out challengers before
+all-36 screening or a broader compute budget.
 
 ## Current experiment
 
