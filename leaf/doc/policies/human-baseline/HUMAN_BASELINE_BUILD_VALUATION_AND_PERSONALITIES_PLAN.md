@@ -140,7 +140,7 @@ This table classifies what can reasonably share the new valuation; it is **not**
 
 ## 5. Sequenced implementation slices and acceptance gates
 
-**Baseline-observation implementation (November 16):** The first step now has `bin/capture_human_baseline_build`, a fixed-seed v38 report, a 36-card scorer/effect identity check, and regression tests. The Kotlin tests and first archive are **not yet verified on Ubuntu**. See [Build Behavior Snapshot](BUILD_BEHAVIOR_SNAPSHOT.md). The snapshot is deliberately recorded **before** introducing the new pip valuation or resource personalities.
+**November 16 implementation status:** The baseline-observation step has `bin/capture_human_baseline_build`, a fixed-seed v38 report, a 36-card scorer/effect identity check, and regression tests. The **first Ubuntu run failed compilation** due to `WISP_CARD_LIST` instead of `WISP_LIST`; a one-line correction is included in the shared-immediate-pip patch, so baseline acceptance is still pending. The next step adds pure immediate roll/pip arithmetic and tests (also awaiting Ubuntu verification), without changing Build selection. See [Immediate Pip and Roll Reward Values](IMMEDIATE_PIP_AND_ROLL_REWARD_VALUES.md). See [Build Behavior Snapshot](BUILD_BEHAVIOR_SNAPSHOT.md). The snapshot is deliberately recorded **before** introducing the new pip valuation or resource personalities.
 
 Each line below is an independently reviewable changeset; use ZIP entries relative to repository root. In every implementation task, include a `TASKS.md` progress update. **No stage should rewrite official CSVs or v38 game mechanics.**
 

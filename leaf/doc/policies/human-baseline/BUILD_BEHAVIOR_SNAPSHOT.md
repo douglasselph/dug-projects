@@ -51,4 +51,6 @@ Report files (when the Java experiment completes):
 - Repeat the same configuration with the same seeds and compare report bytes. A new Build valuation release should intentionally produce changed choices relative to this archive; it must not silently change legal offers, card identities or official mechanics.
 - These are **behavioral records**, not pass/fail claims about which Main action is strategically best, nor proof that a card is weak or strong. Later personality tests must compare legally offered opportunities and useful spending rather than merely final inventory or win rate.
 
+**November 16 first-run update:** The uploaded `leaf-human-baseline-build-20261116-210640.tgz` did **not** capture games. It stopped at Kotlin compilation: `BuildBehaviorSnapshotMain.kt` referenced `CardDataFiles.WISP_CARD_LIST` instead of `WISP_LIST`. The subsequent shared-immediate-pip change fixes that single constant; rerun the script before accepting baseline evidence. This failure must not be treated as four baseline games.
+
 **No game rules, official CSV definitions, purchased dice, expert training, or Human Baseline priorities are changed by this observation work.** The small production change merely fills `RoundEffectChoice.legalPlantCardNames`, a previously empty reporting field, from the coordinator's existing legal choices.

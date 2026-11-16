@@ -49,9 +49,9 @@ See [`doc/LEAF_RESEARCH_GOALS_AND_EXPERIMENT_DESIGN.md`](doc/LEAF_RESEARCH_GOALS
 
 ## New Human Baseline valuation/personality implementation track (November 16)
 
-The next staged Human Baseline design track is **shared immediate and future-only pip-equivalent Build valuation plus fixed Water/Sunlight/Mulch personalities**. It is separate from learned/expert policy optimization. See [Build valuation and resource-personality design (including the 36-Plant migration inventory)](doc/policies/human-baseline/HUMAN_BASELINE_BUILD_VALUATION_AND_PERSONALITIES_PLAN.md) and the implementation sequence in [TASKS.md](TASKS.md). **The original Build behavior capture is implemented; no new evaluator or personality has been introduced. Kotlin acceptance is pending.**
+The next staged Human Baseline design track is **shared immediate and future-only pip-equivalent Build valuation plus fixed Water/Sunlight/Mulch personalities**. It is separate from learned/expert policy optimization. See [Build valuation and resource-personality design (including the 36-Plant migration inventory)](doc/policies/human-baseline/HUMAN_BASELINE_BUILD_VALUATION_AND_PERSONALITIES_PLAN.md) and the implementation sequence in [TASKS.md](TASKS.md). **The old-behavior capture is implemented but its first Ubuntu run failed compilation; a corrected Wisp catalog constant now needs rerun. Pure shared immediate valuation math has been added but is not yet used by Build selection. Kotlin acceptance is pending.**
 
-To capture unchanged Human Baseline Build choices before the new valuation and personality work, run `bin/capture_human_baseline_build`. See [Build Behavior Snapshot](doc/policies/human-baseline/BUILD_BEHAVIOR_SNAPSHOT.md) for the report, seeds and evidence limitations.
+To capture unchanged Human Baseline Build choices before the new valuation and personality work, run `bin/capture_human_baseline_build`. See [Build Behavior Snapshot](doc/policies/human-baseline/BUILD_BEHAVIOR_SNAPSHOT.md) for the report, seeds and evidence limitations. See [Immediate Pip and Roll Reward Values](doc/policies/human-baseline/IMMEDIATE_PIP_AND_ROLL_REWARD_VALUES.md) for the separate current-round arithmetic and test plan.
 
 ## Current v38 research sensitivity pilot
 

@@ -218,7 +218,7 @@ fun main(args: Array<String>) {
         }
         val dataPath = CardDataFiles.dataDirectory()
         val catalogFiles = listOf(CardDataFiles.ROOT_CARD_LIST, CardDataFiles.VF_CARD_LIST,
-            CardDataFiles.ROUND_CARD_LIST, CardDataFiles.WISP_CARD_LIST)
+            CardDataFiles.ROUND_CARD_LIST, CardDataFiles.WISP_LIST)
         val manifest = buildString {
             appendLine("status=OBSERVED_NOT_CERTIFIED")
             appendLine("rules=THREE_ENGAGEMENTS")
