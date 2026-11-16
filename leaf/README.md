@@ -47,6 +47,10 @@ See [`doc/LEAF_RESEARCH_GOALS_AND_EXPERIMENT_DESIGN.md`](doc/LEAF_RESEARCH_GOALS
 
 ---
 
+## New Human Baseline valuation/personality implementation track (November 16)
+
+The next staged Human Baseline design track is **shared immediate and future-only pip-equivalent Build valuation plus fixed Water/Sunlight/Mulch personalities**. It is separate from learned/expert policy optimization. See [HBV design and audited 36-Plant migration inventory](doc/policies/human-baseline/HUMAN_BASELINE_BUILD_VALUATION_AND_PERSONALITIES_PLAN.md) and the checked-off implementation sequence in [TASKS.md](TASKS.md). **Plan only: no new evaluator or personality implementation has been merged.**
+
 ## Current v38 research sensitivity pilot
 
 The four-state forced Root Four More experiment has verified **local mechanical
