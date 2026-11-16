@@ -348,6 +348,9 @@ class CultivationBuildCoordinator(
                 firstExecutable = MainActionKind.ROUND_EFFECT_1 in legalMains,
                 secondExecutable = MainActionKind.ROUND_EFFECT_2 in legalMains,
                 legalMainActions = legalMains,
+                legalPlantCardNames = legalChoices.filterIsInstance<CultivationAction.Main>()
+                    .mapNotNull { (it.action as? CultivationMainAction.ActivatePlant)?.card?.card?.name }
+                    .distinct(),
                 selectedMainAction = selectedMain?.let(::mainActionKind),
                 sunlightHeld = player.tokens.sunlightCount,
                 battlesRemaining = battlesRemaining(game),
