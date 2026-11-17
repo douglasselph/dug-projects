@@ -527,6 +527,163 @@ class HumanBaselineCultivationStrategyTest {
     }
 
 
+    @Nested
+    inner class `Resource Personality Round Acquisition` {
+        @Test
+        fun `Water Keeper takes Water over D8 Draw while neutral baseline keeps Draw`() {
+            val state = context(supply = listOf(DieView(0, 8, 1)), water = 0).copy(
+                grove = DecisionContext.EMPTY.grove.copy(water = 4)
+            )
+            val round = roundWithEffects(GameEffect.GAIN_WATER_TOKEN)
+            val offered = listOf(
+                CultivationAction.Main(CultivationMainAction.Draw),
+                CultivationAction.Main(CultivationMainAction.RoundEffect1)
+            )
+            fun with(personality: dugsolutions.leaf.v35.player.decision.baseline.ResourcePersonality) =
+                assertIs<CultivationAction.Main>(choose(
+                    state, offered, round = round,
+                    strategy = HumanBaselineCultivationStrategy(
+                        policy = HumanBaselinePolicy(resourcePersonality = personality),
+                        strategyRandomizer = FixedRandomizer(0)
+                    )
+                )).action
+
+            assertEquals(CultivationMainAction.Draw, with(
+                dugsolutions.leaf.v35.player.decision.baseline.ResourcePersonality.NEUTRAL
+            ))
+            assertEquals(CultivationMainAction.RoundEffect1, with(
+                dugsolutions.leaf.v35.player.decision.baseline.ResourcePersonality.WATER_KEEPER
+            ))
+        }
+
+        @Test
+        fun `Battle Preparer favors offered Sunlight but no Battle means Draw`() {
+            val round = roundWithEffects(GameEffect.GAIN_SUNLIGHT_TOKEN)
+            val offered = listOf(
+                CultivationAction.Main(CultivationMainAction.Draw),
+                CultivationAction.Main(CultivationMainAction.RoundEffect1)
+            )
+            val nextBattle = context(supply = listOf(DieView(0, 12, 1))).copy(
+                grove = DecisionContext.EMPTY.grove.copy(sunlight = 4),
+                progress = DecisionContext.EMPTY.progress.copy(
+                    battleRoundsRemaining = 1,
+                    upcomingRoundTypes = listOf(RoundCardType.BATTLE)
+                )
+            )
+            val noBattle = nextBattle.copy(progress = nextBattle.progress.copy(
+                battleRoundsRemaining = 0,
+                upcomingRoundTypes = emptyList()
+            ))
+            fun with(context: DecisionContext, profile: dugsolutions.leaf.v35.player.decision.baseline.ResourcePersonality) =
+                assertIs<CultivationAction.Main>(choose(
+                    context, offered, round = round,
+                    strategy = HumanBaselineCultivationStrategy(
+                        policy = HumanBaselinePolicy(resourcePersonality = profile),
+                        strategyRandomizer = FixedRandomizer(0)
+                    )
+                )).action
+
+            assertEquals(CultivationMainAction.Draw, with(nextBattle,
+                dugsolutions.leaf.v35.player.decision.baseline.ResourcePersonality.NEUTRAL))
+            assertEquals(CultivationMainAction.RoundEffect1, with(nextBattle,
+                dugsolutions.leaf.v35.player.decision.baseline.ResourcePersonality.BATTLE_PREPARER))
+            assertEquals(CultivationMainAction.Draw, with(noBattle,
+                dugsolutions.leaf.v35.player.decision.baseline.ResourcePersonality.BATTLE_PREPARER))
+        }
+
+        @Test
+        fun `Mulch avoidance changes a near-tie without removing legal Mulch`() {
+            val round = roundWithEffects(GameEffect.MULCH_DIE_FROM_HAND)
+            val offered = listOf(
+                CultivationAction.Main(CultivationMainAction.Draw),
+                CultivationAction.Main(CultivationMainAction.RoundEffect1)
+            )
+            val state = context(
+                supply = listOf(DieView(0, 12, 1)),
+                hand = listOf(DieView(1, 12, 3))
+            ).copy(grove = DecisionContext.EMPTY.grove.copy(mulch = 4))
+            fun with(profile: dugsolutions.leaf.v35.player.decision.baseline.ResourcePersonality) =
+                assertIs<CultivationAction.Main>(choose(
+                    state, offered, round = round,
+                    strategy = HumanBaselineCultivationStrategy(
+                        policy = HumanBaselinePolicy(resourcePersonality = profile),
+                        strategyRandomizer = FixedRandomizer(0)
+                    )
+                )).action
+            val avoids = dugsolutions.leaf.v35.player.decision.baseline.ResourcePersonality.NEUTRAL.copy(
+                id = "mulch-avoider",
+                mulch = dugsolutions.leaf.v35.player.decision.baseline.ResourceGoal(
+                    dugsolutions.leaf.v35.player.decision.baseline.ResourceInclination.AVOID, 0
+                )
+            )
+
+            assertEquals(CultivationMainAction.RoundEffect1, with(
+                dugsolutions.leaf.v35.player.decision.baseline.ResourcePersonality.NEUTRAL))
+            assertEquals(CultivationMainAction.Draw, with(avoids))
+        }
+
+        @Test
+        fun `Battle Preparer prefers a useful Mulch to a close Draw while neutral keeps Draw`() {
+            val round = roundWithEffects(GameEffect.MULCH_DIE_FROM_HAND)
+            val offered = listOf(
+                CultivationAction.Main(CultivationMainAction.Draw),
+                CultivationAction.Main(CultivationMainAction.RoundEffect1)
+            )
+            val state = context(
+                supply = listOf(DieView(0, 20, 1)),
+                hand = listOf(DieView(1, 12, 2))
+            ).copy(grove = DecisionContext.EMPTY.grove.copy(mulch = 4))
+            fun with(profile: dugsolutions.leaf.v35.player.decision.baseline.ResourcePersonality) =
+                assertIs<CultivationAction.Main>(choose(
+                    state, offered, round = round,
+                    strategy = HumanBaselineCultivationStrategy(
+                        policy = HumanBaselinePolicy(resourcePersonality = profile),
+                        strategyRandomizer = FixedRandomizer(0)
+                    )
+                )).action
+
+            assertEquals(CultivationMainAction.Draw, with(
+                dugsolutions.leaf.v35.player.decision.baseline.ResourcePersonality.NEUTRAL))
+            assertEquals(CultivationMainAction.RoundEffect1, with(
+                dugsolutions.leaf.v35.player.decision.baseline.ResourcePersonality.BATTLE_PREPARER))
+        }
+
+        @Test
+        fun `paired legal Round effects follow independent Water and Sunlight preferences`() {
+            // Official Cultivation Round card: Sunlight/Water in these two slots.
+            val round = roundWithEffects(
+                GameEffect.GAIN_SUNLIGHT_TOKEN,
+                GameEffect.GAIN_WATER_TOKEN
+            )
+            val state = context(water = 0, sunlight = 0).copy(
+                grove = DecisionContext.EMPTY.grove.copy(water = 4, sunlight = 4),
+                progress = DecisionContext.EMPTY.progress.copy(
+                    battleRoundsRemaining = 1,
+                    upcomingRoundTypes = listOf(RoundCardType.BATTLE)
+                )
+            )
+            val offered = listOf(
+                CultivationAction.Main(CultivationMainAction.RoundEffect1),
+                CultivationAction.Main(CultivationMainAction.RoundEffect2)
+            )
+            fun with(profile: dugsolutions.leaf.v35.player.decision.baseline.ResourcePersonality) =
+                assertIs<CultivationAction.Main>(choose(
+                    state, offered, round = round,
+                    strategy = HumanBaselineCultivationStrategy(
+                        policy = HumanBaselinePolicy(resourcePersonality = profile),
+                        strategyRandomizer = FixedRandomizer(0)
+                    )
+                )).action
+
+            assertEquals(CultivationMainAction.RoundEffect2, with(
+                dugsolutions.leaf.v35.player.decision.baseline.ResourcePersonality.WATER_KEEPER))
+            assertEquals(CultivationMainAction.RoundEffect1, with(
+                dugsolutions.leaf.v35.player.decision.baseline.ResourcePersonality.BATTLE_PREPARER))
+            assertEquals(CultivationMainAction.RoundEffect2, with(
+                dugsolutions.leaf.v35.player.decision.baseline.ResourcePersonality.WATER_MULCH_NO_SUNLIGHT))
+        }
+    }
+
     private fun pocketedSparkWisp(): WispCard =
         WispCard(
             quantity = 1,

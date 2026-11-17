@@ -27,9 +27,9 @@ data class ResourceGoal(
 /**
  * An immutable, per-player description of Human Baseline tendencies.
  *
- * These settings are *not* priority scores. Merely attaching a personality does
- * not change Build, Support, or Battle decisions. Subsequent changesets will use
- * them as soft preferences when real legal opportunities can be evaluated.
+ * These settings are *not* learned priority scores. Cultivation Round resource
+ * acquisitions now use them as soft preferences after contextual scoring;
+ * Support spending, Battle decisions, and Plant effects remain unchanged.
  *
  * [id] plus [description] give research manifests a reproducible human-readable
  * configuration without importing expert-learned weights.

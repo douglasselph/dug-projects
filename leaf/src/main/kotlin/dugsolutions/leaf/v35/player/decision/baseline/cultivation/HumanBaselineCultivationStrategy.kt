@@ -4,6 +4,7 @@ import kotlin.math.roundToInt
 
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
+import dugsolutions.leaf.v35.player.decision.baseline.PersonalityResource
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardScoringHelpers
 import dugsolutions.leaf.v35.player.decision.baseline.card.wisp.OvergrowthUseHeuristics
@@ -650,12 +651,29 @@ class HumanBaselineCultivationStrategy(
             GameEffect.UPGRADE_DIE_FROM_HAND -> scoreCompost(context, compostGate)
             GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS -> scoreCompostKeep(context, withRewards = false)
             GameEffect.UPGRADE_DIE_AND_USE_NOW -> scoreCompostKeep(context, withRewards = true)
-            GameEffect.MULCH_DIE_FROM_HAND -> MulchPriority.score(
-                context = context,
-                normalPurchasingPower = policy.normalPurchasingPower(context)
+            GameEffect.MULCH_DIE_FROM_HAND -> {
+                val normalPower = policy.normalPurchasingPower(context)
+                ResourceAcquisitionPreference.apply(
+                    score = MulchPriority.score(context, normalPower),
+                    resource = "Mulch",
+                    goal = policy.resourcePersonality.goal(PersonalityResource.MULCH),
+                    currentlyHeld = DicePoolQuality.observe(context).preparedMulchCount,
+                    viable = MulchPriority.preferredTarget(context, normalPower) != null
+                )
+            }
+            GameEffect.GAIN_WATER_TOKEN -> ResourceAcquisitionPreference.apply(
+                score = WaterPriority.score(context),
+                resource = "Water",
+                goal = policy.resourcePersonality.goal(PersonalityResource.WATER),
+                currentlyHeld = context.self.board.water
             )
-            GameEffect.GAIN_WATER_TOKEN -> WaterPriority.score(context)
-            GameEffect.GAIN_SUNLIGHT_TOKEN -> SunlightTokenPriority.score(context)
+            GameEffect.GAIN_SUNLIGHT_TOKEN -> ResourceAcquisitionPreference.apply(
+                score = SunlightTokenPriority.score(context),
+                resource = "Sunlight",
+                goal = policy.resourcePersonality.goal(PersonalityResource.SUNLIGHT),
+                currentlyHeld = context.self.board.sunlight,
+                viable = SunlightTokenPriority.observe(context).battlesRemaining > 0
+            )
             else -> PriorityScore(45)
         }
 

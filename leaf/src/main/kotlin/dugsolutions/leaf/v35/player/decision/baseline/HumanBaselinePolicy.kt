@@ -122,7 +122,7 @@ open class HumanBaselinePolicy(
     private val battleImmediateResolveMinOpponentSupportValue: Int =
         DEFAULT_BATTLE_IMMEDIATE_RESOLVE_MIN_OPPONENT_SUPPORT,
     private val developmentTargetConfig: DevelopmentTargetConfig = DevelopmentTargetConfig(),
-    /** Fixed per-player resource tendencies; consumed by future resource scorers. */
+    /** Fixed per-player tendencies used by Cultivation Round resource acquisition. */
     val resourcePersonality: ResourcePersonality = ResourcePersonality.NEUTRAL
 ) {
     init {

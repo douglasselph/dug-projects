@@ -4,7 +4,7 @@
 
 Different Human Baseline players can have stable, recognizable tendencies toward **Water, Sunlight, and Mulch** without trying to learn the weights that maximize their win rate. This is deliberately distinct from expert-policy training.
 
-**This changeset configures those tendencies; it does not yet apply them to actions.** No Water/Mulch/Sunlight priority, Support spending, Build choice, official card effect, or shared pip forecast is modified. Applying the personalities to Round resource acquisition is the **next** task; aligning spending and reserve behavior follows it. A configured personality should currently make the same decisions it would have made under the former neutral baseline, provided its strategy RNG and game state are identical.
+**Configuration is now followed by a separate Round-acquisition implementation.** The named profiles modify legal Water, Sunlight, and Mulch **Round Build choices**, but do not change resource spending, Plant effects, rules or shared pip mathematics. Neutral still makes the same decisions as the old baseline with identical state and strategy RNG. See [Round Resource Acquisition and Personalities](ROUND_RESOURCE_ACQUISITION_PERSONALITIES.md).
 
 ## Immutable model
 
@@ -60,7 +60,7 @@ The reader or simulator must explicitly pass this custom profile to that player'
 - All four named profiles have the documented independent axes; negative targets and invalid IDs fail fast.
 - A custom Water preference does not change Sunlight/Mulch settings or mutate the shared named profile.
 - Two players' directors hold different policy objects and preserve different profiles; every strategy in a director sees the same policy object.
-- Default `HumanBaselinePolicy()` remains `ResourcePersonality.NEUTRAL`; **no decision behavior change** is expected until resource scorer integration.
+- Default `HumanBaselinePolicy()` remains `ResourcePersonality.NEUTRAL`; **Neutral choice behavior stays unchanged** after the separate Round acquisition integration. Non-neutral personalities can now intentionally change legal Water/Sunlight/Mulch Round choices; spending is still unchanged.
 
 Run from repository root:
 
@@ -74,4 +74,4 @@ Run from repository root:
 
 ## Future implementation constraints
 
-In the *acquisition* step, apply the profile as a small, explainable tie/near-tie preference after the common pip calculation and legal-target verification; no profile may cause an illegal or clearly pointless action. Preserve remaining-Battle timing for Sunlight, die/Buy tradeoffs for Mulch, and Water opportunities/cap. In the *spending* step, use compatible reserve logic but permit valuable use. Behavioral acceptance will be based on **resource opportunities offered versus chosen and actually used**, never on winning more games.
+In the implemented *acquisition* step, apply the profile as a small, explainable tie/near-tie preference after the **existing contextual legacy scorer** and legal-target verification; the read-only common pip calculation is not yet used in production Build selection. No profile may cause an illegal or clearly pointless action. Preserve remaining-Battle timing for Sunlight, die/Buy tradeoffs for Mulch, and Water opportunities/cap. In the *spending* step, use compatible reserve logic but permit valuable use. Behavioral acceptance will be based on **resource opportunities offered versus chosen and actually used**, never on winning more games.
