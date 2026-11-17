@@ -33,6 +33,10 @@ DecisionDirector.humanBaseline(policy = ...)
 
 so simulation experiments can alter Human Baseline assumptions while leaving the game engine and mechanical RNG untouched.
 
+## Resource personalities (configuration only)
+
+`HumanBaselinePolicy` now optionally accepts an immutable `resourcePersonality` setting. Each player may use a distinct named or custom Water/Sunlight/Mulch profile through `DecisionDirector.humanBaseline(policy = ...)`. It is **not** an expert weight or a replacement for any existing reserve/priority calculation in the current changeset. For configuration, examples and future behavioral acceptance, see [Resource Personalities — Configuration and Wiring](RESOURCE_PERSONALITIES_CONFIGURATION.md).
+
 ## 1. Why this layer exists
 
 Milestone-2 review found that several cross-cutting Human Baseline assumptions were starting to live in different places. The clearest example was Critter reserve behavior:

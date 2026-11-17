@@ -121,7 +121,9 @@ open class HumanBaselinePolicy(
         DEFAULT_BATTLE_IMMEDIATE_RESOLVE_MIN_LEAD,
     private val battleImmediateResolveMinOpponentSupportValue: Int =
         DEFAULT_BATTLE_IMMEDIATE_RESOLVE_MIN_OPPONENT_SUPPORT,
-    private val developmentTargetConfig: DevelopmentTargetConfig = DevelopmentTargetConfig()
+    private val developmentTargetConfig: DevelopmentTargetConfig = DevelopmentTargetConfig(),
+    /** Fixed per-player resource tendencies; consumed by future resource scorers. */
+    val resourcePersonality: ResourcePersonality = ResourcePersonality.NEUTRAL
 ) {
     init {
         require(protectedBeeReserveValue >= 0) { "Protected Bee reserve cannot be negative" }

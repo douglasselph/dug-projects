@@ -53,6 +53,11 @@ The next staged Human Baseline design track is **shared immediate and future-onl
 
 To capture unchanged Human Baseline Build choices before the new valuation and personality work, run `bin/capture_human_baseline_build`. See [Build Behavior Snapshot](doc/policies/human-baseline/BUILD_BEHAVIOR_SNAPSHOT.md) for the report, seeds and evidence limitations. See [Immediate Pip and Roll Reward Values](doc/policies/human-baseline/IMMEDIATE_PIP_AND_ROLL_REWARD_VALUES.md) for the separate current-round arithmetic and test plan. See [Future Dice Lifetime Forecast](doc/policies/human-baseline/FUTURE_DICE_LIFETIME_FORECAST.md) for the read-only 3/4/5-draw and future upgrade valuation model and its tests. See [Common Build Action Valuation](doc/policies/human-baseline/COMMON_BUILD_ACTION_VALUATION.md) for the read-only immediate-plus-future comparisons, known omissions, and acceptance tests (no production strategy change).
 
+
+## Human Baseline resource personalities
+
+[Resource Personalities — Configuration and Wiring](doc/policies/human-baseline/RESOURCE_PERSONALITIES_CONFIGURATION.md) explains the four immutable named profiles and per-player policy injection. Configuration currently does **not** alter Build decisions; separate planned stages will apply acquisition and spending preferences. The shared pip forecast and common Build valuation remain independent of personalities.
+
 ## Current v38 research sensitivity pilot
 
 The four-state forced Root Four More experiment has verified **local mechanical
