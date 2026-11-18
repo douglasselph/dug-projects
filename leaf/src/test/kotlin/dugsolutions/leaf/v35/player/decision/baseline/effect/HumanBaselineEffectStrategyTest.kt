@@ -88,6 +88,28 @@ class HumanBaselineEffectStrategyTest {
         }
 
         @Test
+        fun `ordinary Compost Effect choice follows the future lifetime target`() {
+            val context = context(
+                hand = listOf(
+                    DieView(index = 0, sides = 4, value = 1),
+                    DieView(index = 1, sides = 12, value = 1)
+                ),
+                graftBed = mapOf(DieSides.D6 to 1, DieSides.D20 to 1),
+                futureRounds = listOf(RoundCardType.BATTLE)
+            )
+            val chosen = HumanBaselineEffectStrategy().chooseDie(
+                ChooseEffectDieRequest(
+                    effect = GameEffect.UPGRADE_DIE_FROM_HAND,
+                    legalChoices = effectChoices(context),
+                    context = context
+                )
+            )
+            // The same one-future-Battle comparison drives the main action:
+            // D4 -> D6 adds one expected future pip; D12 -> D20 adds four.
+            assertEquals(1, chosen.index)
+        }
+
+        @Test
         fun `Petal To Die 4 chooses the same high-value trash branch anticipated by card scoring`() {
             val d4 = EffectDieChoice(index = 0, sides = 4, value = 1)
             val context = context(
@@ -221,9 +243,11 @@ class HumanBaselineEffectStrategyTest {
 
     private fun context(
         hand: List<DieView>,
-        graftBed: Map<DieSides, Int> = emptyMap()
+        graftBed: Map<DieSides, Int> = emptyMap(),
+        futureRounds: List<RoundCardType> = emptyList()
     ): DecisionContext = DecisionContext.EMPTY.copy(
         phase = RoundCardType.CULTIVATION,
+        progress = DecisionContext.EMPTY.progress.copy(upcomingRoundTypes = futureRounds),
         self = DecisionContext.EMPTY.self.copy(
             board = DecisionContext.EMPTY.self.board.copy(hand = hand)
         ),

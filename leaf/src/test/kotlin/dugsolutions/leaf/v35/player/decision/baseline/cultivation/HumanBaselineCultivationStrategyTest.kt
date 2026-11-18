@@ -109,12 +109,13 @@ class HumanBaselineCultivationStrategyTest {
             )
             val round = roundWithEffects(GameEffect.UPGRADE_DIE_FROM_HAND)
             val usefulContext = context(
-                supply = listOf(DieView(0, 20, 1)),
+                supply = listOf(DieView(0, 4, 1)),
                 hand = listOf(
                     DieView(0, 12, 1),
                     DieView(1, 20, 5)
                 ),
-                graftBed = mapOf(DieSides.D20 to 1)
+                graftBed = mapOf(DieSides.D20 to 1),
+                futureRounds = listOf(RoundCardType.BATTLE)
             )
             val noTargetContext = context(
                 supply = listOf(DieView(0, 4, 1)),
@@ -134,38 +135,25 @@ class HumanBaselineCultivationStrategyTest {
         }
 
         @Test
-        fun `Compost low die uses the seventy five percent boundary and carries probability metadata`() {
+        fun `Compost uses the forecast instead of a random seventy five percent gate`() {
             val choices = listOf(
                 CultivationAction.Main(CultivationMainAction.Draw),
                 CultivationAction.Main(CultivationMainAction.RoundEffect1)
             )
-            val round = roundWithEffects(GameEffect.UPGRADE_DIE_FROM_HAND)
             val context = context(
                 supply = listOf(DieView(0, 4, 1)),
-                hand = listOf(
-                    DieView(0, 4, 2),
-                    DieView(1, 20, 5)
-                ),
-                graftBed = mapOf(DieSides.D6 to 1)
+                hand = listOf(DieView(0, 12, 1), DieView(1, 20, 5)),
+                graftBed = mapOf(DieSides.D20 to 1),
+                futureRounds = listOf(RoundCardType.BATTLE)
             )
-
-            val accepts = choose(
-                round = round,
-                context = context,
-                choices = choices,
-                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(74))
-            )
-            val declines = choose(
-                round = round,
-                context = context,
-                choices = choices,
-                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(75))
-            )
-
-            val acceptedMain = assertIs<CultivationAction.Main>(accepts)
-            assertEquals(CultivationMainAction.RoundEffect1, acceptedMain.action)
-            assertEquals(75, acceptedMain.decisionProbabilityPercent)
-            assertEquals(CultivationMainAction.Draw, assertIs<CultivationAction.Main>(declines).action)
+            val round = roundWithEffects(GameEffect.UPGRADE_DIE_FROM_HAND)
+            for (randomizer in listOf(FixedRandomizer(74), FixedRandomizer(75))) {
+                val choice = choose(round = round, context = context, choices = choices,
+                    strategy = HumanBaselineCultivationStrategy(strategyRandomizer = randomizer))
+                val main = assertIs<CultivationAction.Main>(choice)
+                assertEquals(CultivationMainAction.RoundEffect1, main.action)
+                assertEquals(null, main.decisionProbabilityPercent)
+            }
         }
 
         @Test
@@ -816,9 +804,11 @@ class HumanBaselineCultivationStrategyTest {
         water: Int = 0,
         sunlight: Int = 0,
         creatureViews: List<CreatureCardView> = emptyList(),
-        graftBed: Map<DieSides, Int> = emptyMap()
+        graftBed: Map<DieSides, Int> = emptyMap(),
+        futureRounds: List<RoundCardType> = emptyList()
     ): DecisionContext = DecisionContext.EMPTY.copy(
         phase = RoundCardType.CULTIVATION,
+        progress = DecisionContext.EMPTY.progress.copy(upcomingRoundTypes = futureRounds),
         self = DecisionContext.EMPTY.self.copy(
             board = DecisionContext.EMPTY.self.board.copy(
                 supply = supply,

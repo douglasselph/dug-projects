@@ -30,7 +30,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.card.CardScoringHelpers
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.card.PlantPreservationEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.common.DieValueHeuristics
-import dugsolutions.leaf.v35.player.decision.baseline.cultivation.resource.CompostPriority
+import dugsolutions.leaf.v35.player.decision.baseline.cultivation.resource.CompostLifetimePriority
 import dugsolutions.leaf.v35.player.decision.baseline.cultivation.resource.MulchPriority
 import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluenceRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
@@ -258,8 +258,8 @@ class HumanBaselineEffectStrategy(
                             )
 
                     request.effect == GameEffect.UPGRADE_DIE_FROM_HAND ->
-                        CompostPriority.targetScore(request.context, die, normalPower)
-                            ?: PriorityScore(0).adjusted(-1000, "Not a legal normal Compost upgrade target")
+                        CompostLifetimePriority.targetScore(request.context, die, normalPower)
+                            ?: PriorityScore(-1000).adjusted(0, "Not a legal Compost target")
 
                     request.effect == GameEffect.MULCH_DIE_FROM_HAND ->
                         MulchPriority.targetScore(request.context, die, normalPower)

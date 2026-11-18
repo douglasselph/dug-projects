@@ -54,9 +54,11 @@ The next staged Human Baseline design track is **shared immediate and future-onl
 To capture unchanged Human Baseline Build choices before the new valuation and personality work, run `bin/capture_human_baseline_build`. See [Build Behavior Snapshot](doc/policies/human-baseline/BUILD_BEHAVIOR_SNAPSHOT.md) for the report, seeds and evidence limitations. See [Immediate Pip and Roll Reward Values](doc/policies/human-baseline/IMMEDIATE_PIP_AND_ROLL_REWARD_VALUES.md) for the separate current-round arithmetic and test plan. See [Future Dice Lifetime Forecast](doc/policies/human-baseline/FUTURE_DICE_LIFETIME_FORECAST.md) for the read-only 3/4/5-draw and future upgrade valuation model and its tests. See [Common Build Action Valuation](doc/policies/human-baseline/COMMON_BUILD_ACTION_VALUATION.md) for the read-only immediate-plus-future comparisons, known omissions, and acceptance tests (no production strategy change).
 
 
+**November 18 Compost checkpoint:** The ordinary Round Compost production scorer now compares a particular Hand die's expected future upgrade benefit (or legal Trash) with Draw, explicitly charging the lost current face and Buy-tier opportunity. This also aligns downstream effect targeting and removes the historical percentage willingness gate. The mathematical forecast is independent of resource personalities. **Full Ubuntu Gradle acceptance remains pending**; see [Compost Dice-Lifetime Valuation](doc/policies/human-baseline/COMPOST_DICE_LIFETIME_VALUATION.md).
+
 ## Human Baseline resource personalities
 
-[Resource Personalities — Configuration and Wiring](doc/policies/human-baseline/RESOURCE_PERSONALITIES_CONFIGURATION.md) explains the four immutable named profiles and per-player policy injection. Configuration **now influences legal Water/Sunlight/Mulch Round resource acquisition**. See [Round Resource Acquisition and Personalities](doc/policies/human-baseline/ROUND_RESOURCE_ACQUISITION_PERSONALITIES.md) for bounded preference rules and focused tests. Resource **spending stays personality-independent**: Water reroll/Refresh, Mulch use and Battle Sunlight continuation use their established tactical and resource-preservation reasoning. The [Resource Spending — Shared Tactical Decisions](doc/policies/human-baseline/RESOURCE_SPENDING_INDEPENDENCE.md) regression verifies this across four personalities (Ubuntu acceptance pending). The shared pip forecast and common Build valuation remain independent of personalities and do not yet drive production Build selection.
+[Resource Personalities — Configuration and Wiring](doc/policies/human-baseline/RESOURCE_PERSONALITIES_CONFIGURATION.md) explains the four immutable named profiles and per-player policy injection. Configuration **now influences legal Water/Sunlight/Mulch Round resource acquisition**. See [Round Resource Acquisition and Personalities](doc/policies/human-baseline/ROUND_RESOURCE_ACQUISITION_PERSONALITIES.md) for bounded preference rules and focused tests. Resource **spending stays personality-independent**: Water reroll/Refresh, Mulch use and Battle Sunlight continuation use their established tactical and resource-preservation reasoning. The [Resource Spending — Shared Tactical Decisions](doc/policies/human-baseline/RESOURCE_SPENDING_INDEPENDENCE.md) regression verifies this across four personalities (Ubuntu acceptance pending). The shared pip forecast and common Build valuation remain independent of personalities. The forecast now drives **ordinary Round Compost** production selection; the wider common Build-action migration remains pending.
 
 ## Current v38 research sensitivity pilot
 
@@ -326,13 +328,16 @@ When changing source or research tooling:
 - say exactly which tests/commands actually ran and which did not;
 - never claim a test passed merely because code compiled or a script parsed.
 
-When delivering changes, prefer a **changes-only ZIP rooted at the repository root**. ZIP entries should begin with paths such as `src/`, `bin/`, `data/`, `doc/`, `README.md`, or `TASKS.md` - not an extra enclosing `leaf/` directory. Exclude `build/`, `.gradle/`, `output/`, caches, and temporary files. Provide a suggested Git commit message.
+**Required patch ZIP layout (for every future coding conversation):** The user is **already inside the top-level `leaf/` project directory** when running the unzip command. Deliver a **changes-only ZIP whose entries are relative to that directory**, with paths such as `src/...`, `bin/...`, `data/...`, `doc/...`, `README.md`, `AGENTS.md`, or `TASKS.md`. **Never add a containing `leaf/` folder** to the archive, and never instruct the user to extract from its parent directory. Otherwise the patch silently creates a nested `leaf/leaf/` tree rather than updating the project. Exclude `build/`, `.gradle/`, `output/`, caches, and temporary files. Provide a suggested Git commit message.
 
-Installation commands should assume the ZIP is in `~/Downloads`, for example:
+Installation commands must assume the user is already in `leaf/` and the ZIP was downloaded to `~/Downloads`:
 
 ```bash
+# Current directory: .../leaf (project root)
 unzip -o ~/Downloads/<changed-files.zip>
 ```
+
+Before delivering any patch, **inspect the archive entry names** and confirm the ZIP has no `leaf/` prefix and would update the intended files in place. This convention persists across ChatGPT conversations and applies to every future changed-files ZIP.
 
 For long-running research runs, preserve the compile-once/direct-Java and persistent-JVM architecture where appropriate, while retaining process isolation where policy/condition state requires it. Runs should be resumable, visibly report current stage plus whole-batch progress, elapsed time, ETA and projected finish time, use `|& tee`, and produce **one verified upload-ready archive copied to `~/Downloads`** with an obvious `UPLOAD THIS FILE:` path.
 

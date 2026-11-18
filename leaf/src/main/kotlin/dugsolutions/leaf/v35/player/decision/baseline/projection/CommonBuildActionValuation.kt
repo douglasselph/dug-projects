@@ -185,7 +185,7 @@ object CommonBuildActionValuation {
                 futureRounds, assumption, rewards, baseFuture, buyPower, availableCosts,
                 listOf("Current Buy power/threshold after losing showing die",
                     "Later Buy opportunities after physical replacement",
-                    "The live Compost target chooser still uses legacy scoring"))
+                    "The live Compost target also applies a separate affordable-Buy-tier cost"))
         }
         // The official Round effect can also Trash when no next die is available.
         // Never claim the Trash fallback is an Upgrade worth zero pips.
