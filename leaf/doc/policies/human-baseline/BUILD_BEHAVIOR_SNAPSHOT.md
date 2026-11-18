@@ -54,3 +54,7 @@ Report files (when the Java experiment completes):
 **November 16 first-run update:** The uploaded `leaf-human-baseline-build-20261116-210640.tgz` did **not** capture games. It stopped at Kotlin compilation: `BuildBehaviorSnapshotMain.kt` referenced `CardDataFiles.WISP_CARD_LIST` instead of `WISP_LIST`. The subsequent shared-immediate-pip change fixes that single constant; rerun the script before accepting baseline evidence. This failure must not be treated as four baseline games.
 
 **No game rules, official CSV definitions, purchased dice, expert training, or Human Baseline priorities are changed by this observation work.** The small production change merely fills `RoundEffectChoice.legalPlantCardNames`, a previously empty reporting field, from the coordinator's existing legal choices.
+
+## November 18 follow-up — immutable reference versus current capture
+
+The November 16 `leaf-human-baseline-build-20261116-214822.tgz` output is the **saved pre-change reference**, not something to regenerate using today's updated code. The current launcher still records the same TSV schema, but now identifies the current Compost dice-lifetime scorer in its manifest. Use `bin/compare_human_baseline_build` to run current seeded games and report observed before/after choices, with strict provenance checks. See [`COMPOST_BUILD_DECISION_COMPARISON.md`](COMPOST_BUILD_DECISION_COMPARISON.md) for caveats about changed game trajectories and absence of same-state comparisons.

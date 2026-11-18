@@ -28,7 +28,7 @@ import java.io.File
 import java.security.MessageDigest
 
 /**
- * Observation-only baseline before changes to Human Baseline Build valuation.
+ * Observation-only Build decisions for the current Human Baseline source revision.
  * No candidate is rescored; the coordinator's actual legal offers and choice,
  * score explanations, and physical resource use are read after each seeded game.
  */
@@ -162,7 +162,7 @@ internal object BuildBehaviorSnapshot {
     }
 }
 
-/** Opt-in, fixed-seed reproducible capture. The output is evidence, not a balance verdict. */
+/** Fixed-seed current-policy capture; historical captures remain immutable comparison references. */
 fun main(args: Array<String>) {
     val arguments = args.associate { arg ->
         require(arg.startsWith("--") && '=' in arg) { "Expected --key=value: $arg" }
@@ -224,7 +224,7 @@ fun main(args: Array<String>) {
             appendLine("rules=THREE_ENGAGEMENTS")
             appendLine("round_setup=STANDARD")
             appendLine("grove=${grove.joinToString(",") { it.name }}")
-            appendLine("policy=Human Baseline (legacy Build scoring; no personality)")
+            appendLine("policy=Human Baseline (normal Round Compost dice-lifetime scoring; neutral resource personality)")
             appendLine("games=$games")
             appendLine("players=$players")
             appendLine("base_seed=$seed")
@@ -249,7 +249,7 @@ fun main(args: Array<String>) {
             appendLine("note=Build choices are engine-legal options, including Plant identities. Score alternatives may be narrower due to willingness gates.")
             appendLine("note=Water GAIN is basic GAIN_WATER_TOKEN; compound Water effects are not included in that counter.")
             appendLine("note=The round-resource lineage ledger records only Round-sourced assets; physical events include all sources.")
-            appendLine("note=No evaluator tuning, personality, learned policy or balance assessment is performed.")
+            appendLine("note=Capture only; no evaluator tuning, learned policy or balance assessment is performed.")
         }
         File(output, "manifest.txt").writeText(manifest)
         println("Build behavior snapshot: ${output.absolutePath}")
