@@ -59,6 +59,6 @@ Run:
   --tests '*HumanBaselineResourcePersonalityWiringTest'
 ```
 
-**This step covers Round resource acquisition only.** It does not adjust Water reroll/Refresh decisions, Mulch spending, Sunlight spending, or resource-producing **Plant effects**. Those require a subsequent spending/reserve step and then shared Plant valuations. The existing legacy scoring framework still contains arbitrary priority bases; migration to common pip-equivalent estimates remains pending and should not be confused with this preference layer.
+**This step covers Round resource acquisition only.** It does not adjust Water reroll/Refresh decisions, Mulch spending, Sunlight spending, or resource-producing **Plant effects**. Spending must remain under the existing **personality-independent** tactical/reserve evaluators; the next step is to verify that invariant with same-state tests, **not** to apply personality to spending. Resource-producing Plant acquisition choices will be reviewed later during shared Plant valuation migration. The existing legacy scoring framework still contains arbitrary priority bases; migration to common pip-equivalent estimates remains pending and should not be confused with this preference layer.
 
 The behavioral-game cohort will later check *opportunities offered, chosen, acquired, spent, and left unused* rather than win rates or fixed token totals. This changeset itself does not certify those full-game metrics or full Gradle results until the Ubuntu tests pass.
